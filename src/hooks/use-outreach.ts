@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost } from "@/lib/api-client"
-import type { OutreachMessage, OutreachStats } from "@/types/api"
+import type { OutreachMessage, OutreachStats, OutreachCampaign } from "@/types/api"
 import { toast } from "sonner"
 
 export interface OutreachFilters {
@@ -18,6 +18,14 @@ export interface SendMessagePayload {
   subject: string
   body: string
   save_as_draft?: boolean
+}
+
+export interface CreateCampaignPayload {
+  name: string
+  type: "cold_email" | "follow_up" | "networking" | "thank_you"
+  template_subject: string
+  template_body: string
+  contacts?: string[]
 }
 
 export interface OutreachTemplate {
@@ -63,6 +71,17 @@ export function useOutreachMessages(filters?: OutreachFilters) {
 }
 
 /**
+ * Fetch all outreach campaigns
+ */
+export function useOutreachCampaigns() {
+  return useQuery({
+    queryKey: ["outreach-campaigns"],
+    queryFn: () => apiGet<{ campaigns: OutreachCampaign[]; total: number }>("/api/outreach/campaigns"),
+    staleTime: 30000,
+  })
+}
+
+/**
  * Send or save an outreach message
  */
 export function useSendMessage() {
@@ -79,6 +98,28 @@ export function useSendMessage() {
     },
     onError: () => {
       toast.error("Failed to send message")
+    },
+  })
+}
+
+/**
+ * Create a new outreach campaign
+ */
+export function useCreateCampaign() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (payload: CreateCampaignPayload) =>
+      apiPost<OutreachCampaign>("/api/outreach/campaigns", payload),
+    onSuccess: () => {
+      // Invalidate campaign and message queries
+      queryClient.invalidateQueries({ queryKey: ["outreach-campaigns"] })
+      queryClient.invalidateQueries({ queryKey: ["outreach-messages"] })
+      queryClient.invalidateQueries({ queryKey: ["outreach-stats"] })
+      toast.success("Campaign created successfully")
+    },
+    onError: () => {
+      toast.error("Failed to create campaign")
     },
   })
 }

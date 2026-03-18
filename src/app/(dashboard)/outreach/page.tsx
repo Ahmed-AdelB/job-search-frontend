@@ -43,7 +43,7 @@ import { StatusBadge } from "@/components/shared/status-badge";
 import { StatSkeleton, TableSkeleton } from "@/components/shared/loading-skeleton";
 import { Mail, Plus, MoreHorizontal, Send, AlertCircle } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useOutreachStats, useOutreachMessages, useSendMessage } from "@/hooks/use-outreach";
+import { useOutreachStats, useOutreachMessages, useCreateCampaign } from "@/hooks/use-outreach";
 import type { OutreachMessage, OutreachStats } from "@/types/api";
 import { toast } from "sonner";
 
@@ -129,12 +129,12 @@ function NewCampaignDialog() {
   const [open, setOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
-    type: "cold_email",
+    type: "cold_email" as const,
     subject: "",
     body: "",
   });
 
-  const sendMessage = useSendMessage();
+  const createCampaign = useCreateCampaign();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -145,12 +145,11 @@ function NewCampaignDialog() {
     }
 
     try {
-      await sendMessage.mutateAsync({
-        contact_id: "", // Will be populated per contact in production
-        message_type: formData.type,
-        subject: formData.subject,
-        body: formData.body,
-        save_as_draft: true,
+      await createCampaign.mutateAsync({
+        name: formData.name,
+        type: formData.type,
+        template_subject: formData.subject,
+        template_body: formData.body,
       });
       setOpen(false);
       setFormData({
@@ -200,7 +199,10 @@ function NewCampaignDialog() {
               className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
               value={formData.type}
               onChange={(e) =>
-                setFormData({ ...formData, type: e.target.value })
+                setFormData({
+                  ...formData,
+                  type: e.target.value as "cold_email" | "follow_up" | "networking" | "thank_you",
+                })
               }
             >
               <option value="cold_email">Cold Email</option>
@@ -243,8 +245,8 @@ function NewCampaignDialog() {
             >
               Cancel
             </Button>
-            <Button type="submit" disabled={sendMessage.isPending}>
-              {sendMessage.isPending ? "Creating..." : "Create Campaign"}
+            <Button type="submit" disabled={createCampaign.isPending}>
+              {createCampaign.isPending ? "Creating..." : "Create Campaign"}
             </Button>
           </div>
         </form>
