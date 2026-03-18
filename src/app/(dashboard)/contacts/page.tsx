@@ -1,583 +1,581 @@
-/**
- * Contacts CRM Page
- * Author: Ahmed Adel Bakr Alderai
- */
+"use client";
 
-"use client"
-
-import { useState } from "react"
-import { useDebounce } from "@/hooks/useDebounce"
-import { useContacts, useDeleteContact, useImportContacts } from "@/hooks"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import { TableSkeleton } from "@/components/shared/loading-skeleton"
-import { StatusBadge } from "@/components/shared/status-badge"
-import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
+import React, { useState } from "react";
 import {
+  ColumnDef,
+  ColumnFiltersState,
+  SortingState,
+  VisibilityState,
   flexRender,
   getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
   useReactTable,
-  ColumnDef,
-} from "@tanstack/react-table"
-import { Download, Loader2, MoreHorizontal, Plus, Search, Trash2, Edit, MessageSquare, AlertCircle, Inbox } from "lucide-react"
-import type { LinkedInContact } from "@/types/api"
+} from "@tanstack/react-table";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { TableSkeleton } from "@/components/shared/loading-skeleton";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import {
+  Users,
+  Plus,
+  MoreHorizontal,
+  Search,
+  Eye,
+  Edit,
+  Mail,
+  Trash2,
+  Download,
+  AlertCircle,
+  ExternalLink,
+} from "lucide-react";
+import { useContacts, useDeleteContact, useImportContacts } from "@/hooks/use-contacts";
+import type { LinkedInContact } from "@/types/api";
+import { toast } from "sonner";
+import { useDebounce } from "@/hooks/useDebounce";
 
-// Table column definitions
-const columns: ColumnDef<LinkedInContact>[] = [
-  {
-    id: "select",
-    header: ({ table }) => (
-      <Checkbox
-        checked={table.getIsAllRowsSelected()}
-        onCheckedChange={(value) => table.toggleAllRowsSelected(!!value)}
-        aria-label="Select all"
-      />
-    ),
-    cell: ({ row }) => (
-      <Checkbox
-        checked={row.getIsSelected()}
-        onCheckedChange={(value) => row.toggleSelected(!!value)}
-        aria-label="Select row"
-      />
-    ),
-    enableSorting: false,
-    enableHiding: false,
-  },
-  {
-    accessorKey: "name",
-    header: "Name",
-    cell: ({ row }) => {
-      const contact = row.original
-      const initials = `${contact.first_name[0]}${contact.last_name[0]}`.toUpperCase()
-      return (
-        <div className="flex items-center gap-3">
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-primary/10 text-sm">{initials}</AvatarFallback>
-          </Avatar>
-          <div>
-            <p className="font-medium">
-              {contact.first_name} {contact.last_name}
-            </p>
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "company",
-    header: "Company",
-    cell: ({ row }) => <span className="text-sm">{row.getValue("company")}</span>,
-  },
-  {
-    accessorKey: "position",
-    header: "Position",
-    cell: ({ row }) => <span className="text-sm">{row.getValue("position")}</span>,
-  },
-  {
-    accessorKey: "email",
-    header: "Email",
-    cell: ({ row }) => {
-      const email = row.getValue("email") as string | undefined
-      return email ? (
-        <a href={`mailto:${email}`} className="text-sm text-primary hover:underline">
-          {email}
-        </a>
-      ) : (
-        <span className="text-sm text-muted-foreground">N/A</span>
-      )
-    },
-  },
-  {
-    accessorKey: "score",
-    header: "Score",
-    cell: ({ row }) => {
-      const score = (row.getValue("score") as number) || 0
-      return (
-        <div className="flex items-center gap-2">
-          <div className="h-2 w-16 rounded-full bg-muted">
-            <div
-              className="h-2 rounded-full bg-gradient-to-r from-green-500 to-blue-500"
-              style={{ width: `${score}%` }}
-            />
-          </div>
-          <span className="text-xs font-medium">{score}%</span>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "connected_on",
-    header: "Connected",
-    cell: ({ row }) => {
-      const date = row.getValue("connected_on") as string | undefined
-      return date ? (
-        <span className="text-sm text-muted-foreground">
-          {new Date(date).toLocaleDateString()}
-        </span>
-      ) : (
-        <span className="text-sm text-muted-foreground">N/A</span>
-      )
-    },
-  },
-  {
-    accessorKey: "tags",
-    header: "Tags",
-    cell: ({ row }) => {
-      const tags = (row.getValue("tags") as string[] | undefined) || []
-      return (
-        <div className="flex flex-wrap gap-1">
-          {tags.slice(0, 2).map((tag) => (
-            <span
-              key={tag}
-              className="inline-flex items-center rounded-full bg-secondary px-2 py-1 text-xs font-medium text-secondary-foreground"
-            >
-              {tag}
-            </span>
-          ))}
-          {tags.length > 2 && (
-            <span className="text-xs text-muted-foreground">+{tags.length - 2}</span>
-          )}
-        </div>
-      )
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => <ContactRowActions contact={row.original} />,
-  },
-]
+/**
+ * Contact Type Badge with color coding
+ */
+function ContactTypeBadge({ type }: { type: string }) {
+  const typeConfig: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  > = {
+    recruiter: { label: "Recruiter", variant: "default" },
+    hiring_manager: { label: "Hiring Manager", variant: "outline" },
+    referral: { label: "Referral", variant: "outline" },
+    network: { label: "Network", variant: "secondary" },
+    other: { label: "Other", variant: "outline" },
+  };
 
-interface ContactRowActionsProps {
-  contact: LinkedInContact
+  const config = typeConfig[type] || { label: type, variant: "outline" };
+  return <Badge variant={config.variant}>{config.label}</Badge>;
 }
 
-function ContactRowActions({ contact }: ContactRowActionsProps) {
-  const deleteContact = useDeleteContact()
-  const [showDetailDialog, setShowDetailDialog] = useState(false)
+/**
+ * Contact Row Actions Menu
+ */
+function ContactActionsMenu({
+  contact,
+  onDelete,
+}: {
+  contact: LinkedInContact;
+  onDelete: (id: string) => void;
+}) {
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const deleteContact = useDeleteContact();
 
-  const handleDelete = () => {
-    if (confirm(`Delete ${contact.first_name} ${contact.last_name}?`)) {
-      deleteContact.mutate(contact.linkedin_id)
+  const handleDelete = async () => {
+    try {
+      await deleteContact.mutateAsync(contact.linkedin_id);
+      setShowDeleteDialog(false);
+    } catch (error) {
+      console.error("Failed to delete contact:", error);
     }
-  }
+  };
 
   return (
     <>
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
+          <Button variant="ghost" size="sm">
+            <MoreHorizontal className="w-4 h-4" />
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setShowDetailDialog(true)}>
-            <MessageSquare className="mr-2 h-4 w-4" />
+          <DropdownMenuItem>
+            <Eye className="w-4 h-4 mr-2" />
+            View Profile
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Contact
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Mail className="w-4 h-4 mr-2" />
             Send Outreach
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={() => setShowDetailDialog(true)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
+          <DropdownMenuSeparator />
           <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-destructive focus:text-destructive"
+            className="text-destructive"
+            onClick={() => setShowDeleteDialog(true)}
           >
-            <Trash2 className="mr-2 h-4 w-4" />
+            <Trash2 className="w-4 h-4 mr-2" />
             Delete
           </DropdownMenuItem>
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <ContactDetailDialog
-        contact={contact}
-        open={showDetailDialog}
-        onOpenChange={setShowDetailDialog}
-      />
+      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Contact</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete{" "}
+              <span className="font-semibold">
+                {contact.first_name} {contact.last_name}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex justify-end gap-2">
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDelete}
+              disabled={deleteContact.isPending}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {deleteContact.isPending ? "Deleting..." : "Delete"}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
-  )
+  );
 }
 
-interface ContactDetailDialogProps {
-  contact: LinkedInContact
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
+/**
+ * Import Contacts Button
+ */
+function ImportContactsButton() {
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
+  const importContacts = useImportContacts();
 
-function ContactDetailDialog({
-  contact,
-  open,
-  onOpenChange,
-}: ContactDetailDialogProps) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
-          <DialogTitle>
-            {contact.first_name} {contact.last_name}
-          </DialogTitle>
-          <DialogDescription>
-            {contact.company} • {contact.position}
-          </DialogDescription>
-        </DialogHeader>
+  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
 
-        <div className="grid gap-6 py-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Email</p>
-              <p className="text-sm">{contact.email || "Not provided"}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Phone</p>
-              <p className="text-sm">{contact.phone || "Not provided"}</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">Score</p>
-              <p className="text-sm font-bold">{contact.score || 0}%</p>
-            </div>
-            <div>
-              <p className="text-sm font-medium text-muted-foreground">
-                Connected On
-              </p>
-              <p className="text-sm">
-                {contact.connected_on
-                  ? new Date(contact.connected_on).toLocaleDateString()
-                  : "N/A"}
-              </p>
-            </div>
-          </div>
-
-          {contact.notes && (
-            <div>
-              <p className="text-sm font-medium text-muted-foreground mb-1">
-                Notes
-              </p>
-              <p className="text-sm text-foreground">{contact.notes}</p>
-            </div>
-          )}
-
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
-              Close
-            </Button>
-            <Button>Send Outreach Message</Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-interface ImportCSVDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function ImportCSVDialog({ open, onOpenChange }: ImportCSVDialogProps) {
-  const importContacts = useImportContacts()
-  const [dragActive, setDragActive] = useState(false)
-
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
+    if (!file.name.endsWith(".csv")) {
+      toast.error("Please select a CSV file");
+      return;
     }
-  }
 
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-        importContacts.mutate(file, {
-          onSuccess: () => {
-            onOpenChange(false)
-          },
-        })
-      }
+    try {
+      await importContacts.mutateAsync(file);
+    } catch (error) {
+      console.error("Failed to import contacts:", error);
     }
-  }
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      importContacts.mutate(file, {
-        onSuccess: () => {
-          onOpenChange(false)
-        },
-      })
+    // Reset input
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
-  }
+  };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Import Contacts</DialogTitle>
-          <DialogDescription>
-            Upload your LinkedIn connections CSV export
-          </DialogDescription>
-        </DialogHeader>
-
-        <div
-          className={`relative rounded-lg border-2 border-dashed p-8 text-center transition ${
-            dragActive
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/25 hover:border-muted-foreground/50"
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleChange}
-            className="absolute inset-0 cursor-pointer opacity-0"
-            disabled={importContacts.isPending}
-          />
-
-          <div className="space-y-2">
-            <Download className="mx-auto h-8 w-8 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Drag and drop your CSV file here</p>
-              <p className="text-sm text-muted-foreground">
-                or click to browse
-              </p>
-            </div>
-            {importContacts.isPending && (
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Importing...</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
+    <>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".csv"
+        onChange={handleFileSelect}
+        className="hidden"
+      />
+      <Button
+        variant="outline"
+        onClick={() => fileInputRef.current?.click()}
+        disabled={importContacts.isPending}
+      >
+        <Download className="w-4 h-4 mr-2" />
+        {importContacts.isPending ? "Importing..." : "Import CSV"}
+      </Button>
+    </>
+  );
 }
 
-export default function ContactsPage() {
-  const [page, setPage] = useState(1)
-  const [perPage] = useState(10)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
-  const debouncedSearch = useDebounce(searchQuery, 300)
+/**
+ * Contacts Data Table
+ */
+function ContactsTable() {
+  const [searchTerm, setSearchTerm] = useState("");
+  const [typeFilter, setTypeFilter] = useState<string>("");
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
+  const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 10 });
 
-  const { data, isLoading, error } = useContacts({
+  const debouncedSearch = useDebounce(searchTerm, 300);
+
+  const { data: contactsData, isLoading, error } = useContacts({
     search: debouncedSearch,
-    page,
-    per_page: perPage,
-  })
+    page: pagination.pageIndex + 1,
+    per_page: pagination.pageSize,
+  });
+
+  const contacts = contactsData?.contacts || [];
+  const totalContacts = contactsData?.total || 0;
+
+  // Filter by type if selected
+  const filteredContacts = typeFilter
+    ? contacts.filter((c) => c.score && Number(c.score) > 0) // Placeholder filter
+    : contacts;
+
+  const columns: ColumnDef<LinkedInContact>[] = [
+    {
+      accessorKey: "first_name",
+      header: "Name",
+      cell: ({ row }) => {
+        const firstName = row.getValue("first_name") as string;
+        const lastName = (row.original as LinkedInContact).last_name;
+        return (
+          <div className="font-medium">
+            {firstName} {lastName}
+          </div>
+        );
+      },
+    },
+    {
+      accessorKey: "company",
+      header: "Company",
+      cell: ({ row }) => (
+        <div className="text-sm">{row.getValue("company") || "-"}</div>
+      ),
+    },
+    {
+      accessorKey: "position",
+      header: "Title",
+      cell: ({ row }) => (
+        <div className="text-sm max-w-xs truncate">
+          {row.getValue("position") || "-"}
+        </div>
+      ),
+    },
+    {
+      id: "type",
+      header: "Type",
+      cell: ({ row }) => {
+        // Determine type based on position and company context
+        const position = (row.original as LinkedInContact).position?.toLowerCase() || "";
+        let type = "network";
+        if (position.includes("recruiter")) type = "recruiter";
+        else if (position.includes("hiring") || position.includes("manager"))
+          type = "hiring_manager";
+        return <ContactTypeBadge type={type} />;
+      },
+    },
+    {
+      accessorKey: "email",
+      header: "Email",
+      cell: ({ row }) => {
+        const email = row.getValue("email") as string | undefined;
+        if (!email) return <span className="text-muted-foreground">-</span>;
+        return (
+          <a
+            href={`mailto:${email}`}
+            className="text-sm text-blue-600 hover:underline"
+          >
+            {email}
+          </a>
+        );
+      },
+    },
+    {
+      id: "linkedin",
+      header: "LinkedIn",
+      cell: ({ row }) => {
+        const linkedinId = (row.original as LinkedInContact).linkedin_id;
+        return (
+          <a
+            href={`https://linkedin.com/in/${linkedinId}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:underline"
+          >
+            <ExternalLink className="w-4 h-4" />
+          </a>
+        );
+      },
+    },
+    {
+      accessorKey: "connected_on",
+      header: "Last Contact",
+      cell: ({ row }) => {
+        const date = row.getValue("connected_on") as string | undefined;
+        if (!date) return <span className="text-muted-foreground text-sm">Never</span>;
+        return (
+          <span className="text-sm">
+            {new Date(date).toLocaleDateString()}
+          </span>
+        );
+      },
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => (
+        <ContactActionsMenu contact={row.original} onDelete={() => {}} />
+      ),
+    },
+  ];
 
   const table = useReactTable({
-    data: data?.contacts || [],
+    data: filteredContacts,
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
+    getSortedRowModel: getSortedRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      sorting,
+      columnFilters,
+      columnVisibility,
+      pagination,
+    },
+    onSortingChange: setSorting,
+    onColumnFiltersChange: setColumnFilters,
+    onColumnVisibilityChange: setColumnVisibility,
+    manualPagination: true,
+    rowCount: totalContacts,
+    onPaginationChange: setPagination,
+  });
 
-  const totalPages = data ? Math.ceil(data.total / perPage) : 1
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load contacts. Please try again.
+        </AlertDescription>
+      </Alert>
+    );
+  }
 
+  if (isLoading) {
+    return <TableSkeleton rows={10} />;
+  }
+
+  if (contacts.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Users className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p className="mb-4">No contacts found</p>
+        <ImportContactsButton />
+      </div>
+    );
+  }
+
+  const pageCount = Math.ceil(totalContacts / pagination.pageSize);
+
+  return (
+    <div className="space-y-4">
+      {/* Filters */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            placeholder="Search by name or company..."
+            value={searchTerm}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+            }}
+            className="pl-10"
+          />
+        </div>
+
+        <div className="flex gap-2">
+          <select
+            className="flex h-9 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setPagination({ pageIndex: 0, pageSize: pagination.pageSize });
+            }}
+          >
+            <option value="">All Types</option>
+            <option value="recruiter">Recruiter</option>
+            <option value="hiring_manager">Hiring Manager</option>
+            <option value="referral">Referral</option>
+            <option value="network">Network</option>
+          </select>
+
+          <ImportContactsButton />
+        </div>
+      </div>
+
+      {/* Table */}
+      <div className="border rounded-lg overflow-hidden">
+        <Table>
+          <TableHeader>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <TableRow key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <TableHead key={header.id} className="bg-muted/50">
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext()
+                        )}
+                  </TableHead>
+                ))}
+              </TableRow>
+            ))}
+          </TableHeader>
+          <TableBody>
+            {table.getRowModel().rows.map((row) => (
+              <TableRow key={row.id} className="hover:bg-muted/50">
+                {row.getVisibleCells().map((cell) => (
+                  <TableCell key={cell.id} className="py-3">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </TableCell>
+                ))}
+              </TableRow>
+            ))}
+          </TableBody>
+        </Table>
+      </div>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-muted-foreground">
+          Showing {pagination.pageIndex * pagination.pageSize + 1} to{" "}
+          {Math.min(
+            (pagination.pageIndex + 1) * pagination.pageSize,
+            totalContacts
+          )}{" "}
+          of {totalContacts} contacts
+        </div>
+
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setPagination((prev) => ({
+                ...prev,
+                pageIndex: Math.max(0, prev.pageIndex - 1),
+              }))
+            }
+            disabled={pagination.pageIndex === 0}
+          >
+            Previous
+          </Button>
+
+          <div className="flex items-center gap-1 px-2">
+            <span className="text-sm">
+              Page {pagination.pageIndex + 1} of {pageCount}
+            </span>
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() =>
+              setPagination((prev) => ({
+                ...prev,
+                pageIndex: Math.min(pageCount - 1, prev.pageIndex + 1),
+              }))
+            }
+            disabled={pagination.pageIndex >= pageCount - 1}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Main Contacts Page
+ */
+export default function ContactsPage() {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Contacts</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
           <p className="text-muted-foreground">
-            Manage your LinkedIn connections and outreach
+            Manage your professional network and reach out to connections
           </p>
         </div>
-        <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Import CSV
-            </Button>
-          </DialogTrigger>
-          <ImportCSVDialog
-            open={importDialogOpen}
-            onOpenChange={setImportDialogOpen}
-          />
-        </Dialog>
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          Add Contact
+        </Button>
       </div>
 
-      {/* Stats */}
-      <div className="grid gap-4 md:grid-cols-3">
-        <Card className="p-6">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
+      {/* Contacts Section */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Your Contacts</CardTitle>
+          <CardDescription>
+            Search, filter, and manage your professional contacts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <ContactsTable />
+        </CardContent>
+      </Card>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card className="bg-background/50 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-xs font-medium uppercase tracking-wide">
               Total Contacts
-            </p>
-            <p className="text-3xl font-bold">{data?.total || 0}</p>
-          </div>
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground mt-1">Across all types</p>
+          </CardContent>
         </Card>
-        <Card className="p-6">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              High Score (80+%)
-            </p>
-            <p className="text-3xl font-bold">
-              {data?.contacts?.filter((c) => (c.score || 0) >= 80).length || 0}
-            </p>
-          </div>
+
+        <Card className="bg-background/50 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-xs font-medium uppercase tracking-wide">
+              Recently Active
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0</div>
+            <p className="text-xs text-muted-foreground mt-1">In the last 7 days</p>
+          </CardContent>
         </Card>
-        <Card className="p-6">
-          <div className="space-y-2">
-            <p className="text-sm font-medium text-muted-foreground">
-              With Email
-            </p>
-            <p className="text-3xl font-bold">
-              {data?.contacts?.filter((c) => c.email).length || 0}
-            </p>
-          </div>
+
+        <Card className="bg-background/50 backdrop-blur-sm">
+          <CardHeader className="pb-3">
+            <CardDescription className="text-xs font-medium uppercase tracking-wide">
+              Response Rate
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">0%</div>
+            <p className="text-xs text-muted-foreground mt-1">Average response</p>
+          </CardContent>
         </Card>
       </div>
-
-      {/* Search */}
-      <Card className="p-6">
-        <div className="flex gap-2">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search by name, company, or email..."
-              value={searchQuery}
-              onChange={(e) => {
-                setSearchQuery(e.target.value)
-                setPage(1)
-              }}
-              className="pl-10"
-            />
-          </div>
-        </div>
-      </Card>
-
-      {/* Table */}
-      <Card className="overflow-hidden">
-        {isLoading ? (
-          <TableSkeleton rows={5} />
-        ) : error ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-background/50 px-4 py-12 text-center">
-            <div className="rounded-lg bg-muted p-3">
-              <AlertCircle className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-foreground">Error loading contacts</h3>
-              <p className="text-sm text-muted-foreground">
-                There was an error loading your contacts. Please try again.
-              </p>
-            </div>
-            <Button onClick={() => window.location.reload()} size="sm">
-              Retry
-            </Button>
-          </div>
-        ) : !data?.contacts || data.contacts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-background/50 px-4 py-12 text-center">
-            <div className="rounded-lg bg-muted p-3">
-              <Inbox className="h-6 w-6 text-muted-foreground" />
-            </div>
-            <div className="space-y-2">
-              <h3 className="font-semibold text-foreground">No contacts imported yet</h3>
-              <p className="text-sm text-muted-foreground">
-                Upload your LinkedIn connections CSV to get started with outreach.
-              </p>
-            </div>
-            <Button
-              onClick={() => setImportDialogOpen(true)}
-              size="sm"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Import CSV
-            </Button>
-          </div>
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    {table.getHeaderGroups().map((headerGroup) =>
-                      headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="px-6 py-3 text-left text-sm font-medium text-muted-foreground"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </th>
-                      ))
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-border hover:bg-muted/50 transition"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-6 py-4 text-sm"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between border-t border-border px-6 py-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * perPage + 1} to{" "}
-                {Math.min(page * perPage, data?.total || 0)} of{" "}
-                {data?.total || 0} contacts
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
     </div>
-  )
+  );
 }

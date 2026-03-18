@@ -2,7 +2,8 @@
 
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { useAuthStore, type User } from "@/stores/auth-store"
+import { useAuthStore } from "@/stores/auth-store"
+import type { User } from "@/types/api"
 
 interface UseAuthResult {
   user: User | null
@@ -17,9 +18,20 @@ interface UseAuthResult {
   clearError: () => void
 }
 
+/** Allowed redirect path prefixes after login */
+const SAFE_REDIRECT_PREFIXES = ["/dashboard", "/profile", "/settings"];
+
+function isSafeRedirectUrl(url: string): boolean {
+  // Only allow relative paths starting with known prefixes
+  if (!url.startsWith("/")) return false;
+  if (url.startsWith("//")) return false; // Protocol-relative URL
+  return SAFE_REDIRECT_PREFIXES.some((prefix) => url.startsWith(prefix));
+}
+
 /**
  * Auth hook - wraps useAuthStore with convenience methods
  * Auto-checks auth on mount and redirects to login if unauthenticated
+ * Author: Ahmed Adel Bakr Alderai
  */
 export function useAuth(requireAuth = false): UseAuthResult {
   const router = useRouter()
@@ -43,7 +55,8 @@ export function useAuth(requireAuth = false): UseAuthResult {
     // Redirect to login if auth is required but user is not authenticated
     if (requireAuth && !isAuth) {
       const returnUrl = typeof window !== "undefined" ? window.location.pathname : "/"
-      router.push(`/login?returnUrl=${encodeURIComponent(returnUrl)}`)
+      const safeReturnUrl = isSafeRedirectUrl(returnUrl) ? returnUrl : "/dashboard"
+      router.push(`/login?returnUrl=${encodeURIComponent(safeReturnUrl)}`)
     }
   }, [requireAuth, checkAuth, router])
 
@@ -60,3 +73,5 @@ export function useAuth(requireAuth = false): UseAuthResult {
     clearError,
   }
 }
+
+export { isSafeRedirectUrl }

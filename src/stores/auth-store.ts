@@ -7,30 +7,7 @@ import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import { apiPost } from "@/lib/api-client";
 import { setToken, removeToken, setUser, removeUser } from "@/lib/auth";
-
-export interface User {
-  user_id: string;
-  email: string;
-  name?: string;
-  avatar?: string;
-}
-
-export interface AuthResponse {
-  token: string;
-  user_id: string;
-  email: string;
-  name?: string;
-}
-
-interface LoginRequest {
-  email: string;
-  password: string;
-}
-
-interface SignupRequest {
-  email: string;
-  password: string;
-}
+import type { User, AuthResponse, LoginRequest, RegisterRequest } from "@/types/api";
 
 interface AuthState {
   user: User | null;
@@ -45,6 +22,16 @@ interface AuthState {
   logout: () => void;
   checkAuth: () => boolean;
   clearError: () => void;
+}
+
+function isTokenExpired(token: string): boolean {
+  try {
+    const payload = JSON.parse(atob(token.split(".")[1]));
+    if (!payload.exp) return false;
+    return payload.exp * 1000 < Date.now();
+  } catch {
+    return true;
+  }
 }
 
 export const useAuthStore = create<AuthState>()(
@@ -70,7 +57,6 @@ export const useAuthStore = create<AuthState>()(
             name: response.name,
           };
 
-          // Store in localStorage
           setToken(response.token);
           setUser(user);
 
@@ -95,7 +81,7 @@ export const useAuthStore = create<AuthState>()(
           await apiPost<AuthResponse>("/auth/register", {
             email,
             password,
-          } as SignupRequest);
+          } as RegisterRequest);
 
           set({ isLoading: false });
           return true;
@@ -122,9 +108,18 @@ export const useAuthStore = create<AuthState>()(
 
       checkAuth: () => {
         const { token } = get();
-        const isAuth = !!token;
-        set({ isAuthenticated: isAuth });
-        return isAuth;
+        if (!token) {
+          set({ isAuthenticated: false });
+          return false;
+        }
+        if (isTokenExpired(token)) {
+          removeToken();
+          removeUser();
+          set({ isAuthenticated: false, token: null, user: null });
+          return false;
+        }
+        set({ isAuthenticated: true });
+        return true;
       },
 
       clearError: () => set({ error: null }),

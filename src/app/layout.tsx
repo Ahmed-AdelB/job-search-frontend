@@ -5,10 +5,9 @@
 
 import type { Metadata, Viewport } from "next";
 import { Inter, Noto_Sans_Arabic } from "next/font/google";
-import { ThemeProvider } from "next-themes";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/sonner";
+import ClientProvider from "./client-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -39,9 +38,6 @@ export const viewport: Viewport = {
   ],
 };
 
-// Create a client-side only QueryClient provider component
-import ClientProvider from "./client-provider";
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -55,7 +51,7 @@ export default function RootLayout({
         <ClientProvider>
           <TooltipProvider delayDuration={300}>
             {children}
-            <Toaster 
+            <Toaster
               position="top-right"
               richColors
               closeButton

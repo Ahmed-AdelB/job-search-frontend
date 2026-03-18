@@ -2,33 +2,33 @@
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { User, Save } from "lucide-react";
+import { Target, Plus } from "lucide-react";
 
-export default function ProfilePage() {
+export default function TargetsPage() {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Target List</h1>
           <p className="text-muted-foreground">
-            Manage your personal information
+            Manage your target companies and roles
           </p>
         </div>
         <Button>
-          <Save className="w-4 h-4 me-2" />
-          Save Profile
+          <Plus className="w-4 h-4 me-2" />
+          Add Target
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
-          <CardDescription>Your profile details</CardDescription>
+          <CardTitle>Target Companies</CardTitle>
+          <CardDescription>Your priority job search targets</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="text-center py-12 text-muted-foreground">
-            <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>Profile form will appear here</p>
+            <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No targets added yet</p>
           </div>
         </CardContent>
       </Card>

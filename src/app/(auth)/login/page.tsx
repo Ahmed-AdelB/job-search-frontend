@@ -6,9 +6,10 @@
  */
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
+import { isSafeRedirectUrl } from "@/hooks/use-auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -32,6 +33,8 @@ export default function LoginPage() {
     return null;
   }
 
+  const searchParams = useSearchParams();
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
@@ -40,7 +43,9 @@ export default function LoginPage() {
     try {
       const success = await login(formData.email, formData.password);
       if (success) {
-        router.push("/dashboard");
+        const returnUrl = searchParams.get("returnUrl");
+        const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/dashboard";
+        router.push(redirectTo);
       }
     } finally {
       setIsLoading(false);

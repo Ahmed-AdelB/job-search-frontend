@@ -1,13 +1,18 @@
+"use client";
+
 /**
- * Topbar - Top navigation bar with search, theme toggle, and user menu
+ * Topbar Component
  * Author: Ahmed Adel Bakr Alderai
  */
 
-"use client";
-
 import { useState } from "react";
-import { Menu, Search, Sun, Moon, Globe, Bell } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/stores/auth-store";
+import { usePreferencesStore } from "@/stores/preferences-store";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,180 +20,176 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { usePreferencesStore } from "@/stores/preferences-store";
-import { useAuthStore } from "@/stores/auth-store";
-import { useI18n } from "@/hooks/useI18n";
-import { Breadcrumbs } from "./breadcrumbs";
-import { MobileNav } from "./mobile-nav";
+import {
+  Search,
+  Sun,
+  Moon,
+  Monitor,
+  Globe,
+  LogOut,
+  User,
+  Settings,
+  CreditCard,
+  Bell,
+} from "lucide-react";
 
 interface TopbarProps {
-  notificationCount?: number;
+  onMenuClick?: () => void;
 }
 
-export function Topbar({ notificationCount = 0 }: TopbarProps) {
-  const [isSearchFocused, setIsSearchFocused] = useState(false);
-  const theme = usePreferencesStore((state) => state.theme);
-  const setTheme = usePreferencesStore((state) => state.setTheme);
-  const language = usePreferencesStore((state) => state.language);
-  const toggleLanguage = usePreferencesStore((state) => state.toggleLanguage);
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const { t } = useI18n();
+export function Topbar({ onMenuClick }: TopbarProps) {
+  const router = useRouter();
+  const { user, logout } = useAuthStore();
+  const { language, theme, setLanguage, setTheme } = usePreferencesStore();
+  const [searchQuery, setSearchQuery] = useState("");
 
-  const userInitials =
-    user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
-
-  const handleThemeChange = (newTheme: string) => {
-    setTheme(newTheme as "light" | "dark" | "system");
-    // Apply theme to document
-    if (newTheme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else if (newTheme === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
-      // system - check system preference
-      const prefersDark = window.matchMedia(
-        "(prefers-color-scheme: dark)"
-      ).matches;
-      if (prefersDark) {
-        document.documentElement.classList.add("dark");
-      } else {
-        document.documentElement.classList.remove("dark");
-      }
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
+  const getInitials = (name: string) => {
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase()
+      .slice(0, 2);
+  };
+
   return (
-    <header className="fixed top-0 left-0 right-0 h-16 border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 z-40">
-      <div className="h-full px-4 sm:px-6 lg:px-8 flex items-center justify-between">
-        {/* Mobile Menu & Breadcrumbs */}
-        <div className="flex items-center gap-4 flex-1 min-w-0">
-          <div className="md:hidden">
-            <MobileNav />
-          </div>
-          <div className="hidden md:block flex-1 min-w-0">
-            <Breadcrumbs />
-          </div>
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card/80 backdrop-blur px-4 sm:px-6">
+      {/* Search */}
+      <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:block">
+        <div className="relative">
+          <Search className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <Input
+            type="search"
+            placeholder="Search jobs, contacts, applications..."
+            className="ps-10"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
         </div>
+      </form>
 
-        {/* Search (Desktop) */}
-        <div className="hidden sm:flex items-center flex-1 max-w-sm mx-4">
-          <div className="relative w-full">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder={t("common.search") || "Search..."}
-              className="pl-10 bg-muted/50 border-0 focus-visible:bg-background"
-              onFocus={() => setIsSearchFocused(true)}
-              onBlur={() => setIsSearchFocused(false)}
-            />
-          </div>
-        </div>
+      <div className="flex-1 sm:hidden" />
 
-        {/* Right Actions */}
-        <div className="flex items-center gap-2 sm:gap-4">
-          {/* Theme Toggle */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                {theme === "dark" ? (
-                  <Moon className="h-4 w-4" />
-                ) : (
-                  <Sun className="h-4 w-4" />
-                )}
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel className="text-xs text-muted-foreground">
-                {t("common.theme") || "Theme"}
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleThemeChange("light")}>
-                <Sun className="h-4 w-4 mr-2" />
-                {t("common.light") || "Light"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleThemeChange("dark")}>
-                <Moon className="h-4 w-4 mr-2" />
-                {t("common.dark") || "Dark"}
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => handleThemeChange("system")}>
-                <Globe className="h-4 w-4 mr-2" />
-                {t("common.system") || "System"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+      {/* Actions */}
+      <div className="flex items-center gap-2">
+        {/* Language Toggle */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Globe className="w-4 h-4" />
+              <span className="sr-only">Toggle language</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Language</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup value={language} onValueChange={(v) => setLanguage(v as "en" | "ar")}>
+              <DropdownMenuRadioItem value="en">English</DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="ar">العربية</DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Language Toggle */}
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleLanguage}
-            className="h-9 w-9 p-0 hidden sm:inline-flex"
-            title={language === "en" ? "العربية" : "English"}
-          >
-            <Globe className="h-4 w-4" />
-          </Button>
+        {/* Theme Toggle */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              {theme === "light" && <Sun className="w-4 h-4" />}
+              {theme === "dark" && <Moon className="w-4 h-4" />}
+              {theme === "system" && <Monitor className="w-4 h-4" />}
+              <span className="sr-only">Toggle theme</span>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Theme</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuRadioGroup value={theme} onValueChange={(v) => setTheme(v as "light" | "dark" | "system")}>
+              <DropdownMenuRadioItem value="light">
+                <Sun className="w-4 h-4 me-2" />
+                Light
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="dark">
+                <Moon className="w-4 h-4 me-2" />
+                Dark
+              </DropdownMenuRadioItem>
+              <DropdownMenuRadioItem value="system">
+                <Monitor className="w-4 h-4 me-2" />
+                System
+              </DropdownMenuRadioItem>
+            </DropdownMenuRadioGroup>
+          </DropdownMenuContent>
+        </DropdownMenu>
 
-          {/* Notifications */}
-          <Button variant="ghost" size="sm" className="h-9 w-9 p-0 relative">
-            <Bell className="h-4 w-4" />
-            {notificationCount > 0 && (
-              <Badge
-                variant="destructive"
-                className="absolute -top-2 -right-2 h-5 w-5 flex items-center justify-center p-0 text-xs"
-              >
-                {notificationCount > 9 ? "9+" : notificationCount}
-              </Badge>
-            )}
-          </Button>
+        {/* Notifications */}
+        <Button variant="ghost" size="icon" className="h-9 w-9 relative">
+          <Bell className="w-4 h-4" />
+          <span className="absolute top-1 end-1 w-2 h-2 bg-red-500 rounded-full" />
+          <span className="sr-only">Notifications</span>
+        </Button>
 
-          {/* User Menu */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm" className="h-9 w-9 p-0">
-                <Avatar className="h-8 w-8">
-                  <AvatarFallback className="text-xs">
-                    {userInitials}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>
-                <div className="flex flex-col gap-1">
-                  <p className="text-sm font-medium">{user?.name || "User"}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email}</p>
-                </div>
-              </DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <a href="/dashboard/profile">{t("nav.profile") || "Profile"}</a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="/dashboard/settings">
-                  {t("nav.settings") || "Settings"}
-                </a>
-              </DropdownMenuItem>
-              <DropdownMenuItem asChild>
-                <a href="/dashboard/billing">{t("nav.billing") || "Billing"}</a>
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                onClick={logout}
-                className="text-destructive focus:text-destructive"
-              >
-                {t("auth.logoutSuccess") || "Logout"}
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
+        {/* User Menu */}
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+              <Avatar className="h-9 w-9">
+                <AvatarImage src={user?.avatar} alt={user?.email} />
+                <AvatarFallback>
+                  {user?.name ? getInitials(user.name) : user?.email?.[0]?.toUpperCase() || "U"}
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="w-56" align="end" forceMount>
+            <DropdownMenuLabel className="font-normal">
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium">{user?.name || "User"}</p>
+                <p className="text-xs text-muted-foreground truncate">
+                  {user?.email}
+                </p>
+              </div>
+            </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/profile" className="cursor-pointer">
+                <User className="w-4 h-4 me-2" />
+                Profile
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/settings" className="cursor-pointer">
+                <Settings className="w-4 h-4 me-2" />
+                Settings
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href="/dashboard/billing" className="cursor-pointer">
+                <CreditCard className="w-4 h-4 me-2" />
+                Billing
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={logout}
+              className="cursor-pointer text-red-600 focus:text-red-600"
+            >
+              <LogOut className="w-4 h-4 me-2" />
+              Log out
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     </header>
   );

@@ -548,3 +548,169 @@ export interface RemoteScore {
   remote_type: "remote" | "hybrid" | "onsite";
   reasoning: string;
 }
+
+// ============================================================================
+// Analytics (Backend Response Types)
+// ============================================================================
+
+// Overview metrics
+export interface AnalyticsOverview {
+  total_jobs_discovered: number;
+  total_applications: number;
+  response_rate: number;
+  interview_count: number;
+  offer_count: number;
+  acceptance_rate: number;
+  active_applications: number;
+  rejection_rate: number;
+}
+
+// Funnel stage
+export interface FunnelStage {
+  stage: string;
+  count: number;
+  percentage: number;
+}
+
+// Funnel metrics
+export interface FunnelMetrics {
+  stages: FunnelStage[];
+  conversion_to_offer: number;
+}
+
+// Timeline entry
+export interface TimelineEntry {
+  date: string;
+  applications: number;
+  responses: number;
+  interviews: number;
+}
+
+// Timeline metrics
+export interface TimelineMetrics {
+  entries: TimelineEntry[];
+  total_applications: number;
+  daily_average: number;
+}
+
+// For backwards compatibility with existing page, expose FunnelData
+export interface FunnelData extends FunnelStage {}
+
+// For backwards compatibility with existing page, expose TimelineData
+export interface TimelineData extends TimelineEntry {
+  jobs_discovered?: number;
+  offers?: number;
+}
+
+// ============================================================================
+// Missing Types (required by hooks)
+// ============================================================================
+
+// Job Filters and Response
+export interface JobFilters {
+  status?: string;
+  source?: string;
+  min_score?: number;
+  remote_type?: string;
+  search?: string;
+  page?: number;
+  per_page?: number;
+  sort_by?: string;
+  sort_order?: "asc" | "desc";
+}
+
+export interface JobsResponse {
+  jobs: Job[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+// Application Response
+export interface ApplicationsResponse {
+  applications: Application[];
+  total: number;
+  page: number;
+  per_page: number;
+}
+
+// Agent Action
+export interface AgentAction {
+  agent_id: string;
+  action: "start" | "stop" | "pause" | "resume" | "restart";
+  status: string;
+}
+
+// Pipeline
+export interface PipelineStatus {
+  phase: string;
+  status: "idle" | "running" | "completed" | "error";
+  progress: number;
+  started_at?: string;
+  completed_at?: string;
+}
+
+export interface PipelineStats {
+  jobs_discovered: number;
+  jobs_applied: number;
+  applications_in_progress: number;
+  interviews_scheduled: number;
+  offers_received: number;
+  success_rate: number;
+}
+
+// Settings
+export interface PipelineSettings {
+  auto_apply_enabled: boolean;
+  min_match_score: number;
+  max_applications_per_day: number;
+  preferred_locations: string[];
+  excluded_companies: string[];
+  remote_types: string[];
+  [key: string]: unknown;
+}
+
+// Deploy
+export interface DeployStatus {
+  version: string;
+  status: "running" | "deploying" | "failed" | "stopped";
+  uptime: string;
+  last_deploy: string;
+}
+
+// Logs
+export interface LogEntry {
+  id: string;
+  timestamp: string;
+  level: "DEBUG" | "INFO" | "WARNING" | "ERROR" | "CRITICAL";
+  agent?: string;
+  message: string;
+  context?: Record<string, unknown>;
+}
+
+// SSE
+export interface SSEEvent {
+  type: string;
+  data: unknown;
+  timestamp: string;
+}
+
+// Admin
+export interface Tenant {
+  id: string;
+  name: string;
+  plan: string;
+  status: "active" | "suspended" | "cancelled";
+  created_at: string;
+}
+
+// Notifications
+export interface Notification {
+  id: string;
+  type: "info" | "success" | "warning" | "error";
+  title: string;
+  message: string;
+  read: boolean;
+  action_url?: string;
+  created_at: string;
+}

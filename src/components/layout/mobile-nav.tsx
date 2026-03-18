@@ -1,321 +1,136 @@
+"use client";
+
 /**
- * Mobile Navigation - Sheet-based mobile navigation menu
+ * Mobile Navigation Component
  * Author: Ahmed Adel Bakr Alderai
  */
-
-"use client";
 
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { Separator } from "@/components/ui/separator";
-import { ScrollArea } from "@/components/ui/scroll-area";
-import { useI18n } from "@/hooks/useI18n";
-import { useAuthStore } from "@/stores/auth-store";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
-import { getNavKey } from "@/lib/nav-keys";
-import {
-  LayoutDashboard,
-  Briefcase,
-  FileCheck,
-  Bot,
-  Users,
-  MessageSquare,
-  UserCheck,
-  Video,
-  BarChart3,
-  Zap,
-  ListTodo,
-  Target,
-  User,
-  Settings,
-  CreditCard,
-  Code,
-  Terminal,
-  Bell,
-  Shield,
-} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { Menu, Zap, LayoutDashboard, Briefcase, Bot, FileText, Calendar, Users, Mail, BarChart3, Brain, Settings, CreditCard, User, Rocket, FileClock, Shield, UsersRound, MailOpen, Target, ListFilter, Bell } from "lucide-react";
 
-interface NavItem {
-  label: string;
-  href: string;
-  icon: React.ReactNode;
-  group: "main" | "people" | "insights" | "account" | "system";
-  adminOnly?: boolean;
-}
-
-const NAV_ITEMS: NavItem[] = [
-  // MAIN
-  {
-    label: "Dashboard",
-    href: "/dashboard",
-    icon: <LayoutDashboard className="h-5 w-5" />,
-    group: "main",
-  },
-  {
-    label: "Jobs",
-    href: "/dashboard/jobs",
-    icon: <Briefcase className="h-5 w-5" />,
-    group: "main",
-  },
-  {
-    label: "Applications",
-    href: "/dashboard/applications",
-    icon: <FileCheck className="h-5 w-5" />,
-    group: "main",
-  },
-  {
-    label: "Agents",
-    href: "/dashboard/agents",
-    icon: <Bot className="h-5 w-5" />,
-    group: "main",
-  },
-
-  // PEOPLE
-  {
-    label: "Contacts",
-    href: "/dashboard/contacts",
-    icon: <Users className="h-5 w-5" />,
-    group: "people",
-  },
-  {
-    label: "Outreach",
-    href: "/dashboard/outreach",
-    icon: <MessageSquare className="h-5 w-5" />,
-    group: "people",
-  },
-  {
-    label: "Recruiters",
-    href: "/dashboard/recruiters",
-    icon: <UserCheck className="h-5 w-5" />,
-    group: "people",
-  },
-  {
-    label: "Interviews",
-    href: "/dashboard/interviews",
-    icon: <Video className="h-5 w-5" />,
-    group: "people",
-  },
-
-  // INSIGHTS
-  {
-    label: "Analytics",
-    href: "/dashboard/analytics",
-    icon: <BarChart3 className="h-5 w-5" />,
-    group: "insights",
-  },
-  {
-    label: "Intelligence",
-    href: "/dashboard/intelligence",
-    icon: <Zap className="h-5 w-5" />,
-    group: "insights",
-  },
-  {
-    label: "Target List",
-    href: "/dashboard/target-list",
-    icon: <Target className="h-5 w-5" />,
-    group: "insights",
-  },
-  {
-    label: "Triage",
-    href: "/dashboard/triage",
-    icon: <ListTodo className="h-5 w-5" />,
-    group: "insights",
-  },
-
-  // ACCOUNT
-  {
-    label: "Profile",
-    href: "/dashboard/profile",
-    icon: <User className="h-5 w-5" />,
-    group: "account",
-  },
-  {
-    label: "Settings",
-    href: "/dashboard/settings",
-    icon: <Settings className="h-5 w-5" />,
-    group: "account",
-  },
-  {
-    label: "Billing",
-    href: "/dashboard/billing",
-    icon: <CreditCard className="h-5 w-5" />,
-    group: "account",
-  },
-
-  // SYSTEM
-  {
-    label: "Deploy",
-    href: "/dashboard/deploy",
-    icon: <Code className="h-5 w-5" />,
-    group: "system",
-  },
-  {
-    label: "Logs",
-    href: "/dashboard/logs",
-    icon: <Terminal className="h-5 w-5" />,
-    group: "system",
-  },
-  {
-    label: "Notifications",
-    href: "/dashboard/notifications",
-    icon: <Bell className="h-5 w-5" />,
-    group: "system",
-  },
-  {
-    label: "Admin",
-    href: "/dashboard/admin",
-    icon: <Shield className="h-5 w-5" />,
-    group: "system",
-    adminOnly: true,
-  },
-];
-
-const GROUP_LABELS: Record<string, string> = {
-  main: "Main",
-  people: "People",
-  insights: "Insights",
-  account: "Account",
-  system: "System",
-};
-
-interface MobileNavProps {
-  isAdmin?: boolean;
-}
-
-export function MobileNav({ isAdmin = false }: MobileNavProps) {
-  const [isOpen, setIsOpen] = useState(false);
+export function MobileNav() {
+  const [open, setOpen] = useState(false);
   const pathname = usePathname();
-  const user = useAuthStore((state) => state.user);
-  const logout = useAuthStore((state) => state.logout);
-  const { t } = useI18n();
 
-  const filteredItems = NAV_ITEMS.filter(
-    (item) => !item.adminOnly || isAdmin
-  );
-
-  const groupedItems = filteredItems.reduce(
-    (acc, item) => {
-      if (!acc[item.group]) {
-        acc[item.group] = [];
-      }
-      acc[item.group].push(item);
-      return acc;
-    },
-    {} as Record<string, NavItem[]>
-  );
-
-  const isActive = (href: string): boolean => {
-    if (href === "/dashboard") {
-      return pathname === "/dashboard";
+  const isActive = (path: string) => {
+    if (path === "/dashboard") {
+      return pathname === "/dashboard" || pathname === "/dashboard/";
     }
-    return pathname.startsWith(href);
+    return pathname.startsWith(path);
   };
 
-  const userInitials =
-    user?.name
-      ?.split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+  const NavLink = ({ href, icon: Icon, label, onClick }: { href: string; icon: React.ElementType; label: string; onClick?: () => void }) => (
+    <Link
+      href={href}
+      onClick={onClick}
+      className={cn(
+        "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-colors",
+        isActive(href)
+          ? "bg-primary text-primary-foreground"
+          : "text-muted-foreground hover:bg-muted hover:text-foreground"
+      )}
+    >
+      <Icon className="w-5 h-5 shrink-0" />
+      <span className="flex-1">{label}</span>
+    </Link>
+  );
 
   return (
-    <Sheet open={isOpen} onOpenChange={setIsOpen}>
+    <Sheet open={open} onOpenChange={setOpen}>
       <SheetTrigger asChild>
-        <Button variant="ghost" size="sm" className="h-9 w-9 p-0 md:hidden">
-          <Menu className="h-5 w-5" />
+        <Button variant="ghost" size="icon" className="lg:hidden">
+          <Menu className="w-5 h-5" />
+          <span className="sr-only">Open menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="left" className="p-0 w-64 flex flex-col">
-        {/* App Name */}
-        <div className="h-16 flex items-center px-4 border-b border-border">
-          <h2 className="font-bold text-lg">JobFlow</h2>
-        </div>
-
-        {/* User Section */}
-        <div className="px-4 py-4 border-b border-border">
-          <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="text-xs">
-                {userInitials}
-              </AvatarFallback>
-            </Avatar>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">
-                {user?.name || user?.email}
-              </p>
-              <p className="text-xs text-muted-foreground truncate">
-                {user?.email}
-              </p>
-            </div>
+      <SheetContent side="start" className="w-72 p-0">
+        <div className="flex flex-col h-full">
+          {/* Logo */}
+          <div className="flex h-16 items-center px-4 border-b">
+            <Link href="/dashboard" className="flex items-center gap-2" onClick={() => setOpen(false)}>
+              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center shrink-0">
+                <Zap className="w-5 h-5 text-white" />
+              </div>
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                JobFlow
+              </span>
+            </Link>
           </div>
-        </div>
 
-        {/* Navigation */}
-        <ScrollArea className="flex-1">
-          <nav className="px-2 py-4 space-y-6">
-            {(["main", "people", "insights", "account", "system"] as const).map(
-              (group) => {
-                const items = groupedItems[group];
-                if (!items || items.length === 0) return null;
+          {/* Navigation */}
+          <ScrollArea className="flex-1 py-4">
+            <nav className="space-y-6 px-3">
+              {/* Overview */}
+              <div className="space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Overview
+                </h3>
+                <NavLink href="/dashboard" icon={LayoutDashboard} label="Dashboard" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/analytics" icon={BarChart3} label="Analytics" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/notifications" icon={Bell} label="Notifications" onClick={() => setOpen(false)} />
+              </div>
 
-                return (
-                  <div key={group}>
-                    <h3 className="px-2 text-xs font-semibold text-muted-foreground/70 uppercase tracking-wider">
-                      {GROUP_LABELS[group]}
-                    </h3>
-                    <div className="space-y-1 mt-2">
-                      {items.map((item) => {
-                        const active = isActive(item.href);
-                        const navKey = getNavKey(item.label);
-                        const translatedLabel = t(`nav.${navKey}`) || item.label;
+              <Separator />
 
-                        return (
-                          <Link
-                            key={item.href}
-                            href={item.href}
-                            onClick={() => setIsOpen(false)}
-                          >
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className={cn(
-                                "w-full justify-start gap-3 px-3",
-                                active &&
-                                  "bg-accent text-accent-foreground"
-                              )}
-                            >
-                              {item.icon}
-                              <span>{translatedLabel}</span>
-                            </Button>
-                          </Link>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              }
-            )}
-          </nav>
-        </ScrollArea>
+              {/* Jobs */}
+              <div className="space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Jobs
+                </h3>
+                <NavLink href="/dashboard/jobs" icon={Briefcase} label="Jobs" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/applications" icon={FileText} label="Applications" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/triage" icon={ListFilter} label="Triage" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/targets" icon={Target} label="Target List" onClick={() => setOpen(false)} />
+              </div>
 
-        {/* Logout Button */}
-        <div className="border-t border-border p-4">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => {
-              setIsOpen(false);
-              logout();
-            }}
-            className="w-full"
-          >
-            {t("auth.logoutSuccess") || "Logout"}
-          </Button>
+              <Separator />
+
+              {/* CRM */}
+              <div className="space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  CRM
+                </h3>
+                <NavLink href="/dashboard/contacts" icon={Users} label="Contacts" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/recruiters" icon={User} label="Recruiters" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/outreach" icon={Mail} label="Outreach" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/invitations" icon={MailOpen} label="Invitations" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/interviews" icon={Calendar} label="Interviews" onClick={() => setOpen(false)} />
+              </div>
+
+              <Separator />
+
+              {/* Intelligence */}
+              <div className="space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Intelligence
+                </h3>
+                <NavLink href="/dashboard/agents" icon={Bot} label="Agents" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/intelligence" icon={Brain} label="Intelligence" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/community" icon={UsersRound} label="Community" onClick={() => setOpen(false)} />
+              </div>
+
+              <Separator />
+
+              {/* Admin */}
+              <div className="space-y-1">
+                <h3 className="px-3 text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                  Admin
+                </h3>
+                <NavLink href="/dashboard/deploy" icon={Rocket} label="Deploy" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/logs" icon={FileClock} label="Logs" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/admin" icon={Shield} label="Admin" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/settings" icon={Settings} label="Settings" onClick={() => setOpen(false)} />
+                <NavLink href="/dashboard/billing" icon={CreditCard} label="Billing" onClick={() => setOpen(false)} />
+              </div>
+            </nav>
+          </ScrollArea>
         </div>
       </SheetContent>
     </Sheet>

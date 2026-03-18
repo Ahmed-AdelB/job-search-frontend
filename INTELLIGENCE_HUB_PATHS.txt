@@ -1,0 +1,48 @@
+INTELLIGENCE HUB - FILE PATHS
+==============================
+
+ABSOLUTE PATHS FOR ALL FILES CREATED:
+
+Components & Pages:
+/Users/aadel/projects/17jobsearch/frontend/src/app/(dashboard)/intelligence/page.tsx
+/Users/aadel/projects/17jobsearch/frontend/src/app/(dashboard)/intelligence/skills/page.tsx
+/Users/aadel/projects/17jobsearch/frontend/src/app/(dashboard)/intelligence/visa/page.tsx
+/Users/aadel/projects/17jobsearch/frontend/src/app/(dashboard)/intelligence/salary/page.tsx
+/Users/aadel/projects/17jobsearch/frontend/src/app/(dashboard)/intelligence/remote/page.tsx
+
+Hooks & Types:
+/Users/aadel/projects/17jobsearch/frontend/src/hooks/use-intelligence.ts
+/Users/aadel/projects/17jobsearch/frontend/src/hooks/index.ts (UPDATED)
+/Users/aadel/projects/17jobsearch/frontend/src/types/api.ts (UPDATED)
+
+Documentation:
+/Users/aadel/projects/17jobsearch/frontend/INTELLIGENCE_HUB_SUMMARY.md
+/Users/aadel/projects/17jobsearch/frontend/INTELLIGENCE_HUB_DEPENDENCIES.md
+/Users/aadel/projects/17jobsearch/frontend/INTELLIGENCE_HUB_PATHS.txt
+
+ROUTE PATHS:
+/intelligence              - Hub dashboard
+/intelligence/skills       - Skills gap analysis
+/intelligence/visa         - Visa eligibility
+/intelligence/salary       - Salary benchmark
+/intelligence/remote       - Remote flexibility
+
+HOOK IMPORTS:
+import {
+  useSkillGap,
+  useSkillRecommendations,
+  useVisaScore,
+  useEligibleOccupations,
+  useSalaryBenchmark,
+  useSalaryReport,
+  useRemoteScore,
+  useSalaryReportPDF,
+} from "@/hooks/use-intelligence"
+
+TYPE IMPORTS:
+import type {
+  SkillGapAnalysis,
+  VisaScore,
+  SalaryBenchmark,
+  RemoteScore,
+} from "@/types/api"

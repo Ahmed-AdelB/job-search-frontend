@@ -1,505 +1,547 @@
+"use client";
+
+import React, { useState } from "react";
+import {
+  ColumnDef,
+  flexRender,
+  getCoreRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  SortingState,
+  useReactTable,
+} from "@tanstack/react-table";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
+import { StatusBadge } from "@/components/shared/status-badge";
+import { StatSkeleton, TableSkeleton } from "@/components/shared/loading-skeleton";
+import { Mail, Plus, MoreHorizontal, Send, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useOutreachStats, useOutreachMessages, useSendMessage } from "@/hooks/use-outreach";
+import type { OutreachMessage, OutreachStats } from "@/types/api";
+import { toast } from "sonner";
+
 /**
- * Outreach Management Page
- * Author: Ahmed Adel Bakr Alderai
+ * Stats Card Component
  */
-
-"use client"
-
-import { useState, useMemo } from "react"
-import {
-  useOutreachStats,
-  useOutreachMessages,
-  useSendMessage,
-  useOutreachTemplates,
-  useResendMessage,
-  useContacts,
-} from "@/hooks"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { TableSkeleton } from "@/components/shared/loading-skeleton"
-import { StatusBadge } from "@/components/shared/status-badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
-import { Checkbox } from "@/components/ui/checkbox"
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
-import { MoreHorizontal, Plus, Send, Loader2, Inbox } from "lucide-react"
-import type { OutreachMessage } from "@/types/api"
-
-interface ComposeFormProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function ComposeDialog({ open, onOpenChange }: ComposeFormProps) {
-  const { data: contacts } = useContacts({ per_page: 100 })
-  const { data: templates } = useOutreachTemplates()
-  const sendMessage = useSendMessage()
-
-  const [selectedContact, setSelectedContact] = useState<string | null>(null)
-  const [selectedTemplate, setSelectedTemplate] = useState("")
-  const [subject, setSubject] = useState("")
-  const [body, setBody] = useState("")
-  const [saveDraft, setSaveDraft] = useState(false)
-
-  const handleTemplateChange = (templateId: string) => {
-    setSelectedTemplate(templateId)
-    const template = templates?.find((t) => t.id === templateId)
-    if (template) {
-      setSubject(template.subject)
-      setBody(template.body)
-    }
-  }
-
-  const handleSubmit = () => {
-    if (!selectedContact || !subject || !body) {
-      alert("Please fill in all required fields")
-      return
-    }
-
-    sendMessage.mutate(
-      {
-        contact_id: selectedContact,
-        message_type: "initial",
-        subject,
-        body,
-        save_as_draft: saveDraft,
-      },
-      {
-        onSuccess: () => {
-          setSelectedContact(null)
-          setSelectedTemplate("")
-          setSubject("")
-          setBody("")
-          setSaveDraft(false)
-          onOpenChange(false)
-        },
-      }
-    )
+function StatsCard({
+  title,
+  value,
+  description,
+  isLoading,
+}: {
+  title: string;
+  value: string | number;
+  description?: string;
+  isLoading?: boolean;
+}) {
+  if (isLoading) {
+    return <StatSkeleton />;
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-2xl">
+    <Card className="bg-background/50 backdrop-blur-sm">
+      <CardHeader className="pb-3">
+        <CardDescription className="text-xs font-medium uppercase tracking-wide">
+          {title}
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <div className="space-y-1">
+          <div className="text-2xl font-bold">{value}</div>
+          {description && (
+            <p className="text-xs text-muted-foreground">{description}</p>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Campaign Type Badge
+ */
+function CampaignTypeBadge({ type }: { type: string }) {
+  const typeConfig: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  > = {
+    cold_email: { label: "Cold Email", variant: "secondary" },
+    follow_up: { label: "Follow-up", variant: "outline" },
+    networking: { label: "Networking", variant: "default" },
+    thank_you: { label: "Thank You", variant: "outline" },
+  };
+
+  const config = typeConfig[type] || { label: type, variant: "outline" };
+  return <Badge variant={config.variant}>{config.label}</Badge>;
+}
+
+/**
+ * Message Status Badge with color coding
+ */
+function MessageStatusBadge({ status }: { status: string }) {
+  const statusConfig: Record<
+    string,
+    { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
+  > = {
+    draft: { label: "Draft", variant: "secondary" },
+    sent: { label: "Sent", variant: "outline" },
+    delivered: { label: "Delivered", variant: "outline" },
+    opened: { label: "Opened", variant: "default" },
+    replied: { label: "Replied", variant: "default" },
+    bounced: { label: "Bounced", variant: "destructive" },
+  };
+
+  const config = statusConfig[status] || { label: status, variant: "outline" };
+  return <Badge variant={config.variant}>{config.label}</Badge>;
+}
+
+/**
+ * New Campaign Dialog
+ */
+function NewCampaignDialog() {
+  const [open, setOpen] = useState(false);
+  const [formData, setFormData] = useState({
+    name: "",
+    type: "cold_email",
+    subject: "",
+    body: "",
+  });
+
+  const sendMessage = useSendMessage();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!formData.name || !formData.subject || !formData.body) {
+      toast.error("Please fill in all fields");
+      return;
+    }
+
+    try {
+      await sendMessage.mutateAsync({
+        contact_id: "", // Will be populated per contact in production
+        message_type: formData.type,
+        subject: formData.subject,
+        body: formData.body,
+        save_as_draft: true,
+      });
+      setOpen(false);
+      setFormData({
+        name: "",
+        type: "cold_email",
+        subject: "",
+        body: "",
+      });
+    } catch (error) {
+      console.error("Failed to create campaign:", error);
+    }
+  };
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          New Campaign
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>Compose Message</DialogTitle>
+          <DialogTitle>Create New Campaign</DialogTitle>
           <DialogDescription>
-            Send a new outreach message to a contact
+            Set up a new outreach campaign to contact your network
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
-          {/* Select Contact */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Contact</label>
-            <Select value={selectedContact || ""} onValueChange={setSelectedContact}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select a contact" />
-              </SelectTrigger>
-              <SelectContent>
-                {contacts?.contacts?.map((contact) => (
-                  <SelectItem key={contact.linkedin_id} value={contact.linkedin_id}>
-                    {contact.first_name} {contact.last_name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Select Template */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Template (Optional)</label>
-            <Select value={selectedTemplate} onValueChange={handleTemplateChange}>
-              <SelectTrigger>
-                <SelectValue placeholder="Choose a template" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="">None</SelectItem>
-                {templates?.map((template) => (
-                  <SelectItem key={template.id} value={template.id}>
-                    {template.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Subject */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Subject</label>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="campaign-name">Campaign Name</Label>
             <Input
-              placeholder="Message subject"
-              value={subject}
-              onChange={(e) => setSubject(e.target.value)}
+              id="campaign-name"
+              placeholder="e.g., Q1 Recruiter Outreach"
+              value={formData.name}
+              onChange={(e) =>
+                setFormData({ ...formData, name: e.target.value })
+              }
             />
           </div>
 
-          {/* Body */}
-          <div>
-            <label className="text-sm font-medium mb-2 block">Message</label>
+          <div className="space-y-2">
+            <Label htmlFor="campaign-type">Campaign Type</Label>
+            <select
+              id="campaign-type"
+              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+              value={formData.type}
+              onChange={(e) =>
+                setFormData({ ...formData, type: e.target.value })
+              }
+            >
+              <option value="cold_email">Cold Email</option>
+              <option value="follow_up">Follow-up</option>
+              <option value="networking">Networking</option>
+              <option value="thank_you">Thank You</option>
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email-subject">Email Subject</Label>
+            <Input
+              id="email-subject"
+              placeholder="Subject line for your emails"
+              value={formData.subject}
+              onChange={(e) =>
+                setFormData({ ...formData, subject: e.target.value })
+              }
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="email-body">Email Body</Label>
             <Textarea
-              placeholder="Write your message..."
-              value={body}
-              onChange={(e) => setBody(e.target.value)}
+              id="email-body"
+              placeholder="Email content (support {{firstName}}, {{lastName}}, {{company}} variables)"
               className="min-h-32"
+              value={formData.body}
+              onChange={(e) =>
+                setFormData({ ...formData, body: e.target.value })
+              }
             />
           </div>
 
-          {/* Save as Draft Checkbox */}
-          <div className="flex items-center gap-2">
-            <Checkbox
-              id="save-draft"
-              checked={saveDraft}
-              onCheckedChange={(checked) => setSaveDraft(!!checked)}
-            />
-            <label htmlFor="save-draft" className="text-sm font-medium">
-              Save as draft instead of sending
-            </label>
-          </div>
-
-          {/* Actions */}
-          <div className="flex gap-2 justify-end pt-4">
-            <Button variant="outline" onClick={() => onOpenChange(false)}>
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
               Cancel
             </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={sendMessage.isPending}
-            >
-              {sendMessage.isPending ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Sending...
-                </>
-              ) : (
-                <>
-                  <Send className="mr-2 h-4 w-4" />
-                  {saveDraft ? "Save Draft" : "Send"}
-                </>
-              )}
+            <Button type="submit" disabled={sendMessage.isPending}>
+              {sendMessage.isPending ? "Creating..." : "Create Campaign"}
             </Button>
           </div>
-        </div>
+        </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }
 
-interface OutreachMessageRowProps {
-  message: OutreachMessage
-}
+/**
+ * Messages Queue Table
+ */
+function MessagesQueueTable() {
+  const [sorting, setSorting] = useState<SortingState>([]);
+  const { data: messagesData, isLoading, error } = useOutreachMessages({
+    status: "draft",
+    per_page: 10,
+  });
 
-function OutreachMessageRow({ message }: OutreachMessageRowProps) {
-  const resendMessage = useResendMessage()
+  const messages = messagesData?.messages || [];
 
-  const handleResend = () => {
-    if (message.status === "draft") {
-      alert("Cannot resend a draft message")
-      return
-    }
-    resendMessage.mutate(message.message_id)
+  const columns: ColumnDef<OutreachMessage>[] = [
+    {
+      accessorKey: "subject",
+      header: "Subject",
+      cell: ({ row }) => (
+        <div className="max-w-xs truncate font-medium">
+          {row.getValue("subject")}
+        </div>
+      ),
+    },
+    {
+      accessorKey: "message_type",
+      header: "Type",
+      cell: ({ row }) => {
+        const type = row.getValue("message_type") as string;
+        const typeLabel = type.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
+        return <Badge variant="outline">{typeLabel}</Badge>;
+      },
+    },
+    {
+      accessorKey: "status",
+      header: "Status",
+      cell: ({ row }) => (
+        <MessageStatusBadge status={row.getValue("status") as string} />
+      ),
+    },
+    {
+      id: "actions",
+      header: "Actions",
+      cell: ({ row }) => {
+        const message = row.original;
+        return (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="ghost" size="sm">
+                <MoreHorizontal className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              <DropdownMenuItem>
+                <Send className="w-4 h-4 mr-2" />
+                Send Now
+              </DropdownMenuItem>
+              <DropdownMenuItem>Edit</DropdownMenuItem>
+              <DropdownMenuItem className="text-destructive">
+                Delete
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        );
+      },
+    },
+  ];
+
+  const table = useReactTable({
+    data: messages,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    state: {
+      sorting,
+    },
+    onSortingChange: setSorting,
+  });
+
+  if (error) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertDescription>
+          Failed to load message queue. Please try again.
+        </AlertDescription>
+      </Alert>
+    );
+  }
+
+  if (isLoading) {
+    return <TableSkeleton rows={5} />;
+  }
+
+  if (messages.length === 0) {
+    return (
+      <div className="text-center py-12 text-muted-foreground">
+        <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
+        <p>No pending messages</p>
+      </div>
+    );
   }
 
   return (
-    <tr className="border-b border-border hover:bg-muted/50 transition">
-      <td className="px-6 py-4">
-        <Checkbox aria-label="Select message" />
-      </td>
-      <td className="px-6 py-4">
-        <div className="text-sm font-medium">{message.contact_id}</div>
-      </td>
-      <td className="px-6 py-4">
-        <div className="text-sm">{message.subject}</div>
-      </td>
-      <td className="px-6 py-4">
-        <StatusBadge status={message.status} />
-      </td>
-      <td className="px-6 py-4">
+    <div className="border rounded-lg">
+      <Table>
+        <TableHeader>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <TableRow key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <TableHead key={header.id}>
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                </TableHead>
+              ))}
+            </TableRow>
+          ))}
+        </TableHeader>
+        <TableBody>
+          {table.getRowModel().rows.map((row) => (
+            <TableRow key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <TableCell key={cell.id}>
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </TableCell>
+              ))}
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+
+      {/* Pagination */}
+      <div className="flex items-center justify-between p-4 border-t">
         <div className="text-sm text-muted-foreground">
-          {message.sent_at
-            ? new Date(message.sent_at).toLocaleDateString()
-            : "Not sent"}
+          Page {table.getState().pagination.pageIndex + 1} of{" "}
+          {table.getPageCount()}
         </div>
-      </td>
-      <td className="px-6 py-4">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" className="h-8 w-8 p-0">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleResend}>
-              Resend
-            </DropdownMenuItem>
-            <DropdownMenuItem className="text-destructive">
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </td>
-    </tr>
-  )
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.previousPage()}
+            disabled={!table.getCanPreviousPage()}
+          >
+            Previous
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => table.nextPage()}
+            disabled={!table.getCanNextPage()}
+          >
+            Next
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// Mock data for charts
-const chartData = [
-  { date: "Mar 1", openRate: 12, replyRate: 4 },
-  { date: "Mar 2", openRate: 19, replyRate: 5 },
-  { date: "Mar 3", openRate: 15, replyRate: 3 },
-  { date: "Mar 4", openRate: 25, replyRate: 8 },
-  { date: "Mar 5", openRate: 22, replyRate: 7 },
-  { date: "Mar 6", openRate: 30, replyRate: 10 },
-  { date: "Mar 7", openRate: 28, replyRate: 9 },
-]
-
-const messageTypeData = [
-  { type: "Initial", count: 45, openRate: 25 },
-  { type: "Follow-up 1", count: 32, openRate: 35 },
-  { type: "Follow-up 2", count: 18, openRate: 40 },
-  { type: "Thank you", count: 12, openRate: 50 },
-]
-
+/**
+ * Main Outreach Page
+ */
 export default function OutreachPage() {
-  const [composeOpen, setComposeOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState("queue")
-  const { data: stats, isLoading: statsLoading } = useOutreachStats()
-  const { data: messages, isLoading: messagesLoading } = useOutreachMessages({
-    status: activeTab === "queue" ? "draft" : activeTab === "sent" ? "sent" : undefined,
-  })
+  const { data: statsData, isLoading: statsLoading } = useOutreachStats();
 
-  // Filter messages by status
-  const filteredMessages = useMemo(() => {
-    if (!messages?.messages) return []
-
-    if (activeTab === "queue") {
-      return messages.messages.filter((m) => m.status === "draft")
-    } else if (activeTab === "sent") {
-      return messages.messages.filter((m) => ["sent", "delivered"].includes(m.status))
-    } else if (activeTab === "replied") {
-      return messages.messages.filter((m) => m.status === "replied")
-    }
-    return messages.messages
-  }, [messages?.messages, activeTab])
+  const stats = statsData as OutreachStats | undefined;
+  const openRate = stats && stats.total_sent > 0
+    ? ((stats.total_opened / stats.total_sent) * 100).toFixed(1)
+    : "0.0";
+  const replyRate = stats && stats.total_sent > 0
+    ? ((stats.total_replied / stats.total_sent) * 100).toFixed(1)
+    : "0.0";
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Outreach</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Outreach</h1>
           <p className="text-muted-foreground">
-            Manage your recruiter outreach and messaging campaigns
+            Manage email campaigns and track engagement
           </p>
         </div>
-        <Dialog open={composeOpen} onOpenChange={setComposeOpen}>
-          <DialogTrigger asChild>
-            <Button>
-              <Plus className="mr-2 h-4 w-4" />
-              Compose
-            </Button>
-          </DialogTrigger>
-          <ComposeDialog open={composeOpen} onOpenChange={setComposeOpen} />
-        </Dialog>
+        <NewCampaignDialog />
       </div>
 
-      {/* Stats */}
-      {statsLoading ? (
-        <div className="grid gap-4 md:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="p-6 animate-pulse">
-              <div className="h-4 bg-muted rounded w-20 mb-2"></div>
-              <div className="h-8 bg-muted rounded w-32"></div>
-            </Card>
-          ))}
-        </div>
-      ) : (
-        <div className="grid gap-4 md:grid-cols-4">
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Total Sent
-              </p>
-              <p className="text-3xl font-bold">{stats?.total_sent || 0}</p>
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Opened
-              </p>
-              <p className="text-3xl font-bold">{stats?.total_opened || 0}</p>
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Open Rate
-              </p>
-              <p className="text-3xl font-bold">
-                {stats?.open_rate.toFixed(1) || 0}%
-              </p>
-            </div>
-          </Card>
-          <Card className="p-6">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">
-                Reply Rate
-              </p>
-              <p className="text-3xl font-bold">
-                {stats?.reply_rate.toFixed(1) || 0}%
-              </p>
-            </div>
-          </Card>
-        </div>
-      )}
+      {/* Stats Grid */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Total Sent"
+          value={stats?.total_sent || 0}
+          isLoading={statsLoading}
+        />
+        <StatsCard
+          title="Opened"
+          value={stats?.total_opened || 0}
+          description={`${openRate}% open rate`}
+          isLoading={statsLoading}
+        />
+        <StatsCard
+          title="Replied"
+          value={stats?.total_replied || 0}
+          description={`${replyRate}% reply rate`}
+          isLoading={statsLoading}
+        />
+        <StatsCard
+          title="Bounced"
+          value="0"
+          description="0% bounce rate"
+          isLoading={statsLoading}
+        />
+      </div>
 
-      {/* Tabs */}
+      {/* Campaigns Section */}
       <Card>
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="w-full justify-start border-b rounded-none bg-transparent p-0">
-            <TabsTrigger
-              value="queue"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground"
-            >
-              Queue
-            </TabsTrigger>
-            <TabsTrigger
-              value="sent"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground"
-            >
-              Sent
-            </TabsTrigger>
-            <TabsTrigger
-              value="replied"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground"
-            >
-              Replied
-            </TabsTrigger>
-            <TabsTrigger
-              value="all"
-              className="rounded-none border-b-2 border-transparent px-4 py-2 font-medium text-muted-foreground data-[state=active]:border-primary data-[state=active]:text-foreground"
-            >
-              All
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value={activeTab} className="p-0">
-            {messagesLoading ? (
-              <TableSkeleton rows={5} />
-            ) : filteredMessages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center gap-4 rounded-lg border border-dashed border-border bg-background/50 px-4 py-12 text-center">
-                <div className="rounded-lg bg-muted p-3">
-                  <Inbox className="h-6 w-6 text-muted-foreground" />
-                </div>
-                <div className="space-y-2">
-                  <h3 className="font-semibold text-foreground">
-                    No {activeTab} messages
-                  </h3>
-                  <p className="text-sm text-muted-foreground">
-                    You don't have any messages in the {activeTab} tab yet.
-                  </p>
-                </div>
-                {activeTab === "queue" && (
-                  <Button
-                    onClick={() => setComposeOpen(true)}
-                    size="sm"
-                  >
-                    <Plus className="mr-2 h-4 w-4" />
-                    Compose Message
-                  </Button>
-                )}
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-border bg-muted/50">
-                      <th className="px-6 py-3 text-left">
-                        <Checkbox aria-label="Select all" />
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Recipient
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Subject
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Status
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Date
-                      </th>
-                      <th className="px-6 py-3 text-left text-sm font-medium text-muted-foreground">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredMessages.map((message) => (
-                      <OutreachMessageRow
-                        key={message.message_id}
-                        message={message}
-                      />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
+        <CardHeader>
+          <CardTitle>Message Queue</CardTitle>
+          <CardDescription>
+            Pending messages ready to send to your contacts
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <MessagesQueueTable />
+        </CardContent>
       </Card>
 
-      {/* Charts Section */}
-      <div className="grid gap-6 md:grid-cols-2">
-        {/* Open Rate Trend */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Open Rate Trend</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <LineChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="date" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Line
-                type="monotone"
-                dataKey="openRate"
-                stroke="#2563eb"
-                name="Open Rate %"
-              />
-            </LineChart>
-          </ResponsiveContainer>
-        </Card>
+      {/* Campaign Performance */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Campaign Performance</CardTitle>
+          <CardDescription>
+            Track performance metrics for each campaign
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-6">
+            {/* Example campaign card */}
+            <div className="border rounded-lg p-4 space-y-4">
+              <div className="flex items-start justify-between">
+                <div>
+                  <h3 className="font-medium">Q1 Recruiter Outreach</h3>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Started 2 days ago
+                  </p>
+                </div>
+                <div className="flex gap-2">
+                  <CampaignTypeBadge type="cold_email" />
+                  <Badge variant="outline">Active</Badge>
+                </div>
+              </div>
 
-        {/* Reply Rate by Message Type */}
-        <Card className="p-6">
-          <h3 className="font-semibold mb-4">Open Rate by Message Type</h3>
-          <ResponsiveContainer width="100%" height={250}>
-            <BarChart data={messageTypeData}>
-              <CartesianGrid strokeDasharray="3 3" />
-              <XAxis dataKey="type" />
-              <YAxis />
-              <Tooltip />
-              <Legend />
-              <Bar
-                dataKey="openRate"
-                fill="#10b981"
-                name="Open Rate %"
-              />
-            </BarChart>
-          </ResponsiveContainer>
-        </Card>
-      </div>
+              <div className="grid grid-cols-3 gap-4">
+                <div>
+                  <p className="text-sm text-muted-foreground">Sent</p>
+                  <p className="text-lg font-semibold">25</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Opened</p>
+                  <p className="text-lg font-semibold">12</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Replied</p>
+                  <p className="text-lg font-semibold">3</p>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Open Rate</span>
+                  <span className="font-medium">48%</span>
+                </div>
+                <Progress value={48} className="h-2" />
+              </div>
+
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span>Reply Rate</span>
+                  <span className="font-medium">12%</span>
+                </div>
+                <Progress value={12} className="h-2" />
+              </div>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }
