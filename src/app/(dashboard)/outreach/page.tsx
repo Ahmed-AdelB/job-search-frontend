@@ -1,23 +1,17 @@
 "use client";
 
-import React, { useState } from "react";
-import {
-  ColumnDef,
-  flexRender,
-  getCoreRowModel,
-  getPaginationRowModel,
-  getSortedRowModel,
-  SortingState,
-  useReactTable,
-} from "@tanstack/react-table";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+/**
+ * Outreach Page - Email campaigns and outreach management
+ * Author: Ahmed Adel Bakr Alderai
+ */
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableBody,
@@ -27,523 +21,351 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { StatusBadge } from "@/components/shared/status-badge";
-import { StatSkeleton, TableSkeleton } from "@/components/shared/loading-skeleton";
-import { Mail, Plus, MoreHorizontal, Send, AlertCircle } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useOutreachStats, useOutreachMessages, useCreateCampaign } from "@/hooks/use-outreach";
-import type { OutreachMessage, OutreachStats } from "@/types/api";
-import { toast } from "sonner";
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Mail,
+  Plus,
+  Send,
+  Eye,
+  Reply,
+  MailOpen,
+  TrendingUp,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Loader2,
+} from "lucide-react";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { OutreachMessage, OutreachStats, OutreachCampaign } from "@/types/api";
 
-/**
- * Stats Card Component
- */
+const STATUS_COLORS: Record<string, string> = {
+  draft: "bg-gray-500",
+  sent: "bg-blue-600",
+  delivered: "bg-indigo-600",
+  opened: "bg-amber-500",
+  replied: "bg-green-600",
+  bounced: "bg-red-600",
+};
+
+export default function OutreachPage() {
+  const [page, setPage] = useState(1);
+  const [showNewCampaign, setShowNewCampaign] = useState(false);
+  const perPage = 20;
+
+  const { data: statsData, isLoading: statsLoading } = useQuery({
+    queryKey: ["outreach", "stats"],
+    queryFn: () => apiGet<OutreachStats>("/api/v1/outreach/stats"),
+    refetchInterval: 30000,
+  });
+
+  const { data: messagesData, isLoading: messagesLoading, refetch } = useQuery({
+    queryKey: ["outreach", "messages", page],
+    queryFn: () =>
+      apiGet<{ messages: OutreachMessage[]; total: number }>(
+        `/api/v1/outreach/messages?page=${page}&per_page=${perPage}`
+      ),
+  });
+
+  const { data: campaignsData } = useQuery({
+    queryKey: ["outreach", "campaigns"],
+    queryFn: () => apiGet<{ campaigns: OutreachCampaign[] }>("/api/v1/outreach/campaigns"),
+  });
+
+  const messages = messagesData?.messages ?? [];
+  const total = messagesData?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+  const campaigns = campaignsData?.campaigns ?? [];
+
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Outreach</h1>
+          <p className="text-muted-foreground">
+            Manage email campaigns and outreach messages
+          </p>
+        </div>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => refetch()}>
+            <RefreshCw className="w-4 h-4 me-2" />
+            Refresh
+          </Button>
+          <NewCampaignDialog open={showNewCampaign} onOpenChange={setShowNewCampaign} />
+        </div>
+      </div>
+
+      {/* Stats Row */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatsCard
+          title="Total Sent"
+          value={statsData?.total_sent ?? 0}
+          icon={Send}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="Open Rate"
+          value={statsData ? `${Math.round(statsData.open_rate * 100)}%` : "0%"}
+          icon={Eye}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="Reply Rate"
+          value={statsData ? `${Math.round(statsData.reply_rate * 100)}%` : "0%"}
+          icon={Reply}
+          loading={statsLoading}
+        />
+        <StatsCard
+          title="Replied"
+          value={statsData?.total_replied ?? 0}
+          icon={TrendingUp}
+          loading={statsLoading}
+        />
+      </div>
+
+      {/* Campaigns */}
+      {campaigns.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Active Campaigns</CardTitle>
+            <CardDescription>{campaigns.length} campaigns</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {campaigns.filter((c) => c.status === "active").map((campaign) => (
+                <div key={campaign.campaign_id} className="p-4 rounded-lg border">
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm">{campaign.name}</span>
+                    <Badge variant="outline" className="text-xs">{campaign.type}</Badge>
+                  </div>
+                  <div className="flex gap-4 text-xs text-muted-foreground">
+                    <span>Sent: {campaign.sent_count}</span>
+                    <span>Opened: {campaign.opened_count}</span>
+                    <span>Replied: {campaign.replied_count}</span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Messages Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Mail className="w-5 h-5" />
+            Message Queue
+          </CardTitle>
+          <CardDescription>{total} total messages</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {messagesLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
+              ))}
+            </div>
+          ) : messages.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No messages yet. Create a campaign to get started.</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Subject</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Sent</TableHead>
+                      <TableHead>Opened</TableHead>
+                      <TableHead>Replied</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {messages.map((msg) => (
+                      <TableRow key={msg.message_id}>
+                        <TableCell className="font-medium max-w-[250px] truncate">
+                          {msg.subject}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline" className="text-xs">
+                            {msg.message_type.replace(/_/g, " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Badge className={`${STATUS_COLORS[msg.status] ?? "bg-gray-500"} text-xs`}>
+                            {msg.status}
+                          </Badge>
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {msg.sent_at
+                            ? new Date(msg.sent_at).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {msg.opened_at
+                            ? new Date(msg.opened_at).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {msg.replied_at
+                            ? new Date(msg.replied_at).toLocaleDateString()
+                            : "—"}
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+
+              {/* Pagination */}
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages}
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.max(1, p - 1))}
+                    disabled={page <= 1}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={page >= totalPages}
+                  >
+                    Next
+                    <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function StatsCard({
   title,
   value,
-  description,
-  isLoading,
+  icon: Icon,
+  loading,
 }: {
   title: string;
-  value: string | number;
-  description?: string;
-  isLoading?: boolean;
+  value: number | string;
+  icon: React.ElementType;
+  loading: boolean;
 }) {
-  if (isLoading) {
-    return <StatSkeleton />;
-  }
-
   return (
-    <Card className="bg-background/50 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardDescription className="text-xs font-medium uppercase tracking-wide">
-          {title}
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <div className="space-y-1">
-          <div className="text-2xl font-bold">{value}</div>
-          {description && (
-            <p className="text-xs text-muted-foreground">{description}</p>
-          )}
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            {loading ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold">{value}</p>
+            )}
+          </div>
+          <Icon className="w-8 h-8 text-muted-foreground opacity-50" />
         </div>
       </CardContent>
     </Card>
   );
 }
 
-/**
- * Campaign Type Badge
- */
-function CampaignTypeBadge({ type }: { type: string }) {
-  const typeConfig: Record<
-    string,
-    { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
-  > = {
-    cold_email: { label: "Cold Email", variant: "secondary" },
-    follow_up: { label: "Follow-up", variant: "outline" },
-    networking: { label: "Networking", variant: "default" },
-    thank_you: { label: "Thank You", variant: "outline" },
-  };
+function NewCampaignDialog({
+  open,
+  onOpenChange,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  const queryClient = useQueryClient();
+  const [name, setName] = useState("");
+  const [type, setType] = useState("cold_email");
 
-  const config = typeConfig[type] || { label: type, variant: "outline" };
-  return <Badge variant={config.variant}>{config.label}</Badge>;
-}
-
-/**
- * Message Status Badge with color coding
- */
-function MessageStatusBadge({ status }: { status: string }) {
-  const statusConfig: Record<
-    string,
-    { label: string; variant: "default" | "secondary" | "destructive" | "outline" }
-  > = {
-    draft: { label: "Draft", variant: "secondary" },
-    sent: { label: "Sent", variant: "outline" },
-    delivered: { label: "Delivered", variant: "outline" },
-    opened: { label: "Opened", variant: "default" },
-    replied: { label: "Replied", variant: "default" },
-    bounced: { label: "Bounced", variant: "destructive" },
-  };
-
-  const config = statusConfig[status] || { label: status, variant: "outline" };
-  return <Badge variant={config.variant}>{config.label}</Badge>;
-}
-
-/**
- * New Campaign Dialog
- */
-function NewCampaignDialog() {
-  const [open, setOpen] = useState(false);
-  const [formData, setFormData] = useState({
-    name: "",
-    type: "cold_email" as const,
-    subject: "",
-    body: "",
+  const createMutation = useMutation({
+    mutationFn: (data: { name: string; type: string }) =>
+      apiPost<{ campaign_id: string }>("/api/v1/outreach/campaigns", data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["outreach"] });
+      onOpenChange(false);
+      setName("");
+      setType("cold_email");
+    },
   });
 
-  const createCampaign = useCreateCampaign();
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    if (!formData.name || !formData.subject || !formData.body) {
-      toast.error("Please fill in all fields");
-      return;
-    }
-
-    try {
-      await createCampaign.mutateAsync({
-        name: formData.name,
-        type: formData.type,
-        template_subject: formData.subject,
-        template_body: formData.body,
-      });
-      setOpen(false);
-      setFormData({
-        name: "",
-        type: "cold_email",
-        subject: "",
-        body: "",
-      });
-    } catch (error) {
-      console.error("Failed to create campaign:", error);
-    }
-  };
-
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
         <Button>
-          <Plus className="w-4 h-4 mr-2" />
+          <Plus className="w-4 h-4 me-2" />
           New Campaign
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-w-md">
+      <DialogContent>
         <DialogHeader>
-          <DialogTitle>Create New Campaign</DialogTitle>
+          <DialogTitle>Create Campaign</DialogTitle>
           <DialogDescription>
-            Set up a new outreach campaign to contact your network
+            Set up a new outreach campaign
           </DialogDescription>
         </DialogHeader>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="campaign-name">Campaign Name</Label>
+            <label className="text-sm font-medium">Campaign Name</label>
             <Input
-              id="campaign-name"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Q1 Recruiter Outreach"
-              value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
             />
           </div>
-
           <div className="space-y-2">
-            <Label htmlFor="campaign-type">Campaign Type</Label>
-            <select
-              id="campaign-type"
-              className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
-              value={formData.type}
-              onChange={(e) =>
-                setFormData({
-                  ...formData,
-                  type: e.target.value as "cold_email" | "follow_up" | "networking" | "thank_you",
-                })
-              }
-            >
-              <option value="cold_email">Cold Email</option>
-              <option value="follow_up">Follow-up</option>
-              <option value="networking">Networking</option>
-              <option value="thank_you">Thank You</option>
-            </select>
+            <label className="text-sm font-medium">Campaign Type</label>
+            <Select value={type} onValueChange={setType}>
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="cold_email">Cold Email</SelectItem>
+                <SelectItem value="follow_up">Follow Up</SelectItem>
+                <SelectItem value="networking">Networking</SelectItem>
+                <SelectItem value="thank_you">Thank You</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email-subject">Email Subject</Label>
-            <Input
-              id="email-subject"
-              placeholder="Subject line for your emails"
-              value={formData.subject}
-              onChange={(e) =>
-                setFormData({ ...formData, subject: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="email-body">Email Body</Label>
-            <Textarea
-              id="email-body"
-              placeholder="Email content (support {{firstName}}, {{lastName}}, {{company}} variables)"
-              className="min-h-32"
-              value={formData.body}
-              onChange={(e) =>
-                setFormData({ ...formData, body: e.target.value })
-              }
-            />
-          </div>
-
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={createCampaign.isPending}>
-              {createCampaign.isPending ? "Creating..." : "Create Campaign"}
-            </Button>
-          </div>
-        </form>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => createMutation.mutate({ name, type })}
+            disabled={!name || createMutation.isPending}
+          >
+            {createMutation.isPending ? (
+              <Loader2 className="w-4 h-4 me-2 animate-spin" />
+            ) : null}
+            Create Campaign
+          </Button>
+        </DialogFooter>
       </DialogContent>
     </Dialog>
-  );
-}
-
-/**
- * Messages Queue Table
- */
-function MessagesQueueTable() {
-  const [sorting, setSorting] = useState<SortingState>([]);
-  const { data: messagesData, isLoading, error } = useOutreachMessages({
-    status: "draft",
-    per_page: 10,
-  });
-
-  const messages = messagesData?.messages || [];
-
-  const columns: ColumnDef<OutreachMessage>[] = [
-    {
-      accessorKey: "subject",
-      header: "Subject",
-      cell: ({ row }) => (
-        <div className="max-w-xs truncate font-medium">
-          {row.getValue("subject")}
-        </div>
-      ),
-    },
-    {
-      accessorKey: "message_type",
-      header: "Type",
-      cell: ({ row }) => {
-        const type = row.getValue("message_type") as string;
-        const typeLabel = type.replace(/_/g, " ").replace(/^\w/, (c) => c.toUpperCase());
-        return <Badge variant="outline">{typeLabel}</Badge>;
-      },
-    },
-    {
-      accessorKey: "status",
-      header: "Status",
-      cell: ({ row }) => (
-        <MessageStatusBadge status={row.getValue("status") as string} />
-      ),
-    },
-    {
-      id: "actions",
-      header: "Actions",
-      cell: ({ row }) => {
-        const message = row.original;
-        return (
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="sm">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem>
-                <Send className="w-4 h-4 mr-2" />
-                Send Now
-              </DropdownMenuItem>
-              <DropdownMenuItem>Edit</DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive">
-                Delete
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        );
-      },
-    },
-  ];
-
-  const table = useReactTable({
-    data: messages,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-    getSortedRowModel: getSortedRowModel(),
-    getPaginationRowModel: getPaginationRowModel(),
-    state: {
-      sorting,
-    },
-    onSortingChange: setSorting,
-  });
-
-  if (error) {
-    return (
-      <Alert variant="destructive">
-        <AlertCircle className="h-4 w-4" />
-        <AlertDescription>
-          Failed to load message queue. Please try again.
-        </AlertDescription>
-      </Alert>
-    );
-  }
-
-  if (isLoading) {
-    return <TableSkeleton rows={5} />;
-  }
-
-  if (messages.length === 0) {
-    return (
-      <div className="text-center py-12 text-muted-foreground">
-        <Mail className="w-12 h-12 mx-auto mb-4 opacity-50" />
-        <p>No pending messages</p>
-      </div>
-    );
-  }
-
-  return (
-    <div className="border rounded-lg">
-      <Table>
-        <TableHeader>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <TableRow key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <TableHead key={header.id}>
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext()
-                      )}
-                </TableHead>
-              ))}
-            </TableRow>
-          ))}
-        </TableHeader>
-        <TableBody>
-          {table.getRowModel().rows.map((row) => (
-            <TableRow key={row.id}>
-              {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id}>
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </TableCell>
-              ))}
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-4 border-t">
-        <div className="text-sm text-muted-foreground">
-          Page {table.getState().pagination.pageIndex + 1} of{" "}
-          {table.getPageCount()}
-        </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-/**
- * Main Outreach Page
- */
-export default function OutreachPage() {
-  const { data: statsData, isLoading: statsLoading } = useOutreachStats();
-
-  const stats = statsData as OutreachStats | undefined;
-  const openRate = stats && stats.total_sent > 0
-    ? ((stats.total_opened / stats.total_sent) * 100).toFixed(1)
-    : "0.0";
-  const replyRate = stats && stats.total_sent > 0
-    ? ((stats.total_replied / stats.total_sent) * 100).toFixed(1)
-    : "0.0";
-
-  return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Outreach</h1>
-          <p className="text-muted-foreground">
-            Manage email campaigns and track engagement
-          </p>
-        </div>
-        <NewCampaignDialog />
-      </div>
-
-      {/* Stats Grid */}
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatsCard
-          title="Total Sent"
-          value={stats?.total_sent || 0}
-          isLoading={statsLoading}
-        />
-        <StatsCard
-          title="Opened"
-          value={stats?.total_opened || 0}
-          description={`${openRate}% open rate`}
-          isLoading={statsLoading}
-        />
-        <StatsCard
-          title="Replied"
-          value={stats?.total_replied || 0}
-          description={`${replyRate}% reply rate`}
-          isLoading={statsLoading}
-        />
-        <StatsCard
-          title="Bounced"
-          value="0"
-          description="0% bounce rate"
-          isLoading={statsLoading}
-        />
-      </div>
-
-      {/* Campaigns Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Message Queue</CardTitle>
-          <CardDescription>
-            Pending messages ready to send to your contacts
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <MessagesQueueTable />
-        </CardContent>
-      </Card>
-
-      {/* Campaign Performance */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Campaign Performance</CardTitle>
-          <CardDescription>
-            Track performance metrics for each campaign
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-6">
-            {/* Example campaign card */}
-            <div className="border rounded-lg p-4 space-y-4">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h3 className="font-medium">Q1 Recruiter Outreach</h3>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Started 2 days ago
-                  </p>
-                </div>
-                <div className="flex gap-2">
-                  <CampaignTypeBadge type="cold_email" />
-                  <Badge variant="outline">Active</Badge>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-3 gap-4">
-                <div>
-                  <p className="text-sm text-muted-foreground">Sent</p>
-                  <p className="text-lg font-semibold">25</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Opened</p>
-                  <p className="text-lg font-semibold">12</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground">Replied</p>
-                  <p className="text-lg font-semibold">3</p>
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Open Rate</span>
-                  <span className="font-medium">48%</span>
-                </div>
-                <Progress value={48} className="h-2" />
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex justify-between text-sm">
-                  <span>Reply Rate</span>
-                  <span className="font-medium">12%</span>
-                </div>
-                <Progress value={12} className="h-2" />
-              </div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
   );
 }

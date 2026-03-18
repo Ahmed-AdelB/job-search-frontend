@@ -1,795 +1,435 @@
+"use client";
+
 /**
- * Target Companies Page
+ * Target List Page - Target company management
  * Author: Ahmed Adel Bakr Alderai
  */
 
-"use client"
-
-import { useState } from "react"
-import {
-  useTargetCompanies,
-  useCreateTargetCompany,
-  useUpdateTargetCompanyTier,
-  useDeleteTargetCompany,
-  useImportTargetCompanies,
-} from "@/hooks"
-import { useDebounce } from "@/hooks/useDebounce"
-import { Card } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
+} from "@/components/ui/dialog";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Label } from "@/components/ui/label"
-import { Textarea } from "@/components/ui/textarea"
-import { TableSkeleton } from "@/components/shared/loading-skeleton"
-import { EmptyState } from "@/components/shared/empty-state"
-import { StatusBadge } from "@/components/shared/status-badge"
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import {
-  flexRender,
-  getCoreRowModel,
-  useReactTable,
-  ColumnDef,
-} from "@tanstack/react-table"
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
+  Target,
   Plus,
   Search,
-  Download,
   MoreHorizontal,
-  Trash2,
-  Edit,
-  Loader2,
-  Building2,
   ExternalLink,
-} from "lucide-react"
-import type { TargetCompany, TierType } from "@/types/api"
+  Trash2,
+  Edit2,
+  Building2,
+  Briefcase,
+  Loader2,
+} from "lucide-react";
+import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client";
+import type { TargetCompany, TargetListResponse, CreateTargetCompanyRequest, TierType } from "@/types/api";
 
-// Tier color mapping
-function getTierColor(tier: TierType) {
-  switch (tier) {
-    case "A":
-      return "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100"
-    case "B":
-      return "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100"
-    case "C":
-      return "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100"
-  }
-}
+const TIER_COLOR: Record<string, string> = {
+  A: "bg-green-600",
+  B: "bg-blue-600",
+  C: "bg-amber-500",
+};
 
-// Table column definitions
-const columns: ColumnDef<TargetCompany>[] = [
-  {
-    accessorKey: "name",
-    header: "Company Name",
-    cell: ({ row }) => {
-      const company = row.original
-      return (
-        <div className="flex items-center gap-3">
-          <div className="rounded-lg bg-primary/10 p-2">
-            <Building2 className="h-4 w-4 text-primary" />
-          </div>
-          <div>
-            <p className="font-medium">{company.name}</p>
-            {company.company_size && (
-              <p className="text-xs text-muted-foreground">{company.company_size}</p>
-            )}
-          </div>
-        </div>
-      )
-    },
-  },
-  {
-    accessorKey: "tier",
-    header: "Tier",
-    cell: ({ row }) => {
-      const tier = row.getValue("tier") as TierType
-      return (
-        <Badge className={`${getTierColor(tier)} font-semibold`}>
-          Tier {tier}
-        </Badge>
-      )
-    },
-  },
-  {
-    accessorKey: "industry",
-    header: "Industry",
-    cell: ({ row }) => {
-      const industry = row.getValue("industry") as string | undefined
-      return industry ? (
-        <span className="text-sm">{industry}</span>
-      ) : (
-        <span className="text-sm text-muted-foreground">—</span>
-      )
-    },
-  },
-  {
-    accessorKey: "open_roles",
-    header: "Open Roles",
-    cell: ({ row }) => {
-      const roles = (row.getValue("open_roles") as number) || 0
-      return <span className="font-medium">{roles}</span>
-    },
-  },
-  {
-    accessorKey: "applied_count",
-    header: "Applied",
-    cell: ({ row }) => {
-      const applied = (row.getValue("applied_count") as number) || 0
-      return <span className="text-sm">{applied}</span>
-    },
-  },
-  {
-    accessorKey: "careers_url",
-    header: "Careers URL",
-    cell: ({ row }) => {
-      const url = row.getValue("careers_url") as string | undefined
-      return url ? (
-        <a
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-primary hover:underline inline-flex items-center gap-1"
-        >
-          <ExternalLink className="h-4 w-4" />
-        </a>
-      ) : (
-        <span className="text-muted-foreground">—</span>
-      )
-    },
-  },
-  {
-    id: "actions",
-    enableHiding: false,
-    cell: ({ row }) => <CompanyRowActions company={row.original} />,
-  },
-]
-
-interface CompanyRowActionsProps {
-  company: TargetCompany
-}
-
-function CompanyRowActions({ company }: CompanyRowActionsProps) {
-  const deleteCompany = useDeleteTargetCompany()
-  const [editDialogOpen, setEditDialogOpen] = useState(false)
-
-  const handleDelete = () => {
-    if (confirm(`Delete "${company.name}"?`)) {
-      deleteCompany.mutate(company.id)
-    }
-  }
-
-  return (
-    <>
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button variant="ghost" className="h-8 w-8 p-0">
-            <span className="sr-only">Open menu</span>
-            <MoreHorizontal className="h-4 w-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-          <DropdownMenuItem onClick={() => setEditDialogOpen(true)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </DropdownMenuItem>
-          <DropdownMenuItem
-            onClick={handleDelete}
-            className="text-destructive focus:text-destructive"
-          >
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-
-      <EditCompanyDialog
-        company={company}
-        open={editDialogOpen}
-        onOpenChange={setEditDialogOpen}
-      />
-    </>
-  )
-}
-
-interface EditCompanyDialogProps {
-  company: TargetCompany
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function EditCompanyDialog({
-  company,
-  open,
-  onOpenChange,
-}: EditCompanyDialogProps) {
-  const [tier, setTier] = useState<TierType>(company.tier)
-  const updateTier = useUpdateTargetCompanyTier()
-
-  const handleSave = () => {
-    updateTier.mutate(
-      { id: company.id, tier },
-      {
-        onSuccess: () => {
-          onOpenChange(false)
-        },
-      }
-    )
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Edit Company</DialogTitle>
-          <DialogDescription>Update company information</DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="name">Company Name</Label>
-            <Input
-              id="name"
-              value={company.name}
-              disabled
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="tier">Tier</Label>
-            <Select value={tier} onValueChange={(val) => setTier(val as TierType)}>
-              <SelectTrigger id="tier" className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A">Tier A (High Priority)</SelectItem>
-                <SelectItem value="B">Tier B (Medium Priority)</SelectItem>
-                <SelectItem value="C">Tier C (Low Priority)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="industry">Industry</Label>
-            <Input
-              id="industry"
-              value={company.industry || ""}
-              disabled
-              className="mt-1"
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={updateTier.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={updateTier.isPending || tier === company.tier}
-            >
-              {updateTier.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Save Changes
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-interface AddCompanyDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function AddCompanyDialog({ open, onOpenChange }: AddCompanyDialogProps) {
-  const [name, setName] = useState("")
-  const [tier, setTier] = useState<TierType>("B")
-  const [industry, setIndustry] = useState("")
-  const [careersUrl, setCareersUrl] = useState("")
-  const [notes, setNotes] = useState("")
-
-  const createCompany = useCreateTargetCompany()
-
-  const handleSubmit = () => {
-    if (!name.trim()) return
-
-    createCompany.mutate(
-      {
-        name,
-        tier,
-        industry: industry || undefined,
-        careers_url: careersUrl || undefined,
-        notes: notes || undefined,
-      },
-      {
-        onSuccess: () => {
-          setName("")
-          setTier("B")
-          setIndustry("")
-          setCareersUrl("")
-          setNotes("")
-          onOpenChange(false)
-        },
-      }
-    )
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Add Target Company</DialogTitle>
-          <DialogDescription>
-            Add a new company to your target list
-          </DialogDescription>
-        </DialogHeader>
-
-        <div className="space-y-4 py-4">
-          <div>
-            <Label htmlFor="company-name">Company Name *</Label>
-            <Input
-              id="company-name"
-              placeholder="e.g., Google, Microsoft..."
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="tier">Tier</Label>
-            <Select value={tier} onValueChange={(val) => setTier(val as TierType)}>
-              <SelectTrigger id="tier" className="mt-1">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="A">Tier A (High Priority)</SelectItem>
-                <SelectItem value="B">Tier B (Medium Priority)</SelectItem>
-                <SelectItem value="C">Tier C (Low Priority)</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div>
-            <Label htmlFor="industry">Industry</Label>
-            <Input
-              id="industry"
-              placeholder="e.g., Technology, Finance..."
-              value={industry}
-              onChange={(e) => setIndustry(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="careers-url">Careers URL</Label>
-            <Input
-              id="careers-url"
-              placeholder="https://careers.company.com"
-              type="url"
-              value={careersUrl}
-              onChange={(e) => setCareersUrl(e.target.value)}
-              className="mt-1"
-            />
-          </div>
-
-          <div>
-            <Label htmlFor="notes">Notes</Label>
-            <Textarea
-              id="notes"
-              placeholder="Add any notes about this company..."
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="mt-1 resize-none"
-              rows={3}
-            />
-          </div>
-
-          <div className="flex justify-end gap-2 pt-4">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={createCompany.isPending}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSubmit}
-              disabled={createCompany.isPending || !name.trim()}
-            >
-              {createCompany.isPending && (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Add Company
-            </Button>
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
-
-interface ImportCSVDialogProps {
-  open: boolean
-  onOpenChange: (open: boolean) => void
-}
-
-function ImportCSVDialog({ open, onOpenChange }: ImportCSVDialogProps) {
-  const importCompanies = useImportTargetCompanies()
-  const [dragActive, setDragActive] = useState(false)
-
-  const handleDrag = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true)
-    } else if (e.type === "dragleave") {
-      setDragActive(false)
-    }
-  }
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    e.stopPropagation()
-    setDragActive(false)
-
-    if (e.dataTransfer.files && e.dataTransfer.files[0]) {
-      const file = e.dataTransfer.files[0]
-      if (file.type === "text/csv" || file.name.endsWith(".csv")) {
-        importCompanies.mutate(file, {
-          onSuccess: () => {
-            onOpenChange(false)
-          },
-        })
-      }
-    }
-  }
-
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      const file = e.target.files[0]
-      importCompanies.mutate(file, {
-        onSuccess: () => {
-          onOpenChange(false)
-        },
-      })
-    }
-  }
-
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Import Companies</DialogTitle>
-          <DialogDescription>
-            Upload a CSV file with target companies
-          </DialogDescription>
-        </DialogHeader>
-
-        <div
-          className={`relative rounded-lg border-2 border-dashed p-8 text-center transition ${
-            dragActive
-              ? "border-primary bg-primary/5"
-              : "border-muted-foreground/25 hover:border-muted-foreground/50"
-          }`}
-          onDragEnter={handleDrag}
-          onDragLeave={handleDrag}
-          onDragOver={handleDrag}
-          onDrop={handleDrop}
-        >
-          <input
-            type="file"
-            accept=".csv"
-            onChange={handleChange}
-            className="absolute inset-0 cursor-pointer opacity-0"
-            disabled={importCompanies.isPending}
-          />
-
-          <div className="space-y-2">
-            <Download className="mx-auto h-8 w-8 text-muted-foreground" />
-            <div>
-              <p className="font-medium">Drag and drop your CSV file here</p>
-              <p className="text-sm text-muted-foreground">
-                or click to browse
-              </p>
-            </div>
-            {importCompanies.isPending && (
-              <div className="flex items-center justify-center gap-2 pt-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
-                <span className="text-sm">Importing...</span>
-              </div>
-            )}
-          </div>
-        </div>
-      </DialogContent>
-    </Dialog>
-  )
-}
+const SIZE_LABEL: Record<string, string> = {
+  startup: "Startup (1-50)",
+  small: "Small (51-200)",
+  medium: "Medium (201-1000)",
+  large: "Large (1001-5000)",
+  enterprise: "Enterprise (5000+)",
+};
 
 export default function TargetListPage() {
-  const [page, setPage] = useState(1)
-  const [perPage] = useState(10)
-  const [searchQuery, setSearchQuery] = useState("")
-  const [tierFilter, setTierFilter] = useState<TierType | "all">("all")
-  const [addDialogOpen, setAddDialogOpen] = useState(false)
-  const [importDialogOpen, setImportDialogOpen] = useState(false)
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [tierFilter, setTierFilter] = useState("all");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [editTarget, setEditTarget] = useState<TargetCompany | null>(null);
 
-  const debouncedSearch = useDebounce(searchQuery, 300)
+  const [form, setForm] = useState<CreateTargetCompanyRequest>({
+    name: "",
+    tier: "B",
+    industry: "",
+    company_size: undefined,
+    careers_url: "",
+    notes: "",
+  });
 
-  const { data, isLoading, error } = useTargetCompanies({
-    search: debouncedSearch,
-    tier: tierFilter !== "all" ? tierFilter : undefined,
-    page,
-    per_page: perPage,
-  })
+  const { data, isLoading } = useQuery({
+    queryKey: ["target-list", search, tierFilter],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (tierFilter !== "all") params.set("tier", tierFilter);
+      return apiGet<TargetListResponse>(`/api/v1/target-list?${params.toString()}`);
+    },
+  });
 
-  const table = useReactTable({
-    data: data?.companies || [],
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  })
+  const createMutation = useMutation({
+    mutationFn: (payload: CreateTargetCompanyRequest) =>
+      apiPost<TargetCompany>("/api/v1/target-list", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["target-list"] });
+      setDialogOpen(false);
+      resetForm();
+    },
+  });
 
-  const totalPages = data ? Math.ceil(data.total / perPage) : 1
+  const updateMutation = useMutation({
+    mutationFn: ({ id, ...payload }: { id: string } & Partial<CreateTargetCompanyRequest>) =>
+      apiPut<TargetCompany>(`/api/v1/target-list/${id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["target-list"] });
+      setEditTarget(null);
+      resetForm();
+    },
+  });
 
-  const tierCounts = data?.companies
-    ? {
-        A: data.companies.filter((c) => c.tier === "A").length,
-        B: data.companies.filter((c) => c.tier === "B").length,
-        C: data.companies.filter((c) => c.tier === "C").length,
-      }
-    : { A: 0, B: 0, C: 0 }
+  const deleteMutation = useMutation({
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/target-list/${id}`),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["target-list"] }),
+  });
+
+  const companies = data?.companies ?? [];
+  const total = data?.total ?? 0;
+
+  const resetForm = () => {
+    setForm({ name: "", tier: "B", industry: "", company_size: undefined, careers_url: "", notes: "" });
+  };
+
+  const openEdit = (target: TargetCompany) => {
+    setEditTarget(target);
+    setForm({
+      name: target.name,
+      tier: target.tier,
+      industry: target.industry ?? "",
+      company_size: target.company_size,
+      careers_url: target.careers_url ?? "",
+      notes: target.notes ?? "",
+    });
+  };
+
+  const tierCounts = companies.reduce(
+    (acc, c) => { acc[c.tier] = (acc[c.tier] ?? 0) + 1; return acc; },
+    {} as Record<string, number>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">Target Companies</h1>
+          <h1 className="text-2xl font-bold tracking-tight">Target List</h1>
           <p className="text-muted-foreground">
-            Manage your list of target companies by priority tier
+            Manage your priority companies ({total} targets)
           </p>
         </div>
-        <div className="flex gap-2">
-          <Dialog open={addDialogOpen} onOpenChange={setAddDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Company
-              </Button>
-            </DialogTrigger>
-            <AddCompanyDialog
-              open={addDialogOpen}
-              onOpenChange={setAddDialogOpen}
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button onClick={resetForm}>
+              <Plus className="w-4 h-4 me-2" />
+              Add Target
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add Target Company</DialogTitle>
+              <DialogDescription>Add a company to your priority target list</DialogDescription>
+            </DialogHeader>
+            <CompanyForm
+              form={form}
+              setForm={setForm}
+              onSubmit={() => createMutation.mutate(form)}
+              isPending={createMutation.isPending}
+              submitLabel="Add Company"
             />
-          </Dialog>
-
-          <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">
-                <Download className="mr-2 h-4 w-4" />
-                Import
-              </Button>
-            </DialogTrigger>
-            <ImportCSVDialog
-              open={importDialogOpen}
-              onOpenChange={setImportDialogOpen}
-            />
-          </Dialog>
-        </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Stats by Tier */}
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-3">
-        <Card className="p-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
-                Tier A (High)
-              </p>
-              <Badge className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-100">
-                {tierCounts.A}
-              </Badge>
-            </div>
-            <p className="text-3xl font-bold">{tierCounts.A}</p>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
-                Tier B (Medium)
-              </p>
-              <Badge className="bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-100">
-                {tierCounts.B}
-              </Badge>
-            </div>
-            <p className="text-3xl font-bold">{tierCounts.B}</p>
-          </div>
-        </Card>
-
-        <Card className="p-6">
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-medium text-muted-foreground">
-                Tier C (Low)
-              </p>
-              <Badge className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-100">
-                {tierCounts.C}
-              </Badge>
-            </div>
-            <p className="text-3xl font-bold">{tierCounts.C}</p>
-          </div>
-        </Card>
+      {/* Tier Summary */}
+      <div className="grid gap-4 sm:grid-cols-3">
+        {(["A", "B", "C"] as const).map((tier) => (
+          <Card
+            key={tier}
+            className="cursor-pointer hover:border-primary/50 transition-colors"
+            onClick={() => setTierFilter(tierFilter === tier ? "all" : tier)}
+          >
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Tier {tier}</p>
+                  <p className="text-2xl font-bold">{tierCounts[tier] ?? 0}</p>
+                </div>
+                <Badge className={TIER_COLOR[tier]}>{tier}</Badge>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
       </div>
 
-      {/* Search and Filter */}
-      <Card className="p-6">
-        <div className="space-y-4">
-          <div className="flex gap-2">
-            <div className="relative flex-1">
-              <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+      {/* Search + Filter */}
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-2 flex-1">
+              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
               <Input
-                placeholder="Search by company name or industry..."
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value)
-                  setPage(1)
-                }}
-                className="pl-10"
+                placeholder="Search companies..."
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                className="max-w-md"
               />
             </div>
+            <Select value={tierFilter} onValueChange={setTierFilter}>
+              <SelectTrigger className="w-[120px]">
+                <SelectValue placeholder="Tier" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Tiers</SelectItem>
+                <SelectItem value="A">Tier A</SelectItem>
+                <SelectItem value="B">Tier B</SelectItem>
+                <SelectItem value="C">Tier C</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
+        </CardContent>
+      </Card>
 
-          <div className="flex flex-wrap gap-2">
-            <Button
-              variant={tierFilter === "all" ? "default" : "outline"}
-              size="sm"
-              onClick={() => {
-                setTierFilter("all")
-                setPage(1)
-              }}
-            >
-              All Tiers
-            </Button>
-            {(["A", "B", "C"] as const).map((tier) => (
-              <Button
-                key={tier}
-                variant={tierFilter === tier ? "default" : "outline"}
-                size="sm"
-                onClick={() => {
-                  setTierFilter(tier)
-                  setPage(1)
-                }}
-              >
-                Tier {tier}
-              </Button>
-            ))}
+      {/* Companies Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <Target className="w-5 h-5" />
+            Target Companies
+          </CardTitle>
+          <CardDescription>{total} companies in your target list</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : companies.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>{search || tierFilter !== "all" ? "No companies match your filters" : "No target companies yet. Add your first target."}</p>
+            </div>
+          ) : (
+            <div className="rounded-md border overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Company</TableHead>
+                    <TableHead>Tier</TableHead>
+                    <TableHead>Industry</TableHead>
+                    <TableHead>Size</TableHead>
+                    <TableHead>Open Roles</TableHead>
+                    <TableHead>Applied</TableHead>
+                    <TableHead>Notes</TableHead>
+                    <TableHead className="w-[60px]">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {companies.map((company) => (
+                    <TableRow key={company.id}>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                          <span className="font-medium">{company.name}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Badge className={TIER_COLOR[company.tier]}>{company.tier}</Badge>
+                      </TableCell>
+                      <TableCell className="text-sm">{company.industry ?? "\u2014"}</TableCell>
+                      <TableCell className="text-sm">
+                        {company.company_size ? SIZE_LABEL[company.company_size] ?? company.company_size : "\u2014"}
+                      </TableCell>
+                      <TableCell>
+                        {company.open_roles != null ? (
+                          <Badge variant="outline" className="text-xs">
+                            <Briefcase className="w-3 h-3 me-1" />
+                            {company.open_roles}
+                          </Badge>
+                        ) : "\u2014"}
+                      </TableCell>
+                      <TableCell className="text-sm">{company.applied_count ?? 0}</TableCell>
+                      <TableCell className="text-sm max-w-[150px] truncate">
+                        {company.notes ?? "\u2014"}
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button variant="ghost" size="sm">
+                              <MoreHorizontal className="w-4 h-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem onClick={() => openEdit(company)}>
+                              <Edit2 className="w-4 h-4 me-2" />
+                              Edit
+                            </DropdownMenuItem>
+                            {company.careers_url && (
+                              <DropdownMenuItem asChild>
+                                <a href={company.careers_url} target="_blank" rel="noopener noreferrer">
+                                  <ExternalLink className="w-4 h-4 me-2" />
+                                  Careers Page
+                                </a>
+                              </DropdownMenuItem>
+                            )}
+                            <DropdownMenuSeparator />
+                            <DropdownMenuItem
+                              className="text-destructive"
+                              onClick={() => deleteMutation.mutate(company.id)}
+                            >
+                              <Trash2 className="w-4 h-4 me-2" />
+                              Remove
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Edit Dialog */}
+      <Dialog open={!!editTarget} onOpenChange={(open) => !open && setEditTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit {editTarget?.name}</DialogTitle>
+            <DialogDescription>Update target company details</DialogDescription>
+          </DialogHeader>
+          <CompanyForm
+            form={form}
+            setForm={setForm}
+            onSubmit={() => editTarget && updateMutation.mutate({ id: editTarget.id, ...form })}
+            isPending={updateMutation.isPending}
+            submitLabel="Save Changes"
+          />
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+function CompanyForm({
+  form,
+  setForm,
+  onSubmit,
+  isPending,
+  submitLabel,
+}: {
+  form: CreateTargetCompanyRequest;
+  setForm: React.Dispatch<React.SetStateAction<CreateTargetCompanyRequest>>;
+  onSubmit: () => void;
+  isPending: boolean;
+  submitLabel: string;
+}) {
+  return (
+    <>
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label>Company Name</Label>
+          <Input
+            value={form.name}
+            onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+            placeholder="e.g. Google"
+          />
+        </div>
+        <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-1.5">
+            <Label>Tier</Label>
+            <Select value={form.tier} onValueChange={(v) => setForm((f) => ({ ...f, tier: v as TierType }))}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="A">Tier A (Top priority)</SelectItem>
+                <SelectItem value="B">Tier B (Interested)</SelectItem>
+                <SelectItem value="C">Tier C (Backup)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1.5">
+            <Label>Company Size</Label>
+            <Select value={form.company_size ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, company_size: v as CreateTargetCompanyRequest["company_size"] }))}>
+              <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="startup">Startup</SelectItem>
+                <SelectItem value="small">Small</SelectItem>
+                <SelectItem value="medium">Medium</SelectItem>
+                <SelectItem value="large">Large</SelectItem>
+                <SelectItem value="enterprise">Enterprise</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-      </Card>
-
-      {/* Table */}
-      <Card className="overflow-hidden">
-        {isLoading ? (
-          <TableSkeleton rows={5} />
-        ) : error ? (
-          <EmptyState
-            title="Error loading companies"
-            description="There was an error loading your target companies. Please try again."
-            action={
-              <Button onClick={() => window.location.reload()}>
-                Retry
-              </Button>
-            }
+        <div className="space-y-1.5">
+          <Label>Industry</Label>
+          <Input
+            value={form.industry ?? ""}
+            onChange={(e) => setForm((f) => ({ ...f, industry: e.target.value }))}
+            placeholder="e.g. Technology, Finance"
           />
-        ) : !data?.companies || data.companies.length === 0 ? (
-          <EmptyState
-            title="No target companies yet"
-            description="Start by adding companies you'd like to work for."
-            action={
-              <Button onClick={() => setAddDialogOpen(true)}>
-                <Plus className="mr-2 h-4 w-4" />
-                Add Company
-              </Button>
-            }
+        </div>
+        <div className="space-y-1.5">
+          <Label>Careers URL</Label>
+          <Input
+            value={form.careers_url ?? ""}
+            onChange={(e) => setForm((f) => ({ ...f, careers_url: e.target.value }))}
+            placeholder="https://careers.example.com"
           />
-        ) : (
-          <>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-border bg-muted/50">
-                    {table.getHeaderGroups().map((headerGroup) =>
-                      headerGroup.headers.map((header) => (
-                        <th
-                          key={header.id}
-                          className="px-6 py-3 text-left text-sm font-medium text-muted-foreground"
-                        >
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
-                        </th>
-                      ))
-                    )}
-                  </tr>
-                </thead>
-                <tbody>
-                  {table.getRowModel().rows.map((row) => (
-                    <tr
-                      key={row.id}
-                      className="border-b border-border hover:bg-muted/50 transition"
-                    >
-                      {row.getVisibleCells().map((cell) => (
-                        <td
-                          key={cell.id}
-                          className="px-6 py-4 text-sm"
-                        >
-                          {flexRender(
-                            cell.column.columnDef.cell,
-                            cell.getContext()
-                          )}
-                        </td>
-                      ))}
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-
-            {/* Pagination */}
-            <div className="flex items-center justify-between border-t border-border px-6 py-4">
-              <p className="text-sm text-muted-foreground">
-                Showing {(page - 1) * perPage + 1} to{" "}
-                {Math.min(page * perPage, data?.total || 0)} of{" "}
-                {data?.total || 0} companies
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.max(1, page - 1))}
-                  disabled={page === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setPage(Math.min(totalPages, page + 1))}
-                  disabled={page === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
-            </div>
-          </>
-        )}
-      </Card>
-    </div>
-  )
+        </div>
+        <div className="space-y-1.5">
+          <Label>Notes</Label>
+          <Textarea
+            value={form.notes ?? ""}
+            onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+            rows={2}
+            placeholder="Any notes about this company..."
+          />
+        </div>
+      </div>
+      <DialogFooter>
+        <Button onClick={onSubmit} disabled={isPending || !form.name}>
+          {isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+          {submitLabel}
+        </Button>
+      </DialogFooter>
+    </>
+  );
 }

@@ -1,370 +1,426 @@
-"use client"
+"use client";
 
-import { useState, useMemo } from "react"
-import { format, isPast, parseISO } from "date-fns"
-import { Calendar, Plus, Clock, MapPin, Video, Phone, User, Eye, ExternalLink, Edit2, Trash2 } from "lucide-react"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Skeleton } from "@/components/ui/skeleton"
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog"
-import { useInterviews, useDeleteInterview } from "@/hooks/use-interviews"
-import type { Interview } from "@/types/api"
+/**
+ * Interviews Page - Schedule and prepare for interviews
+ * Author: Ahmed Adel Bakr Alderai
+ */
 
-// Interview type badge configuration
-const interviewTypeBadgeConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; bgClass: string; textColor: string }> = {
-  phone: { variant: "default", bgClass: "bg-blue-100 dark:bg-blue-950", textColor: "text-blue-700 dark:text-blue-300" },
-  video: { variant: "default", bgClass: "bg-purple-100 dark:bg-purple-950", textColor: "text-purple-700 dark:text-purple-300" },
-  onsite: { variant: "default", bgClass: "bg-orange-100 dark:bg-orange-950", textColor: "text-orange-700 dark:text-orange-300" },
-  technical: { variant: "destructive", bgClass: "bg-red-100 dark:bg-red-950", textColor: "text-red-700 dark:text-red-300" },
-  behavioral: { variant: "default", bgClass: "bg-yellow-100 dark:bg-yellow-950", textColor: "text-yellow-700 dark:text-yellow-300" },
-  final: { variant: "default", bgClass: "bg-emerald-100 dark:bg-emerald-950", textColor: "text-emerald-700 dark:text-emerald-300" },
-}
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Calendar,
+  Plus,
+  MoreHorizontal,
+  Video,
+  Phone,
+  MapPin,
+  Code2,
+  Users,
+  Star,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  Loader2,
+  ExternalLink,
+  FileText,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
+import { apiGet, apiPost, apiPut } from "@/lib/api-client";
+import type { Interview } from "@/types/api";
 
-// Status badge configuration
-const statusBadgeConfig: Record<string, { variant: "default" | "secondary" | "destructive" | "outline"; label: string }> = {
-  scheduled: { variant: "default", label: "Scheduled" },
-  completed: { variant: "secondary", label: "Completed" },
-  cancelled: { variant: "outline", label: "Cancelled" },
-  "no-show": { variant: "destructive", label: "No Show" },
-}
+const TYPE_ICON: Record<string, React.ElementType> = {
+  phone: Phone,
+  video: Video,
+  onsite: MapPin,
+  technical: Code2,
+  behavioral: Users,
+  final: Star,
+};
 
-// Interview card skeleton loader
-function InterviewCardSkeleton() {
-  return (
-    <Card className="overflow-hidden">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-5 w-48" />
-            <Skeleton className="h-4 w-32" />
-          </div>
-          <Skeleton className="h-6 w-20" />
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <Skeleton className="h-4 w-full" />
-        <Skeleton className="h-4 w-3/4" />
-        <div className="flex gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+const TYPE_COLOR: Record<string, string> = {
+  phone: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
+  video: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
+  onsite: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+  technical: "bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400",
+  behavioral: "bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400",
+  final: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
+};
 
-// Interview card component
-interface InterviewCardProps {
-  interview: Interview
-  onDelete: () => void
-  isDeletingId: string | null
-}
-
-function InterviewCard({ interview, onDelete, isDeletingId }: InterviewCardProps) {
-  const scheduledDate = parseISO(interview.scheduled_at)
-  const isPastInterview = isPast(scheduledDate)
-  const typeConfig = interviewTypeBadgeConfig[interview.type] || interviewTypeBadgeConfig.phone
-  const statusConfig = statusBadgeConfig[interview.status] || statusBadgeConfig.scheduled
-
-  const getInterviewIcon = () => {
-    switch (interview.type) {
-      case "phone":
-        return <Phone className="w-4 h-4" />
-      case "video":
-        return <Video className="w-4 h-4" />
-      case "onsite":
-        return <MapPin className="w-4 h-4" />
-      default:
-        return <User className="w-4 h-4" />
-    }
-  }
-
-  return (
-    <Card className="overflow-hidden hover:shadow-md transition-shadow">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-2">
-              <h3 className="text-lg font-semibold truncate">Interview</h3>
-              <Badge
-                className={`${typeConfig.bgClass} ${typeConfig.textColor} border-0`}
-              >
-                {interview.type.charAt(0).toUpperCase() + interview.type.slice(1)}
-              </Badge>
-            </div>
-            <p className="text-sm text-muted-foreground">
-              {format(scheduledDate, "MMMM d, yyyy")} at {format(scheduledDate, "h:mm a")}
-            </p>
-          </div>
-          <Badge variant={statusConfig.variant} className="whitespace-nowrap">
-            {statusConfig.label}
-          </Badge>
-        </div>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          {interview.interviewer_names && interview.interviewer_names.length > 0 && (
-            <div className="flex items-center gap-2 text-sm">
-              <User className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">
-                {interview.interviewer_names.join(", ")}
-              </span>
-            </div>
-          )}
-
-          {interview.duration_minutes && (
-            <div className="flex items-center gap-2 text-sm">
-              <Clock className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{interview.duration_minutes} minutes</span>
-            </div>
-          )}
-
-          {interview.location && (
-            <div className="flex items-center gap-2 text-sm">
-              <MapPin className="w-4 h-4 text-muted-foreground" />
-              <span className="text-muted-foreground">{interview.location}</span>
-            </div>
-          )}
-
-          {interview.meeting_url && (
-            <div className="flex items-center gap-2 text-sm">
-              <Video className="w-4 h-4 text-muted-foreground" />
-              <a
-                href={interview.meeting_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-primary hover:underline flex items-center gap-1"
-              >
-                Join meeting <ExternalLink className="w-3 h-3" />
-              </a>
-            </div>
-          )}
-
-          {interview.notes && (
-            <div className="mt-3 p-2 bg-muted rounded text-sm">
-              <p className="line-clamp-2 text-muted-foreground">{interview.notes}</p>
-            </div>
-          )}
-
-          {interview.feedback && (
-            <div className="mt-3 p-2 bg-green-50 dark:bg-green-950 rounded text-sm">
-              <p className="font-medium text-green-700 dark:text-green-300 mb-1">Feedback</p>
-              <p className="line-clamp-2 text-green-600 dark:text-green-400">{interview.feedback}</p>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-wrap gap-2 pt-2 border-t">
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Eye className="w-4 h-4 mr-2" />
-            View Notes
-          </Button>
-
-          {interview.meeting_url && (
-            <a href={interview.meeting_url} target="_blank" rel="noopener noreferrer">
-              <Button variant="outline" size="sm">
-                <ExternalLink className="w-4 h-4 mr-2" />
-                Join
-              </Button>
-            </a>
-          )}
-
-          <Button variant="outline" size="sm" className="flex-1 sm:flex-none">
-            <Edit2 className="w-4 h-4 mr-2" />
-            Reschedule
-          </Button>
-
-          <AlertDialog>
-            <AlertDialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                className="flex-1 sm:flex-none text-destructive hover:text-destructive"
-              >
-                <Trash2 className="w-4 h-4 mr-2" />
-                Cancel
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Cancel Interview</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Are you sure you want to cancel this interview? This action cannot be undone.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Keep Interview</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={onDelete}
-                  disabled={isDeletingId === interview.interview_id}
-                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                >
-                  {isDeletingId === interview.interview_id ? "Cancelling..." : "Cancel Interview"}
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
+const STATUS_BADGE: Record<string, string> = {
+  scheduled: "bg-blue-600",
+  completed: "bg-green-600",
+  cancelled: "bg-gray-500",
+  "no-show": "bg-red-600",
+};
 
 export default function InterviewsPage() {
-  const [isDeletingId, setIsDeletingId] = useState<string | null>(null)
-  const { data: response, isLoading } = useInterviews()
-  const { mutate: deleteInterview } = useDeleteInterview()
+  const queryClient = useQueryClient();
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const perPage = 20;
 
-  const interviews = response?.interviews ?? []
+  // Form state
+  const [form, setForm] = useState({
+    application_id: "",
+    type: "video" as Interview["type"],
+    scheduled_at: "",
+    duration_minutes: "60",
+    location: "",
+    meeting_url: "",
+    notes: "",
+  });
 
-  // Separate interviews into upcoming and past
-  const { upcoming, past } = useMemo(() => {
-    return interviews.reduce(
-      (acc, interview) => {
-        if (isPast(parseISO(interview.scheduled_at))) {
-          acc.past.push(interview)
-        } else {
-          acc.upcoming.push(interview)
-        }
-        return acc
-      },
-      { upcoming: [] as Interview[], past: [] as Interview[] }
-    )
-  }, [interviews])
+  const { data, isLoading } = useQuery({
+    queryKey: ["interviews", statusFilter, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("per_page", String(perPage));
+      return apiGet<{ interviews: Interview[]; total: number }>(`/api/v1/interviews?${params.toString()}`);
+    },
+  });
 
-  // Sort upcoming by date (earliest first)
-  upcoming.sort((a, b) => parseISO(a.scheduled_at).getTime() - parseISO(b.scheduled_at).getTime())
+  const createMutation = useMutation({
+    mutationFn: (payload: Record<string, unknown>) =>
+      apiPost<Interview>("/api/v1/interviews", payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] });
+      setDialogOpen(false);
+      setForm({ application_id: "", type: "video", scheduled_at: "", duration_minutes: "60", location: "", meeting_url: "", notes: "" });
+    },
+  });
 
-  // Sort past by date (most recent first)
-  past.sort((a, b) => parseISO(b.scheduled_at).getTime() - parseISO(a.scheduled_at).getTime())
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      apiPut<Interview>(`/api/v1/interviews/${id}`, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interviews"] }),
+  });
 
-  const handleDelete = (interviewId: string) => {
-    setIsDeletingId(interviewId)
-    deleteInterview(interviewId, {
-      onSettled: () => {
-        setIsDeletingId(null)
-      },
-    })
-  }
+  const interviews = data?.interviews ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+  const upcoming = interviews.filter((i) => i.status === "scheduled" && new Date(i.scheduled_at) > new Date());
+  const today = interviews.filter((i) => {
+    const d = new Date(i.scheduled_at);
+    const now = new Date();
+    return i.status === "scheduled" && d.toDateString() === now.toDateString();
+  });
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Interviews</h1>
           <p className="text-muted-foreground">
-            Schedule and prepare for your upcoming interviews
+            Schedule and prepare for your interviews
           </p>
         </div>
-        <Button>
-          <Plus className="w-4 h-4 mr-2" />
-          Schedule Interview
-        </Button>
-      </div>
-
-      {/* Upcoming Interviews Section */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-5 h-5" />
-          <h2 className="text-lg font-semibold">Upcoming Interviews</h2>
-          {upcoming.length > 0 && (
-            <Badge variant="secondary">{upcoming.length}</Badge>
-          )}
-        </div>
-
-        {isLoading ? (
-          <div className="grid gap-4">
-            {Array.from({ length: 3 }).map((_, i) => (
-              <InterviewCardSkeleton key={i} />
-            ))}
-          </div>
-        ) : upcoming.length > 0 ? (
-          <div className="grid gap-4">
-            {upcoming.map((interview) => (
-              <InterviewCard
-                key={interview.interview_id}
-                interview={interview}
-                onDelete={() => handleDelete(interview.interview_id)}
-                isDeletingId={isDeletingId}
-              />
-            ))}
-          </div>
-        ) : (
-          <Card>
-            <CardContent className="py-12">
-              <div className="text-center text-muted-foreground space-y-2">
-                <Calendar className="w-12 h-12 mx-auto opacity-50" />
-                <p>No upcoming interviews scheduled</p>
-                <p className="text-sm">Schedule an interview to get started</p>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Plus className="w-4 h-4 me-2" />
+              Schedule Interview
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Schedule Interview</DialogTitle>
+              <DialogDescription>Add a new interview to your calendar</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <div className="space-y-1.5">
+                <Label>Application ID</Label>
+                <Input
+                  value={form.application_id}
+                  onChange={(e) => setForm((f) => ({ ...f, application_id: e.target.value }))}
+                  placeholder="Link to an application"
+                />
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1.5">
+                  <Label>Type</Label>
+                  <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as Interview["type"] }))}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="phone">Phone</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="onsite">On-site</SelectItem>
+                      <SelectItem value="technical">Technical</SelectItem>
+                      <SelectItem value="behavioral">Behavioral</SelectItem>
+                      <SelectItem value="final">Final</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1.5">
+                  <Label>Duration (min)</Label>
+                  <Input
+                    type="number"
+                    value={form.duration_minutes}
+                    onChange={(e) => setForm((f) => ({ ...f, duration_minutes: e.target.value }))}
+                  />
+                </div>
+              </div>
+              <div className="space-y-1.5">
+                <Label>Date & Time</Label>
+                <Input
+                  type="datetime-local"
+                  value={form.scheduled_at}
+                  onChange={(e) => setForm((f) => ({ ...f, scheduled_at: e.target.value }))}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Meeting URL</Label>
+                <Input
+                  value={form.meeting_url}
+                  onChange={(e) => setForm((f) => ({ ...f, meeting_url: e.target.value }))}
+                  placeholder="https://zoom.us/j/..."
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Location</Label>
+                <Input
+                  value={form.location}
+                  onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                  placeholder="Office address or virtual"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label>Notes</Label>
+                <Textarea
+                  value={form.notes}
+                  onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+                  placeholder="Prep notes, topics to review..."
+                  rows={3}
+                />
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDialogOpen(false)}>Cancel</Button>
+              <Button
+                onClick={() => createMutation.mutate({
+                  application_id: form.application_id,
+                  type: form.type,
+                  scheduled_at: new Date(form.scheduled_at).toISOString(),
+                  duration_minutes: parseInt(form.duration_minutes) || 60,
+                  location: form.location || undefined,
+                  meeting_url: form.meeting_url || undefined,
+                  notes: form.notes || undefined,
+                })}
+                disabled={createMutation.isPending || !form.scheduled_at}
+              >
+                {createMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                Schedule
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      {/* Past Interviews Section */}
-      {past.length > 0 && (
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <Calendar className="w-5 h-5" />
-            <h2 className="text-lg font-semibold">Past Interviews</h2>
-            <Badge variant="outline">{past.length}</Badge>
-          </div>
-
-          <div className="grid gap-4">
-            {past.map((interview) => (
-              <InterviewCard
-                key={interview.interview_id}
-                interview={interview}
-                onDelete={() => handleDelete(interview.interview_id)}
-                isDeletingId={isDeletingId}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Summary Stats */}
-      {interviews.length > 0 && (
+      {/* Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-3">
         <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Interview Summary</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Total Interviews</p>
-                <p className="text-2xl font-bold">{interviews.length}</p>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Today</p>
+                <p className="text-2xl font-bold">{today.length}</p>
               </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Upcoming</p>
-                <p className="text-2xl font-bold text-blue-600 dark:text-blue-400">{upcoming.length}</p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Completed</p>
-                <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                  {interviews.filter((i) => i.status === "completed").length}
-                </p>
-              </div>
-              <div className="space-y-1">
-                <p className="text-sm text-muted-foreground">Success Rate</p>
-                <p className="text-2xl font-bold">
-                  {interviews.length > 0
-                    ? Math.round(
-                      (interviews.filter((i) => i.status === "completed").length /
-                        interviews.length) *
-                      100
-                    )
-                    : 0}
-                  %
-                </p>
-              </div>
+              <Calendar className="w-8 h-8 text-muted-foreground opacity-50" />
             </div>
           </CardContent>
         </Card>
-      )}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Upcoming</p>
+                <p className="text-2xl font-bold">{upcoming.length}</p>
+              </div>
+              <Clock className="w-8 h-8 text-muted-foreground opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total</p>
+                <p className="text-2xl font-bold">{total}</p>
+              </div>
+              <FileText className="w-8 h-8 text-muted-foreground opacity-50" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Filter + Table */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Calendar className="w-5 h-5" />
+                Interview Schedule
+              </CardTitle>
+              <CardDescription>{total} total interviews</CardDescription>
+            </div>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All</SelectItem>
+                <SelectItem value="scheduled">Scheduled</SelectItem>
+                <SelectItem value="completed">Completed</SelectItem>
+                <SelectItem value="cancelled">Cancelled</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="space-y-2">
+              {Array.from({ length: 6 }).map((_, i) => (
+                <Skeleton key={i} className="h-14 w-full" />
+              ))}
+            </div>
+          ) : interviews.length === 0 ? (
+            <div className="text-center py-12 text-muted-foreground">
+              <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>No interviews scheduled</p>
+            </div>
+          ) : (
+            <>
+              <div className="rounded-md border overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Date & Time</TableHead>
+                      <TableHead>Duration</TableHead>
+                      <TableHead>Location</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Rating</TableHead>
+                      <TableHead className="w-[60px]">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {interviews.map((interview) => {
+                      const TypeIcon = TYPE_ICON[interview.type] ?? Calendar;
+                      return (
+                        <TableRow key={interview.interview_id}>
+                          <TableCell>
+                            <div className={`inline-flex items-center gap-1.5 px-2 py-1 rounded-md text-xs font-medium ${TYPE_COLOR[interview.type] ?? ""}`}>
+                              <TypeIcon className="w-3.5 h-3.5" />
+                              {interview.type}
+                            </div>
+                          </TableCell>
+                          <TableCell className="whitespace-nowrap text-sm">
+                            {new Date(interview.scheduled_at).toLocaleString()}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {interview.duration_minutes ? `${interview.duration_minutes} min` : "\u2014"}
+                          </TableCell>
+                          <TableCell className="text-sm max-w-[200px] truncate">
+                            {interview.meeting_url ? (
+                              <a href={interview.meeting_url} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline inline-flex items-center gap-1">
+                                Join Meeting <ExternalLink className="w-3 h-3" />
+                              </a>
+                            ) : interview.location || "\u2014"}
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={STATUS_BADGE[interview.status] ?? "bg-gray-500"}>
+                              {interview.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell>
+                            {interview.rating ? (
+                              <div className="flex items-center gap-1">
+                                <Star className="w-3.5 h-3.5 text-amber-500 fill-amber-500" />
+                                <span className="text-sm">{interview.rating}/5</span>
+                              </div>
+                            ) : "\u2014"}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => updateStatusMutation.mutate({ id: interview.interview_id, status: "completed" })}
+                                >
+                                  <CheckCircle2 className="w-4 h-4 me-2" />
+                                  Mark Completed
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => updateStatusMutation.mutate({ id: interview.interview_id, status: "cancelled" })}
+                                >
+                                  <XCircle className="w-4 h-4 me-2" />
+                                  Cancel
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
+                  </TableBody>
+                </Table>
+              </div>
+
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">Page {page} of {totalPages}</p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+                    <ChevronLeft className="w-4 h-4" /> Previous
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                    Next <ChevronRight className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
+        </CardContent>
+      </Card>
     </div>
-  )
+  );
 }

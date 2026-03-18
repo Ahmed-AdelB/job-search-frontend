@@ -1,18 +1,18 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { useApplications, useUpdateApplication, useWithdrawApplication } from "@/hooks/use-applications"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
+/**
+ * Applications Page - Track job applications
+ * Author: Ahmed Adel Bakr Alderai
+ */
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,274 +20,137 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table"
+} from "@/components/ui/table";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+} from "@/components/ui/dropdown-menu";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
-import { Skeleton } from "@/components/ui/skeleton"
-import { Plus, MoreHorizontal, Eye, Edit2, Archive, LogOut } from "lucide-react"
-import { formatDistanceToNow } from "date-fns"
-import type { Application } from "@/types/api"
+  FileText,
+  Search,
+  MoreHorizontal,
+  Archive,
+  RotateCcw,
+  ChevronLeft,
+  ChevronRight,
+  Send,
+  Eye,
+  XCircle,
+  CheckCircle2,
+  Clock,
+  Loader2,
+} from "lucide-react";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { ApplicationsResponse, Application } from "@/types/api";
 
-const STATUS_COLORS: Record<string, string> = {
-  draft: "bg-gray-100 text-gray-800",
-  submitted: "bg-blue-100 text-blue-800",
-  screening: "bg-indigo-100 text-indigo-800",
-  interview: "bg-yellow-100 text-yellow-800",
-  offer: "bg-emerald-100 text-emerald-800",
-  hired: "bg-green-100 text-green-800",
-  rejected: "bg-red-100 text-red-800",
-  withdrawn: "bg-slate-100 text-slate-800",
-}
-
-const STATUS_LABELS: Record<string, string> = {
-  draft: "Draft",
-  submitted: "Submitted",
-  screening: "Screening",
-  interview: "Interview",
-  offer: "Offer",
-  hired: "Hired",
-  rejected: "Rejected",
-  withdrawn: "Withdrawn",
-}
-
-interface ApplicationsPageState {
-  statusFilter: string
-  searchQuery: string
-  currentPage: number
-  showWithdrawDialog: boolean
-  withdrawingApplicationId: string | null
-}
+const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
+  draft: { color: "bg-gray-500", icon: FileText },
+  submitted: { color: "bg-blue-600", icon: Send },
+  screening: { color: "bg-indigo-600", icon: Eye },
+  interview: { color: "bg-amber-500", icon: Clock },
+  offer: { color: "bg-green-600", icon: CheckCircle2 },
+  hired: { color: "bg-emerald-700", icon: CheckCircle2 },
+  rejected: { color: "bg-red-600", icon: XCircle },
+  withdrawn: { color: "bg-gray-500", icon: Archive },
+};
 
 export default function ApplicationsPage() {
-  const [state, setState] = useState<ApplicationsPageState>({
-    statusFilter: "",
-    searchQuery: "",
-    currentPage: 1,
-    showWithdrawDialog: false,
-    withdrawingApplicationId: null,
-  })
+  const queryClient = useQueryClient();
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [page, setPage] = useState(1);
+  const perPage = 25;
 
-  const itemsPerPage = 10
+  const { data, isLoading } = useQuery({
+    queryKey: ["applications", search, statusFilter, page],
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (search) params.set("search", search);
+      if (statusFilter !== "all") params.set("status", statusFilter);
+      params.set("page", String(page));
+      params.set("per_page", String(perPage));
+      return apiGet<ApplicationsResponse>(`/api/v1/applications?${params.toString()}`);
+    },
+  });
 
-  const filters = {
-    status: state.statusFilter || undefined,
-    page: state.currentPage,
-    per_page: itemsPerPage,
-  }
+  const updateStatusMutation = useMutation({
+    mutationFn: ({ id, status }: { id: string; status: string }) =>
+      apiPost<{ status: string }>(`/api/v1/applications/${id}/status`, { status }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
 
-  const { data: applicationsData, isLoading, error } = useApplications(filters)
-  const updateMutation = useUpdateApplication()
-  const withdrawMutation = useWithdrawApplication()
+  const reapplyMutation = useMutation({
+    mutationFn: (id: string) =>
+      apiPost<{ status: string }>(`/api/v1/applications/${id}/reapply`, {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
+  });
 
-  const applications = applicationsData?.applications || []
-  const total = applicationsData?.total || 0
-  const totalPages = Math.ceil(total / itemsPerPage)
+  const applications = data?.applications ?? [];
+  const total = data?.total ?? 0;
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
 
-  // Filter applications by search query (client-side since API doesn't support it)
-  const filteredApplications = applications.filter((app) => {
-    if (!state.searchQuery) return true
-    const query = state.searchQuery.toLowerCase()
-    // Search by job title and company (will be populated from related job data)
-    return `${app.application_id}`.toLowerCase().includes(query)
-  })
-
-  const handleStatusChange = (applicationId: string, newStatus: string) => {
-    updateMutation.mutate({
-      applicationId: parseInt(applicationId),
-      data: { status: newStatus as Application["status"] },
-    })
-  }
-
-  const handleArchive = (applicationId: string) => {
-    updateMutation.mutate({
-      applicationId: parseInt(applicationId),
-      data: { status: "withdrawn" },
-    })
-  }
-
-  const handleWithdraw = (applicationId: string) => {
-    setState((prev) => ({
-      ...prev,
-      showWithdrawDialog: true,
-      withdrawingApplicationId: applicationId,
-    }))
-  }
-
-  const confirmWithdraw = () => {
-    if (state.withdrawingApplicationId) {
-      withdrawMutation.mutate(parseInt(state.withdrawingApplicationId))
-      setState((prev) => ({
-        ...prev,
-        showWithdrawDialog: false,
-        withdrawingApplicationId: null,
-      }))
-    }
-  }
-
-  // Calculate stats from data
-  const stats = {
-    total: total,
-    inProgress: applications.filter((a) =>
-      ["submitted", "screening", "interview"].includes(a.status)
-    ).length,
-    interviews: applications.filter((a) => a.status === "interview").length,
-    offers: applications.filter((a) => a.status === "offer").length,
-    rejected: applications.filter((a) => a.status === "rejected").length,
-  }
+  // Summary counts
+  const counts = applications.reduce(
+    (acc, app) => {
+      acc[app.status] = (acc[app.status] ?? 0) + 1;
+      return acc;
+    },
+    {} as Record<string, number>
+  );
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
-          <p className="text-muted-foreground">
-            Track and manage your job applications
-          </p>
-        </div>
-        <Button>
-          <Plus className="w-4 h-4 me-2" />
-          New Application
-        </Button>
+      <div>
+        <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
+        <p className="text-muted-foreground">
+          Track and manage your {total} job applications
+        </p>
       </div>
 
-      {/* Stats Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Total Applications
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold">{stats.total}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              In Progress
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold text-blue-600">{stats.inProgress}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Interviews
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold text-yellow-600">{stats.interviews}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Offers
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold text-emerald-600">{stats.offers}</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="pb-3">
-            <CardTitle className="text-sm font-medium text-muted-foreground">
-              Rejected
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <Skeleton className="h-8 w-12" />
-            ) : (
-              <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
-            )}
-          </CardContent>
-        </Card>
+      {/* Summary Cards */}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+        {(["submitted", "screening", "interview", "offer", "rejected"] as const).map((s) => {
+          const config = STATUS_CONFIG[s];
+          const StatusIcon = config.icon;
+          return (
+            <Card key={s} className="cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => { setStatusFilter(s); setPage(1); }}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground capitalize">{s}</p>
+                    <p className="text-2xl font-bold">{counts[s] ?? 0}</p>
+                  </div>
+                  <StatusIcon className="w-6 h-6 text-muted-foreground opacity-60" />
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
       </div>
 
-      {/* Main Table Card */}
+      {/* Filters */}
       <Card>
-        <CardHeader>
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div>
-              <CardTitle>Your Applications</CardTitle>
-              <CardDescription>
-                Monitor application status and progress
-              </CardDescription>
-            </div>
-          </div>
-
-          {/* Filters */}
-          <div className="flex flex-col sm:flex-row gap-3 pt-6">
-            <div className="flex-1">
+        <CardContent className="p-4">
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div className="flex items-center gap-2 flex-1">
+              <Search className="w-4 h-4 text-muted-foreground shrink-0" />
               <Input
-                placeholder="Search applications..."
-                value={state.searchQuery}
-                onChange={(e) =>
-                  setState((prev) => ({
-                    ...prev,
-                    searchQuery: e.target.value,
-                    currentPage: 1,
-                  }))
-                }
-                className="max-w-sm"
+                placeholder="Search by company or job title..."
+                value={search}
+                onChange={(e) => { setSearch(e.target.value); setPage(1); }}
+                className="max-w-md"
               />
             </div>
-
-            <Select
-              value={state.statusFilter}
-              onValueChange={(value) =>
-                setState((prev) => ({
-                  ...prev,
-                  statusFilter: value,
-                  currentPage: 1,
-                }))
-              }
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Filter by status" />
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Status" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">All Statuses</SelectItem>
+                <SelectItem value="all">All Statuses</SelectItem>
                 <SelectItem value="draft">Draft</SelectItem>
                 <SelectItem value="submitted">Submitted</SelectItem>
                 <SelectItem value="screening">Screening</SelectItem>
@@ -299,220 +162,176 @@ export default function ApplicationsPage() {
               </SelectContent>
             </Select>
           </div>
+        </CardContent>
+      </Card>
+
+      {/* Applications Table */}
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5" />
+            Applications
+          </CardTitle>
+          <CardDescription>{total} total applications</CardDescription>
         </CardHeader>
-
         <CardContent>
-          {error && (
-            <div className="text-center py-8 text-red-600">
-              <p>Failed to load applications. Please try again.</p>
-            </div>
-          )}
-
           {isLoading ? (
-            <div className="space-y-4">
-              {Array.from({ length: 5 }).map((_, i) => (
-                <div key={i} className="flex gap-4">
-                  <Skeleton className="h-12 flex-1" />
-                  <Skeleton className="h-12 w-12" />
-                </div>
+            <div className="space-y-2">
+              {Array.from({ length: 10 }).map((_, i) => (
+                <Skeleton key={i} className="h-12 w-full" />
               ))}
             </div>
-          ) : filteredApplications.length === 0 ? (
+          ) : applications.length === 0 ? (
             <div className="text-center py-12 text-muted-foreground">
-              <p className="mb-2">No applications found</p>
-              <p className="text-sm">
-                {state.searchQuery || state.statusFilter
-                  ? "Try adjusting your filters"
-                  : "Get started by creating your first application"}
-              </p>
+              <FileText className="w-12 h-12 mx-auto mb-4 opacity-50" />
+              <p>{search || statusFilter !== "all" ? "No applications match your filters" : "No applications yet. Apply to jobs to see them here."}</p>
             </div>
           ) : (
             <>
-              {/* Table */}
-              <div className="overflow-x-auto">
+              <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Job Title</TableHead>
-                      <TableHead>Company</TableHead>
+                      <TableHead>Job</TableHead>
                       <TableHead>Status</TableHead>
-                      <TableHead>Applied Date</TableHead>
-                      <TableHead>Last Updated</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
+                      <TableHead>Applied</TableHead>
+                      <TableHead>Resume</TableHead>
+                      <TableHead>Notes</TableHead>
+                      <TableHead className="w-[60px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {filteredApplications.map((application) => (
-                      <TableRow key={application.application_id}>
-                        <TableCell className="font-medium">
-                          {application.job_id ? `Job ${application.job_id}` : "N/A"}
-                        </TableCell>
-                        <TableCell>—</TableCell>
-                        <TableCell>
-                          <Badge className={STATUS_COLORS[application.status]}>
-                            {STATUS_LABELS[application.status]}
-                          </Badge>
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {application.applied_at
-                            ? formatDistanceToNow(
-                                new Date(application.applied_at),
-                                { addSuffix: true }
-                              )
-                            : "—"}
-                        </TableCell>
-                        <TableCell className="text-sm text-muted-foreground">
-                          {formatDistanceToNow(new Date(application.updated_at), {
-                            addSuffix: true,
-                          })}
-                        </TableCell>
-                        <TableCell className="text-right">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                className="h-8 w-8 p-0"
-                              >
-                                <span className="sr-only">Open menu</span>
-                                <MoreHorizontal className="h-4 w-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                              <DropdownMenuItem>
-                                <Eye className="mr-2 h-4 w-4" />
-                                View Details
-                              </DropdownMenuItem>
-                              <DropdownMenuItem>
-                                <Edit2 className="mr-2 h-4 w-4" />
-                                Edit Application
-                              </DropdownMenuItem>
-                              <DropdownMenuSeparator />
-
-                              {/* Status Submenu */}
-                              <DropdownMenuLabel>Update Status</DropdownMenuLabel>
-                              {[
-                                "draft",
-                                "submitted",
-                                "screening",
-                                "interview",
-                                "offer",
-                                "hired",
-                                "rejected",
-                              ].map((status) => (
+                    {applications.map((app) => {
+                      const config = STATUS_CONFIG[app.status] ?? STATUS_CONFIG.draft;
+                      const StatusIcon = config.icon;
+                      return (
+                        <TableRow key={app.application_id}>
+                          <TableCell>
+                            <div>
+                              <p className="font-medium">{app.job_id}</p>
+                              {app.cover_letter && (
+                                <p className="text-xs text-muted-foreground">Has cover letter</p>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className={`${config.color} text-xs`}>
+                              <StatusIcon className="w-3 h-3 me-1" />
+                              {app.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                            {app.applied_at
+                              ? new Date(app.applied_at).toLocaleDateString()
+                              : "\u2014"}
+                          </TableCell>
+                          <TableCell>
+                            {app.resume_url ? (
+                              <Badge variant="outline" className="text-xs">
+                                <FileText className="w-3 h-3 me-1" />
+                                Attached
+                              </Badge>
+                            ) : (
+                              <span className="text-xs text-muted-foreground">None</span>
+                            )}
+                          </TableCell>
+                          <TableCell className="max-w-[200px] text-sm truncate">
+                            {app.notes || "\u2014"}
+                          </TableCell>
+                          <TableCell>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </Button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
                                 <DropdownMenuItem
-                                  key={status}
                                   onClick={() =>
-                                    handleStatusChange(
-                                      application.application_id,
-                                      status
-                                    )
+                                    updateStatusMutation.mutate({
+                                      id: app.application_id,
+                                      status: "interview",
+                                    })
                                   }
                                 >
-                                  {STATUS_LABELS[status]}
+                                  <Clock className="w-4 h-4 me-2" />
+                                  Mark Interview
                                 </DropdownMenuItem>
-                              ))}
-
-                              <DropdownMenuSeparator />
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleArchive(application.application_id)
-                                }
-                              >
-                                <Archive className="mr-2 h-4 w-4" />
-                                Archive
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                variant="destructive"
-                                onClick={() =>
-                                  handleWithdraw(application.application_id)
-                                }
-                              >
-                                <LogOut className="mr-2 h-4 w-4" />
-                                Withdraw
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </TableCell>
-                      </TableRow>
-                    ))}
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    updateStatusMutation.mutate({
+                                      id: app.application_id,
+                                      status: "offer",
+                                    })
+                                  }
+                                >
+                                  <CheckCircle2 className="w-4 h-4 me-2" />
+                                  Mark Offer
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() =>
+                                    updateStatusMutation.mutate({
+                                      id: app.application_id,
+                                      status: "withdrawn",
+                                    })
+                                  }
+                                >
+                                  <Archive className="w-4 h-4 me-2" />
+                                  Withdraw
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
+                                {(app.status === "rejected" || app.status === "withdrawn") && (
+                                  <DropdownMenuItem
+                                    onClick={() => reapplyMutation.mutate(app.application_id)}
+                                    disabled={reapplyMutation.isPending}
+                                  >
+                                    {reapplyMutation.isPending ? (
+                                      <Loader2 className="w-4 h-4 me-2 animate-spin" />
+                                    ) : (
+                                      <RotateCcw className="w-4 h-4 me-2" />
+                                    )}
+                                    Reapply
+                                  </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                  className="text-destructive"
+                                  onClick={() =>
+                                    updateStatusMutation.mutate({
+                                      id: app.application_id,
+                                      status: "rejected",
+                                    })
+                                  }
+                                >
+                                  <XCircle className="w-4 h-4 me-2" />
+                                  Mark Rejected
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </TableCell>
+                        </TableRow>
+                      );
+                    })}
                   </TableBody>
                 </Table>
               </div>
 
-              {/* Pagination */}
-              {totalPages > 1 && (
-                <div className="flex items-center justify-between pt-6 border-t">
-                  <div className="text-sm text-muted-foreground">
-                    Showing page {state.currentPage} of {totalPages}
-                  </div>
-                  <div className="flex gap-2">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setState((prev) => ({
-                          ...prev,
-                          currentPage: Math.max(1, prev.currentPage - 1),
-                        }))
-                      }
-                      disabled={state.currentPage === 1}
-                    >
-                      Previous
-                    </Button>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() =>
-                        setState((prev) => ({
-                          ...prev,
-                          currentPage: Math.min(totalPages, prev.currentPage + 1),
-                        }))
-                      }
-                      disabled={state.currentPage === totalPages}
-                    >
-                      Next
-                    </Button>
-                  </div>
+              <div className="flex items-center justify-between mt-4">
+                <p className="text-sm text-muted-foreground">
+                  Page {page} of {totalPages} ({total} total)
+                </p>
+                <div className="flex gap-2">
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page <= 1}>
+                    <ChevronLeft className="w-4 h-4" /> Previous
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setPage((p) => Math.min(totalPages, p + 1))} disabled={page >= totalPages}>
+                    Next <ChevronRight className="w-4 h-4" />
+                  </Button>
                 </div>
-              )}
+              </div>
             </>
           )}
         </CardContent>
       </Card>
-
-      {/* Withdraw Confirmation Dialog */}
-      <AlertDialog
-        open={state.showWithdrawDialog}
-        onOpenChange={(open) =>
-          setState((prev) => ({
-            ...prev,
-            showWithdrawDialog: open,
-            withdrawingApplicationId: null,
-          }))
-        }
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Withdraw Application</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to withdraw this application? This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex gap-3 justify-end">
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmWithdraw}
-              disabled={withdrawMutation.isPending}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              {withdrawMutation.isPending ? "Withdrawing..." : "Withdraw"}
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
-  )
+  );
 }

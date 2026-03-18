@@ -1,30 +1,284 @@
 "use client";
 
+/**
+ * Invitations Page - Manage job referrals and invitations
+ * Author: Ahmed Adel Bakr Alderai
+ */
+
+import { useState } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MailOpen } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import {
+  MailOpen,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Check,
+  X,
+  Clock,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+import { apiGet, apiPost } from "@/lib/api-client";
+import type { Invitation, InvitationsResponse } from "@/types/api";
+
+const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
+  pending: { color: "bg-amber-500", icon: Clock },
+  accepted: { color: "bg-green-600", icon: Check },
+  declined: { color: "bg-red-600", icon: X },
+  expired: { color: "bg-gray-500", icon: Clock },
+};
 
 export default function InvitationsPage() {
+  const { data, isLoading } = useQuery({
+    queryKey: ["invitations"],
+    queryFn: () => apiGet<InvitationsResponse>("/api/v1/invitations"),
+  });
+
+  const invitations = data?.invitations ?? [];
+  const acceptanceRate = data?.acceptance_rate;
+  const incoming = invitations.filter((i) => i.type === "incoming");
+  const outgoing = invitations.filter((i) => i.type === "outgoing");
+  const pending = invitations.filter((i) => i.status === "pending");
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Invitations</h1>
         <p className="text-muted-foreground">
-          Manage job referrals and invitations
+          Manage job referrals and network invitations
         </p>
       </div>
 
+      {/* Stats Cards */}
+      <div className="grid gap-4 sm:grid-cols-4">
+        <StatsCard
+          title="Total"
+          value={invitations.length}
+          icon={MailOpen}
+          loading={isLoading}
+        />
+        <StatsCard
+          title="Pending"
+          value={pending.length}
+          icon={Clock}
+          loading={isLoading}
+        />
+        <StatsCard
+          title="Incoming"
+          value={incoming.length}
+          icon={ArrowDownLeft}
+          loading={isLoading}
+        />
+        <StatsCard
+          title="Acceptance Rate"
+          value={acceptanceRate != null ? `${Math.round(acceptanceRate * 100)}%` : "—"}
+          icon={TrendingUp}
+          loading={isLoading}
+        />
+      </div>
+
+      <Tabs defaultValue="all">
+        <TabsList>
+          <TabsTrigger value="all">
+            <MailOpen className="w-4 h-4 me-2" />
+            All ({invitations.length})
+          </TabsTrigger>
+          <TabsTrigger value="incoming">
+            <ArrowDownLeft className="w-4 h-4 me-2" />
+            Incoming ({incoming.length})
+          </TabsTrigger>
+          <TabsTrigger value="outgoing">
+            <ArrowUpRight className="w-4 h-4 me-2" />
+            Outgoing ({outgoing.length})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="all" className="mt-6">
+          <InvitationTable invitations={invitations} isLoading={isLoading} />
+        </TabsContent>
+        <TabsContent value="incoming" className="mt-6">
+          <InvitationTable invitations={incoming} isLoading={isLoading} />
+        </TabsContent>
+        <TabsContent value="outgoing" className="mt-6">
+          <InvitationTable invitations={outgoing} isLoading={isLoading} />
+        </TabsContent>
+      </Tabs>
+    </div>
+  );
+}
+
+function StatsCard({
+  title,
+  value,
+  icon: Icon,
+  loading,
+}: {
+  title: string;
+  value: number | string;
+  icon: React.ElementType;
+  loading: boolean;
+}) {
+  return (
+    <Card>
+      <CardContent className="p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <p className="text-sm text-muted-foreground">{title}</p>
+            {loading ? (
+              <Skeleton className="h-8 w-12 mt-1" />
+            ) : (
+              <p className="text-2xl font-bold">{value}</p>
+            )}
+          </div>
+          <Icon className="w-8 h-8 text-muted-foreground opacity-50" />
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+function InvitationTable({
+  invitations,
+  isLoading,
+}: {
+  invitations: Invitation[];
+  isLoading: boolean;
+}) {
+  const queryClient = useQueryClient();
+
+  const respondMutation = useMutation({
+    mutationFn: ({ id, action }: { id: string; action: "accept" | "decline" }) =>
+      apiPost<{ status: string }>(`/api/v1/invitations/${id}/${action}`, {}),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitations"] }),
+  });
+
+  if (isLoading) {
+    return (
       <Card>
-        <CardHeader>
-          <CardTitle>Your Invitations</CardTitle>
-          <CardDescription>Job referrals and network invitations</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="text-center py-12 text-muted-foreground">
-            <MailOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p>No invitations yet</p>
+        <CardContent className="p-6">
+          <div className="space-y-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-12 w-full" />
+            ))}
           </div>
         </CardContent>
       </Card>
-    </div>
+    );
+  }
+
+  if (invitations.length === 0) {
+    return (
+      <Card>
+        <CardContent className="py-12">
+          <div className="text-center text-muted-foreground">
+            <MailOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
+            <p>No invitations in this category</p>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card>
+      <CardContent className="p-0">
+        <div className="rounded-md border-0">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Person</TableHead>
+                <TableHead>Company</TableHead>
+                <TableHead>Type</TableHead>
+                <TableHead>Status</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead className="w-[160px]">Actions</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {invitations.map((inv) => {
+                const statusConfig = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.pending;
+                const StatusIcon = statusConfig.icon;
+                return (
+                  <TableRow key={inv.id}>
+                    <TableCell>
+                      <div>
+                        <p className="font-medium">{inv.person_name}</p>
+                        {inv.email && (
+                          <p className="text-xs text-muted-foreground">{inv.email}</p>
+                        )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="text-sm">{inv.company}</TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="text-xs">
+                        {inv.type === "incoming" ? (
+                          <ArrowDownLeft className="w-3 h-3 me-1" />
+                        ) : (
+                          <ArrowUpRight className="w-3 h-3 me-1" />
+                        )}
+                        {inv.type}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      <Badge className={statusConfig.color}>
+                        <StatusIcon className="w-3 h-3 me-1" />
+                        {inv.status}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                      {new Date(inv.sent_at ?? inv.created_at).toLocaleDateString()}
+                    </TableCell>
+                    <TableCell>
+                      {inv.status === "pending" && inv.type === "incoming" && (
+                        <div className="flex gap-1">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() =>
+                              respondMutation.mutate({ id: inv.id, action: "accept" })
+                            }
+                            disabled={respondMutation.isPending}
+                          >
+                            <Check className="w-4 h-4 me-1" />
+                            Accept
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              respondMutation.mutate({ id: inv.id, action: "decline" })
+                            }
+                            disabled={respondMutation.isPending}
+                          >
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      )}
+                      {inv.message && (
+                        <p className="text-xs text-muted-foreground mt-1 line-clamp-1">
+                          {inv.message}
+                        </p>
+                      )}
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
