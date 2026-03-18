@@ -57,16 +57,15 @@ export default function Error({ error, reset }: ErrorProps) {
               <RotateCcw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="flex-1"
-            >
-              <Link href="/">
+            <Link href="/" className="flex-1">
+              <Button
+                variant="outline"
+                className="w-full"
+              >
                 <Home className="w-4 h-4 mr-2" />
                 Home
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
 
           {/* Footer Note */}

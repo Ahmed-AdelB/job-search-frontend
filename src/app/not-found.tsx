@@ -24,7 +24,7 @@ export default function NotFound() {
           <div className="text-center mb-6">
             <h1 className="text-2xl font-bold mb-2">Page Not Found</h1>
             <p className="text-muted-foreground text-sm">
-              The page you're looking for doesn't exist or has been moved.
+              The page you&apos;re looking for doesn&apos;t exist or has been moved.
             </p>
           </div>
 
@@ -37,25 +37,18 @@ export default function NotFound() {
 
           {/* Action Buttons */}
           <div className="flex flex-col gap-3 mb-6">
-            <Button
-              asChild
-              className="w-full"
-            >
-              <Link href="/">
+            <Link href="/">
+              <Button className="w-full">
                 <Home className="w-4 h-4 mr-2" />
                 Back to Home
-              </Link>
-            </Button>
-            <Button
-              asChild
-              variant="outline"
-              className="w-full"
-            >
-              <Link href="/dashboard">
+              </Button>
+            </Link>
+            <Link href="/dashboard">
+              <Button variant="outline" className="w-full">
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Go to Dashboard
-              </Link>
-            </Button>
+              </Button>
+            </Link>
           </div>
 
           {/* Help Text */}

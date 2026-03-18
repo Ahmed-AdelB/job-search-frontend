@@ -49,7 +49,7 @@ export default function RootLayout({
         className={`${inter.variable} ${notoSansArabic.variable} antialiased min-h-screen`}
       >
         <ClientProvider>
-          <TooltipProvider delayDuration={300}>
+          <TooltipProvider>
             {children}
             <Toaster
               position="top-right"
