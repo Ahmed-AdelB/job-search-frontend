@@ -66,7 +66,7 @@ const STATUS_LABELS: Record<string, string> = {
 }
 
 interface ApplicationsPageState {
-  statusFilter: string
+  statusFilter: string | null
   searchQuery: string
   currentPage: number
   showWithdrawDialog: boolean
@@ -85,7 +85,7 @@ export default function ApplicationsPage() {
   const itemsPerPage = 10
 
   const filters = {
-    status: state.statusFilter || undefined,
+    status: state.statusFilter || "",
     page: state.currentPage,
     per_page: itemsPerPage,
   }
