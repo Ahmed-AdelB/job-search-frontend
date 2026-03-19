@@ -5,6 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
+import { motion } from "motion/react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -68,7 +69,7 @@ export default function ContactsPage() {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
@@ -141,8 +142,14 @@ export default function ContactsPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {contacts.map((contact) => (
-                      <TableRow key={contact.linkedin_id}>
+                    {contacts.map((contact, index) => (
+                      <motion.tr
+                        key={contact.linkedin_id}
+                        initial={{opacity:0,x:-10}}
+                        animate={{opacity:1,x:0}}
+                        transition={{delay: index * 0.03}}
+                        className="hover:bg-muted/50 transition-colors"
+                      >
                         <TableCell>
                           <div>
                             <p className="font-medium">
@@ -208,7 +215,7 @@ export default function ContactsPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                      </TableRow>
+                      </motion.tr>
                     ))}
                   </TableBody>
                 </Table>
@@ -243,6 +250,6 @@ export default function ContactsPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

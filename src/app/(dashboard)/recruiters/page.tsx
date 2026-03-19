@@ -5,6 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
+import { motion } from "motion/react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -95,7 +96,7 @@ export default function RecruitersPage() {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <div className="space-y-6">
+    <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Recruiters</h1>
         <p className="text-muted-foreground">
@@ -156,8 +157,14 @@ export default function RecruitersPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {recruiters.map((recruiter) => (
-                      <TableRow key={recruiter.contact_id}>
+                    {recruiters.map((recruiter, index) => (
+                      <motion.tr
+                        key={recruiter.contact_id}
+                        initial={{opacity:0,x:-10}}
+                        animate={{opacity:1,x:0}}
+                        transition={{delay: index * 0.03}}
+                        className="hover:bg-muted/50 transition-colors"
+                      >
                         <TableCell>
                           <div>
                             <p className="font-medium">{recruiter.name}</p>
@@ -233,7 +240,7 @@ export default function RecruitersPage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </TableCell>
-                      </TableRow>
+                      </motion.tr>
                     ))}
                   </TableBody>
                 </Table>
@@ -299,6 +306,6 @@ export default function RecruitersPage() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </motion.div>
   );
 }
