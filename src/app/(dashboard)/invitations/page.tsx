@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -53,7 +54,7 @@ export default function InvitationsPage() {
   const pending = invitations.filter((i) => i.status === "pending");
 
   return (
-    <div className="space-y-6">
+    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Invitations</h1>
         <p className="text-muted-foreground">
@@ -115,7 +116,7 @@ export default function InvitationsPage() {
           <InvitationTable invitations={outgoing} isLoading={isLoading} />
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }
 

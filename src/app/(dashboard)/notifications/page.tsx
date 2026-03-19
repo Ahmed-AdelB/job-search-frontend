@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { motion } from "motion/react"
 import { useNotifications, useMarkAllNotificationsAsRead, useMarkNotificationAsRead, useDeleteNotification } from "@/hooks/use-notifications"
 import { isSafeUrl, formatRelativeTime, getNotificationTypeConfig } from "@/lib/notification-utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -93,7 +94,7 @@ export default function NotificationsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -325,6 +326,6 @@ export default function NotificationsPage() {
           </Tabs>
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   )
 }

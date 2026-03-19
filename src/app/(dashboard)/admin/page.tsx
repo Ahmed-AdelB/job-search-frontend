@@ -6,6 +6,7 @@
  */
 
 import { useState } from "react";
+import { motion } from "motion/react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -54,7 +55,7 @@ const TENANT_STATUS_COLOR: Record<string, string> = {
 
 export default function AdminPage() {
   return (
-    <div className="space-y-6">
+    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Administration</h1>
         <p className="text-muted-foreground">
@@ -88,7 +89,7 @@ export default function AdminPage() {
           <TrashTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }
 

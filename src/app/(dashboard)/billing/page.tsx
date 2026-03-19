@@ -5,6 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
+import { motion } from "motion/react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -91,7 +92,12 @@ export default function BillingPage() {
   const invoicesList = invoices?.invoices ?? [];
 
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
@@ -181,16 +187,32 @@ export default function BillingPage() {
               ))}
             </div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: {
+                  opacity: 1,
+                  transition: { staggerChildren: 0.1 },
+                },
+              }}
+            >
               {plansList.map((plan) => {
                 const config = TIER_CONFIG[plan.tier] ?? TIER_CONFIG.free;
                 const TierIcon = config.icon;
                 const isCurrent = sub?.plan_id === plan.id;
 
                 return (
-                  <div
+                  <motion.div
                     key={plan.id}
                     className={`rounded-lg border-2 p-5 space-y-4 ${isCurrent ? config.accent : "border-border"} ${config.color}`}
+                    variants={{
+                      hidden: { opacity: 0, y: 20 },
+                      visible: { opacity: 1, y: 0 },
+                    }}
+                    whileHover={{ scale: 1.02 }}
                   >
                     <div className="flex items-center gap-2">
                       <TierIcon className="w-5 h-5" />
@@ -233,10 +255,10 @@ export default function BillingPage() {
                         {plan.price_monthly === 0 ? "Get Started" : "Upgrade"}
                       </Button>
                     )}
-                  </div>
+                  </motion.div>
                 );
               })}
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>
@@ -268,8 +290,13 @@ export default function BillingPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {invoicesList.map((inv) => (
-                    <TableRow key={inv.id}>
+                  {invoicesList.map((inv, index) => (
+                    <motion.tr
+                      key={inv.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
                       <TableCell className="text-sm">
                         {new Date(inv.invoice_date).toLocaleDateString()}
                       </TableCell>
@@ -290,7 +317,7 @@ export default function BillingPage() {
                           </Button>
                         ) : "\u2014"}
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -298,6 +325,6 @@ export default function BillingPage() {
           )}
         </CardContent>
       </Card>
-    </div>
+    </motion.div>
   );
 }

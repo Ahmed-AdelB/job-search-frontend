@@ -5,6 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
+import { motion } from "motion/react";
 import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -55,7 +56,12 @@ const PLATFORM_LABELS: Record<string, string> = {
 
 export default function CommunityPage() {
   return (
-    <div className="space-y-6">
+    <motion.div
+      className="space-y-6"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Community</h1>
         <p className="text-muted-foreground">
@@ -82,7 +88,7 @@ export default function CommunityPage() {
           <DiscoverTab />
         </TabsContent>
       </Tabs>
-    </div>
+    </motion.div>
   );
 }
 
@@ -149,8 +155,13 @@ function TrackedTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {communities.map((community) => (
-                    <TableRow key={community.id}>
+                  {communities.map((community, index) => (
+                    <motion.tr
+                      key={community.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.05 }}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <span className="font-medium">{community.name}</span>
@@ -200,7 +211,7 @@ function TrackedTab() {
                           Remove
                         </Button>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -261,11 +272,27 @@ function DiscoverTab() {
             <p>No recommendations available. Complete your profile to get suggestions.</p>
           </div>
         ) : (
-          <div className="space-y-3">
+          <motion.div
+            className="space-y-3"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: { staggerChildren: 0.08 },
+              },
+            }}
+          >
             {recommendations.map((rec) => (
-              <div
+              <motion.div
                 key={rec.id}
                 className="flex items-start justify-between p-4 rounded-lg border"
+                variants={{
+                  hidden: { opacity: 0, y: 10 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                whileHover={{ scale: 1.01 }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
@@ -294,9 +321,9 @@ function DiscoverTab() {
                   <Plus className="w-4 h-4 me-1" />
                   Track
                 </Button>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         )}
       </CardContent>
     </Card>
