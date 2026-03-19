@@ -56,6 +56,30 @@ const INVOICE_STATUS_COLOR: Record<string, string> = {
   uncollectible: "bg-red-600",
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.12,
+      delayChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+};
+
 export default function BillingPage() {
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["billing", "plans"],
@@ -191,13 +215,7 @@ export default function BillingPage() {
               className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
               initial="hidden"
               animate="visible"
-              variants={{
-                hidden: { opacity: 0 },
-                visible: {
-                  opacity: 1,
-                  transition: { staggerChildren: 0.1 },
-                },
-              }}
+              variants={containerVariants}
             >
               {plansList.map((plan) => {
                 const config = TIER_CONFIG[plan.tier] ?? TIER_CONFIG.free;
@@ -208,11 +226,16 @@ export default function BillingPage() {
                   <motion.div
                     key={plan.id}
                     className={`rounded-lg border-2 p-5 space-y-4 ${isCurrent ? config.accent : "border-border"} ${config.color}`}
-                    variants={{
-                      hidden: { opacity: 0, y: 20 },
-                      visible: { opacity: 1, y: 0 },
+                    variants={itemVariants}
+                    whileHover={{
+                      scale: 1.02,
+                      boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.15)",
+                      transition: {
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 15,
+                      },
                     }}
-                    whileHover={{ scale: 1.02 }}
                   >
                     <div className="flex items-center gap-2">
                       <TierIcon className="w-5 h-5" />
@@ -295,7 +318,12 @@ export default function BillingPage() {
                       key={inv.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{
+                        delay: index * 0.05,
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 20,
+                      }}
                     >
                       <TableCell className="text-sm">
                         {new Date(inv.invoice_date).toLocaleDateString()}

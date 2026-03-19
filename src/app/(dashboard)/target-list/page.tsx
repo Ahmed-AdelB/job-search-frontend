@@ -69,6 +69,30 @@ const SIZE_LABEL: Record<string, string> = {
   enterprise: "Enterprise (5000+)",
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function TargetListPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -145,7 +169,7 @@ export default function TargetListPage() {
   );
 
   return (
-    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
+    <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Target List</h1>
@@ -177,25 +201,31 @@ export default function TargetListPage() {
       </div>
 
       {/* Tier Summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
+      <motion.div
+        className="grid gap-4 sm:grid-cols-3"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants as any}
+      >
         {(["A", "B", "C"] as const).map((tier) => (
-          <Card
-            key={tier}
-            className="cursor-pointer hover:border-primary/50 transition-colors"
-            onClick={() => setTierFilter(tierFilter === tier ? "all" : tier)}
-          >
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Tier {tier}</p>
-                  <p className="text-2xl font-bold">{tierCounts[tier] ?? 0}</p>
+          <motion.div key={tier} variants={itemVariants}>
+            <Card
+              className="cursor-pointer hover:border-primary/50 transition-colors"
+              onClick={() => setTierFilter(tierFilter === tier ? "all" : tier)}
+            >
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-sm text-muted-foreground">Tier {tier}</p>
+                    <p className="text-2xl font-bold">{tierCounts[tier] ?? 0}</p>
+                  </div>
+                  <Badge className={TIER_COLOR[tier]}>{tier}</Badge>
                 </div>
-                <Badge className={TIER_COLOR[tier]}>{tier}</Badge>
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
-      </div>
+      </motion.div>
 
       {/* Search + Filter */}
       <Card>
@@ -262,8 +292,22 @@ export default function TargetListPage() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {companies.map((company) => (
-                    <TableRow key={company.id}>
+                  {companies.map((company, index) => (
+                    <motion.tr
+                      key={company.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: index * 0.05,
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 20,
+                      } as any}
+                      whileHover={{
+                        backgroundColor: "rgba(0, 0, 0, 0.02)",
+                        transition: { duration: 0.2 },
+                      } as any}
+                    >
                       <TableCell>
                         <div className="flex items-center gap-2">
                           <Building2 className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -320,7 +364,7 @@ export default function TargetListPage() {
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>

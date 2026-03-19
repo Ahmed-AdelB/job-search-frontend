@@ -51,9 +51,46 @@ const ALERT_CONFIG: Record<string, { color: string; icon: React.ElementType }> =
   error: { color: "bg-red-600", icon: XCircle },
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
+const slideInVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function TriagePage() {
   return (
-    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
+    <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Triage</h1>
@@ -127,90 +164,145 @@ function DigestTab() {
           </CardContent>
         </Card>
       ) : (
-        <>
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-primary" />
-                Digest for {new Date(preview.date).toLocaleDateString()}
-              </CardTitle>
-              {preview.summary && (
-                <CardDescription>{preview.summary}</CardDescription>
-              )}
-            </CardHeader>
-            <CardContent>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div className="p-4 rounded-lg border text-center">
-                  <div className="text-3xl font-bold">{preview.jobs_discovered ?? 0}</div>
-                  <div className="text-sm text-muted-foreground">Jobs Discovered</div>
-                </div>
-                <div className="p-4 rounded-lg border text-center">
-                  <div className="text-3xl font-bold">{preview.recommended_actions.length}</div>
-                  <div className="text-sm text-muted-foreground">Recommended Actions</div>
-                </div>
-                <div className="p-4 rounded-lg border text-center">
-                  <div className="text-3xl font-bold">{preview.alerts.length}</div>
-                  <div className="text-sm text-muted-foreground">Alerts</div>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {preview.recommended_actions.length > 0 && (
+        <motion.div
+          className="space-y-4"
+          initial="hidden"
+          animate="visible"
+          variants={containerVariants as any}
+        >
+          <motion.div variants={itemVariants}>
             <Card>
               <CardHeader>
-                <CardTitle>Recommended Actions</CardTitle>
-                <CardDescription>Steps to optimize your job search today</CardDescription>
+                <CardTitle className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-primary" />
+                  Digest for {new Date(preview.date).toLocaleDateString()}
+                </CardTitle>
+                {preview.summary && (
+                  <CardDescription>{preview.summary}</CardDescription>
+                )}
               </CardHeader>
               <CardContent>
-                <ul className="space-y-3">
-                  {preview.recommended_actions.map((action, i) => (
-                    <li key={i} className="flex items-start gap-3 p-3 rounded-lg border">
-                      <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
-                      <span className="text-sm">{action}</span>
-                    </li>
-                  ))}
-                </ul>
+                <div className="grid gap-4 sm:grid-cols-3">
+                  <div className="p-4 rounded-lg border text-center">
+                    <div className="text-3xl font-bold">{preview.jobs_discovered ?? 0}</div>
+                    <div className="text-sm text-muted-foreground">Jobs Discovered</div>
+                  </div>
+                  <div className="p-4 rounded-lg border text-center">
+                    <div className="text-3xl font-bold">{preview.recommended_actions.length}</div>
+                    <div className="text-sm text-muted-foreground">Recommended Actions</div>
+                  </div>
+                  <div className="p-4 rounded-lg border text-center">
+                    <div className="text-3xl font-bold">{preview.alerts.length}</div>
+                    <div className="text-sm text-muted-foreground">Alerts</div>
+                  </div>
+                </div>
               </CardContent>
             </Card>
+          </motion.div>
+
+          {preview.recommended_actions.length > 0 && (
+            <motion.div variants={itemVariants}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Recommended Actions</CardTitle>
+                  <CardDescription>Steps to optimize your job search today</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <motion.ul
+                    className="space-y-3"
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.08,
+                        },
+                      },
+                    }}
+                  >
+                    {preview.recommended_actions.map((action, i) => (
+                      <motion.li
+                        key={i}
+                        className="flex items-start gap-3 p-3 rounded-lg border"
+                        variants={slideInVariants}
+                      >
+                        <CheckCircle2 className="w-5 h-5 text-green-600 mt-0.5 shrink-0" />
+                        <span className="text-sm">{action}</span>
+                      </motion.li>
+                    ))}
+                  </motion.ul>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
 
           {preview.alerts.length > 0 && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Alerts</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {preview.alerts.map((alert) => {
-                  const config = ALERT_CONFIG[alert.type] ?? ALERT_CONFIG.info;
-                  const AlertIcon = config.icon;
-                  return (
-                    <div
-                      key={alert.id}
-                      className="flex items-start gap-3 p-3 rounded-lg border"
-                    >
-                      <Badge className={`${config.color} shrink-0`}>
-                        <AlertIcon className="w-3 h-3 me-1" />
-                        {alert.type}
-                      </Badge>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm">{alert.title}</p>
-                        {alert.description && (
-                          <p className="text-sm text-muted-foreground mt-1">{alert.description}</p>
-                        )}
-                      </div>
-                      {alert.action_url && alert.action_label && (
-                        <Button variant="outline" size="sm" asChild>
-                          <a href={alert.action_url}>{alert.action_label}</a>
-                        </Button>
-                      )}
-                    </div>
-                  );
-                })}
-              </CardContent>
-            </Card>
+            <motion.div variants={itemVariants}>
+              <Card>
+                <CardHeader>
+                  <CardTitle>Alerts</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          staggerChildren: 0.08,
+                        },
+                      },
+                    }}
+                  >
+                    {preview.alerts.map((alert, index) => {
+                      const config = ALERT_CONFIG[alert.type] ?? ALERT_CONFIG.info;
+                      const AlertIcon = config.icon;
+                      return (
+                        <motion.div
+                          key={alert.id}
+                          className="flex items-start gap-3 p-3 rounded-lg border"
+                          variants={{
+                            hidden: { opacity: 0, x: -20 },
+                            visible: {
+                              opacity: 1,
+                              x: 0,
+                              transition: {
+                                delay: index * 0.05,
+                                type: "spring",
+                                stiffness: 100,
+                                damping: 15,
+                              },
+                            },
+                          } as any}
+                        >
+                          <Badge className={`${config.color} shrink-0`}>
+                            <AlertIcon className="w-3 h-3 me-1" />
+                            {alert.type}
+                          </Badge>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm">{alert.title}</p>
+                            {alert.description && (
+                              <p className="text-sm text-muted-foreground mt-1">{alert.description}</p>
+                            )}
+                          </div>
+                          {alert.action_url && alert.action_label && (
+                            <Button variant="outline" size="sm" asChild>
+                              <a href={alert.action_url}>{alert.action_label}</a>
+                            </Button>
+                          )}
+                        </motion.div>
+                      );
+                    })}
+                  </motion.div>
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
-        </>
+        </motion.div>
       )}
     </div>
   );
@@ -267,8 +359,18 @@ function HistoryTab() {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {history.map((entry) => (
-                    <TableRow key={entry.id}>
+                  {history.map((entry, index) => (
+                    <motion.tr
+                      key={entry.id}
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{
+                        delay: index * 0.05,
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 20,
+                      } as any}
+                    >
                       <TableCell className="font-medium">
                         {new Date(entry.date).toLocaleDateString()}
                       </TableCell>
@@ -282,7 +384,7 @@ function HistoryTab() {
                           <Eye className="w-4 h-4" />
                         </Button>
                       </TableCell>
-                    </TableRow>
+                    </motion.tr>
                   ))}
                 </TableBody>
               </Table>
@@ -463,9 +565,14 @@ function ConfigTab() {
         </Button>
 
         {updateMutation.isSuccess && (
-          <p className="text-sm text-green-600 flex items-center gap-1">
+          <motion.p
+            className="text-sm text-green-600 flex items-center gap-1"
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ type: "spring", stiffness: 120, damping: 15 } as any}
+          >
             <CheckCircle2 className="w-4 h-4" /> Configuration saved
-          </p>
+          </motion.p>
         )}
       </CardContent>
     </Card>

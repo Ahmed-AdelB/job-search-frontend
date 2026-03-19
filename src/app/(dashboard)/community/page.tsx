@@ -54,6 +54,30 @@ const PLATFORM_LABELS: Record<string, string> = {
   linkedin_group: "LinkedIn Group",
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 10 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+};
+
 export default function CommunityPage() {
   return (
     <motion.div
@@ -160,7 +184,12 @@ function TrackedTab() {
                       key={community.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.05 }}
+                      transition={{
+                        delay: index * 0.05,
+                        type: "spring",
+                        stiffness: 120,
+                        damping: 20,
+                      }}
                     >
                       <TableCell>
                         <div className="flex items-center gap-2">
@@ -276,23 +305,22 @@ function DiscoverTab() {
             className="space-y-3"
             initial="hidden"
             animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: { staggerChildren: 0.08 },
-              },
-            }}
+            variants={containerVariants}
           >
             {recommendations.map((rec) => (
               <motion.div
                 key={rec.id}
                 className="flex items-start justify-between p-4 rounded-lg border"
-                variants={{
-                  hidden: { opacity: 0, y: 10 },
-                  visible: { opacity: 1, y: 0 },
+                variants={itemVariants}
+                whileHover={{
+                  scale: 1.02,
+                  boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.15)",
+                  transition: {
+                    type: "spring",
+                    stiffness: 120,
+                    damping: 15,
+                  },
                 }}
-                whileHover={{ scale: 1.01 }}
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">

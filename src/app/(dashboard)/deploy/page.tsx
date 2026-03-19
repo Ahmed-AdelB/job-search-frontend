@@ -43,6 +43,44 @@ const STATUS_BADGE: Record<string, { color: string; icon: React.ElementType }> =
   stopped: { color: "bg-gray-500", icon: Clock },
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.15,
+      delayChildren: 0.1,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
+const pulseVariants = {
+  pulse: {
+    scale: [1, 1.05, 1],
+    boxShadow: [
+      "0 0 0 0 rgba(34, 197, 94, 0.7)",
+      "0 0 0 10px rgba(34, 197, 94, 0)",
+    ],
+    transition: {
+      duration: 2,
+      repeat: Infinity,
+    },
+  },
+} as any;
+
 export default function DeployPage() {
   const queryClient = useQueryClient();
 
@@ -65,7 +103,7 @@ export default function DeployPage() {
   const statusConfig = data ? STATUS_BADGE[data.status] ?? STATUS_BADGE.stopped : null;
 
   return (
-    <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
+    <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Deploy</h1>
         <p className="text-muted-foreground">
@@ -74,79 +112,97 @@ export default function DeployPage() {
       </div>
 
       {/* Status Overview */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Status</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-20 mt-1" />
-                ) : data && statusConfig ? (
-                  <Badge className={`${statusConfig.color} mt-1`}>
-                    {data.status}
-                  </Badge>
-                ) : (
-                  <p className="text-lg font-bold mt-1">Unknown</p>
-                )}
+      <motion.div
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+        initial="hidden"
+        animate="visible"
+        variants={containerVariants as any}
+      >
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Status</p>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-20 mt-1" />
+                  ) : data && statusConfig ? (
+                    <motion.div
+                      variants={data.status === "running" ? pulseVariants : undefined}
+                      animate={data.status === "running" ? "pulse" : undefined}
+                    >
+                      <Badge className={`${statusConfig.color} mt-1`}>
+                        {data.status}
+                      </Badge>
+                    </motion.div>
+                  ) : (
+                    <p className="text-lg font-bold mt-1">Unknown</p>
+                  )}
+                </div>
+                <Activity className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <Activity className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Version</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-24 mt-1" />
-                ) : (
-                  <p className="text-lg font-bold mt-1">{data?.version ?? "\u2014"}</p>
-                )}
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Version</p>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-24 mt-1" />
+                  ) : (
+                    <p className="text-lg font-bold mt-1">{data?.version ?? "\u2014"}</p>
+                  )}
+                </div>
+                <Server className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <Server className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Uptime</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-20 mt-1" />
-                ) : (
-                  <p className="text-lg font-bold mt-1">{data?.uptime ?? "\u2014"}</p>
-                )}
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Uptime</p>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-20 mt-1" />
+                  ) : (
+                    <p className="text-lg font-bold mt-1">{data?.uptime ?? "\u2014"}</p>
+                  )}
+                </div>
+                <Clock className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <Clock className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Last Deploy</p>
-                {isLoading ? (
-                  <Skeleton className="h-8 w-28 mt-1" />
-                ) : (
-                  <p className="text-sm font-medium mt-1">
-                    {data?.last_deploy
-                      ? new Date(data.last_deploy).toLocaleString()
-                      : "\u2014"}
-                  </p>
-                )}
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Last Deploy</p>
+                  {isLoading ? (
+                    <Skeleton className="h-8 w-28 mt-1" />
+                  ) : (
+                    <p className="text-sm font-medium mt-1">
+                      {data?.last_deploy
+                        ? new Date(data.last_deploy).toLocaleString()
+                        : "\u2014"}
+                    </p>
+                  )}
+                </div>
+                <Rocket className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <Rocket className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Actions */}
       <Card>
@@ -155,7 +211,13 @@ export default function DeployPage() {
           <CardDescription>Manage deployment lifecycle</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <motion.div
+            className="flex items-center justify-between p-4 rounded-lg border"
+            whileHover={{
+              backgroundColor: "rgba(0, 0, 0, 0.02)",
+              transition: { duration: 0.2 },
+            } as any}
+          >
             <div>
               <h4 className="font-medium">Rebuild & Deploy</h4>
               <p className="text-sm text-muted-foreground">
@@ -189,9 +251,15 @@ export default function DeployPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <motion.div
+            className="flex items-center justify-between p-4 rounded-lg border"
+            whileHover={{
+              backgroundColor: "rgba(0, 0, 0, 0.02)",
+              transition: { duration: 0.2 },
+            } as any}
+          >
             <div>
               <h4 className="font-medium">Rollback</h4>
               <p className="text-sm text-muted-foreground">
@@ -225,27 +293,47 @@ export default function DeployPage() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
+          </motion.div>
 
           {rebuildMutation.isSuccess && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-green-600"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 } as any}
+            >
               <CheckCircle2 className="w-4 h-4" /> Rebuild initiated successfully
-            </div>
+            </motion.div>
           )}
           {rebuildMutation.isError && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-red-600"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 } as any}
+            >
               <XCircle className="w-4 h-4" /> Rebuild failed
-            </div>
+            </motion.div>
           )}
           {rollbackMutation.isSuccess && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-green-600"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 } as any}
+            >
               <CheckCircle2 className="w-4 h-4" /> Rollback initiated successfully
-            </div>
+            </motion.div>
           )}
           {rollbackMutation.isError && (
-            <div className="flex items-center gap-2 text-sm text-red-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-red-600"
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ type: "spring", stiffness: 120, damping: 15 } as any}
+            >
               <XCircle className="w-4 h-4" /> Rollback failed
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>
