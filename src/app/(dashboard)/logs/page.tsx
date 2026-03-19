@@ -53,6 +53,30 @@ const LEVEL_BADGE: Record<string, string> = {
   CRITICAL: "bg-red-800",
 };
 
+const filterChipVariants = {
+  hidden: { opacity: 0, scale: 0.8 },
+  visible: {
+    opacity: 1,
+    scale: 1,
+    transition: {
+      type: "spring" as const,
+      stiffness: 120,
+      damping: 12,
+    },
+  },
+} as any;
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
 export default function LogsPage() {
   const [level, setLevel] = useState<string>("all");
   const [agent, setAgent] = useState<string>("");
@@ -96,8 +120,13 @@ export default function LogsPage() {
       {/* Filters */}
       <Card>
         <CardContent className="p-4">
-          <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex items-center gap-2 flex-1">
+          <motion.div
+            className="flex flex-col sm:flex-row gap-3"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div variants={filterChipVariants} className="flex items-center gap-2 flex-1">
               <Search className="w-4 h-4 text-muted-foreground shrink-0" />
               <Input
                 placeholder="Search logs..."
@@ -108,30 +137,34 @@ export default function LogsPage() {
                 }}
                 className="max-w-sm"
               />
-            </div>
-            <Select value={level} onValueChange={(v) => { setLevel(v ?? "all"); setPage(1); }}>
-              <SelectTrigger className="w-[140px]">
-                <SelectValue placeholder="Log level" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="DEBUG">DEBUG</SelectItem>
-                <SelectItem value="INFO">INFO</SelectItem>
-                <SelectItem value="WARNING">WARNING</SelectItem>
-                <SelectItem value="ERROR">ERROR</SelectItem>
-                <SelectItem value="CRITICAL">CRITICAL</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input
-              placeholder="Filter by agent..."
-              value={agent}
-              onChange={(e) => {
-                setAgent(e.target.value);
-                setPage(1);
-              }}
-              className="w-[180px]"
-            />
-          </div>
+            </motion.div>
+            <motion.div variants={filterChipVariants}>
+              <Select value={level} onValueChange={(v) => { setLevel(v ?? "all"); setPage(1); }}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Log level" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Levels</SelectItem>
+                  <SelectItem value="DEBUG">DEBUG</SelectItem>
+                  <SelectItem value="INFO">INFO</SelectItem>
+                  <SelectItem value="WARNING">WARNING</SelectItem>
+                  <SelectItem value="ERROR">ERROR</SelectItem>
+                  <SelectItem value="CRITICAL">CRITICAL</SelectItem>
+                </SelectContent>
+              </Select>
+            </motion.div>
+            <motion.div variants={filterChipVariants}>
+              <Input
+                placeholder="Filter by agent..."
+                value={agent}
+                onChange={(e) => {
+                  setAgent(e.target.value);
+                  setPage(1);
+                }}
+                className="w-[180px]"
+              />
+            </motion.div>
+          </motion.div>
         </CardContent>
       </Card>
 
@@ -175,7 +208,14 @@ export default function LogsPage() {
                       const config = LEVEL_CONFIG[log.level] ?? LEVEL_CONFIG.INFO;
                       const LevelIcon = config.icon;
                       return (
-                        <TableRow key={log.id} className={log.level === "ERROR" || log.level === "CRITICAL" ? config.bg : ""}>
+                        <motion.tr
+                          key={log.id}
+                          className={log.level === "ERROR" || log.level === "CRITICAL" ? config.bg : ""}
+                          initial={{ opacity: 0, x: -20 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}
+                          whileHover={{ backgroundColor: "var(--muted)" }}
+                        >
                           <TableCell className="font-mono text-xs text-muted-foreground whitespace-nowrap">
                             {new Date(log.timestamp).toLocaleString()}
                           </TableCell>
@@ -197,7 +237,7 @@ export default function LogsPage() {
                           <TableCell className="max-w-md truncate text-sm">
                             {log.message}
                           </TableCell>
-                        </TableRow>
+                        </motion.tr>
                       );
                     })}
                   </TableBody>

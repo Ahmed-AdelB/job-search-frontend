@@ -53,6 +53,30 @@ const TENANT_STATUS_COLOR: Record<string, string> = {
   cancelled: "bg-red-600",
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function AdminPage() {
   return (
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
@@ -131,8 +155,19 @@ function TenantsTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {tenants.map((tenant) => (
-                  <TableRow key={tenant.id}>
+                {tenants.map((tenant, index) => (
+                  <motion.tr
+                    key={tenant.id}
+                    initial={{opacity:0,x:-10}}
+                    animate={{opacity:1,x:0}}
+                    transition={{
+                      type: "spring" as const,
+                      stiffness: 100,
+                      damping: 15,
+                      delay: index * 0.03,
+                    }}
+                    whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
+                  >
                     <TableCell className="font-medium">{tenant.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{tenant.plan}</Badge>
@@ -145,7 +180,7 @@ function TenantsTab() {
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(tenant.created_at).toLocaleDateString()}
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>
@@ -181,7 +216,11 @@ function MaintenanceTab() {
           <CardDescription>System maintenance and optimization tools</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <motion.div
+            className="flex items-center justify-between p-4 rounded-lg border"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+          >
             <div>
               <h4 className="font-medium">Database Vacuum</h4>
               <p className="text-sm text-muted-foreground">Optimize database storage and performance</p>
@@ -213,9 +252,13 @@ function MaintenanceTab() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <motion.div
+            className="flex items-center justify-between p-4 rounded-lg border"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+          >
             <div>
               <h4 className="font-medium">Clear Cache</h4>
               <p className="text-sm text-muted-foreground">Clear all application caches</p>
@@ -232,9 +275,13 @@ function MaintenanceTab() {
               )}
               Clear Cache
             </Button>
-          </div>
+          </motion.div>
 
-          <div className="flex items-center justify-between p-4 rounded-lg border">
+          <motion.div
+            className="flex items-center justify-between p-4 rounded-lg border"
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+          >
             <div>
               <h4 className="font-medium">Health Check</h4>
               <p className="text-sm text-muted-foreground">Run system health diagnostics</p>
@@ -251,40 +298,60 @@ function MaintenanceTab() {
               )}
               Run Check
             </Button>
-          </div>
+          </motion.div>
 
           {/* Health Check Results */}
           {healthCheckMutation.isSuccess && healthCheckMutation.data && (
-            <Card className="border-green-200 dark:border-green-800">
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center gap-2 text-green-600 font-medium">
-                  <CheckCircle2 className="w-5 h-5" />
-                  Health Check Results
-                </div>
-                {healthCheckMutation.data.checks && Object.entries(healthCheckMutation.data.checks).map(([key, ok]) => (
-                  <div key={key} className="flex items-center gap-2 text-sm">
-                    {ok ? (
-                      <CheckCircle2 className="w-4 h-4 text-green-600" />
-                    ) : (
-                      <XCircle className="w-4 h-4 text-red-600" />
-                    )}
-                    <span className="capitalize">{key.replace(/_/g, " ")}</span>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.4 }}
+            >
+              <Card className="border-green-200 dark:border-green-800">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-green-600 font-medium">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Health Check Results
                   </div>
-                ))}
-              </CardContent>
-            </Card>
+                  {healthCheckMutation.data.checks && Object.entries(healthCheckMutation.data.checks).map(([key, ok]) => (
+                    <motion.div
+                      key={key}
+                      className="flex items-center gap-2 text-sm"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      {ok ? (
+                        <CheckCircle2 className="w-4 h-4 text-green-600" />
+                      ) : (
+                        <XCircle className="w-4 h-4 text-red-600" />
+                      )}
+                      <span className="capitalize">{key.replace(/_/g, " ")}</span>
+                    </motion.div>
+                  ))}
+                </CardContent>
+              </Card>
+            </motion.div>
           )}
 
           {/* Mutation Status */}
           {vacuumMutation.isSuccess && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-green-600"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <CheckCircle2 className="w-4 h-4" /> Database vacuum completed
-            </div>
+            </motion.div>
           )}
           {cacheClearMutation.isSuccess && (
-            <div className="flex items-center gap-2 text-sm text-green-600">
+            <motion.div
+              className="flex items-center gap-2 text-sm text-green-600"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <CheckCircle2 className="w-4 h-4" /> Cache cleared successfully
-            </div>
+            </motion.div>
           )}
         </CardContent>
       </Card>
@@ -340,8 +407,19 @@ function TrashTab() {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {items.map((item) => (
-                  <TableRow key={item.id}>
+                {items.map((item, index) => (
+                  <motion.tr
+                    key={item.id}
+                    initial={{opacity:0,x:-10}}
+                    animate={{opacity:1,x:0}}
+                    transition={{
+                      type: "spring" as const,
+                      stiffness: 100,
+                      damping: 15,
+                      delay: index * 0.03,
+                    }}
+                    whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
+                  >
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>
                       <Badge variant="outline">{item.type}</Badge>
@@ -360,7 +438,7 @@ function TrashTab() {
                         Restore
                       </Button>
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 ))}
               </TableBody>
             </Table>

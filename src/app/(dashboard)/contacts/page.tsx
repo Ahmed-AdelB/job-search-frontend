@@ -42,6 +42,30 @@ import {
 import { apiGet, apiDelete } from "@/lib/api-client";
 import type { ContactsResponse } from "@/types/api";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function ContactsPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -77,16 +101,25 @@ export default function ContactsPage() {
             Manage your professional network
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline">
-            <Upload className="w-4 h-4 me-2" />
-            Import CSV
-          </Button>
-          <Button>
-            <Plus className="w-4 h-4 me-2" />
-            Add Contact
-          </Button>
-        </div>
+        <motion.div
+          className="flex gap-2"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={itemVariants}>
+            <Button variant="outline">
+              <Upload className="w-4 h-4 me-2" />
+              Import CSV
+            </Button>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <Button>
+              <Plus className="w-4 h-4 me-2" />
+              Add Contact
+            </Button>
+          </motion.div>
+        </motion.div>
       </div>
 
       <Card>
@@ -147,7 +180,13 @@ export default function ContactsPage() {
                         key={contact.linkedin_id}
                         initial={{opacity:0,x:-10}}
                         animate={{opacity:1,x:0}}
-                        transition={{delay: index * 0.03}}
+                        transition={{
+                          type: "spring" as const,
+                          stiffness: 100,
+                          damping: 15,
+                          delay: index * 0.03,
+                        }}
+                        whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
                         className="hover:bg-muted/50 transition-colors"
                       >
                         <TableCell>

@@ -41,6 +41,30 @@ const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> 
   expired: { color: "bg-gray-500", icon: Clock },
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function InvitationsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
@@ -63,32 +87,45 @@ export default function InvitationsPage() {
       </div>
 
       {/* Stats Cards */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <StatsCard
-          title="Total"
-          value={invitations.length}
-          icon={MailOpen}
-          loading={isLoading}
-        />
-        <StatsCard
-          title="Pending"
-          value={pending.length}
-          icon={Clock}
-          loading={isLoading}
-        />
-        <StatsCard
-          title="Incoming"
-          value={incoming.length}
-          icon={ArrowDownLeft}
-          loading={isLoading}
-        />
-        <StatsCard
-          title="Acceptance Rate"
-          value={acceptanceRate != null ? `${Math.round(acceptanceRate * 100)}%` : "—"}
-          icon={TrendingUp}
-          loading={isLoading}
-        />
-      </div>
+      <motion.div
+        className="grid gap-4 sm:grid-cols-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Total"
+            value={invitations.length}
+            icon={MailOpen}
+            loading={isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Pending"
+            value={pending.length}
+            icon={Clock}
+            loading={isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Incoming"
+            value={incoming.length}
+            icon={ArrowDownLeft}
+            loading={isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Acceptance Rate"
+            value={acceptanceRate != null ? `${Math.round(acceptanceRate * 100)}%` : "—"}
+            icon={TrendingUp}
+            loading={isLoading}
+          />
+        </motion.div>
+      </motion.div>
 
       <Tabs defaultValue="all">
         <TabsList>
@@ -212,7 +249,13 @@ function InvitationTable({
                 const statusConfig = STATUS_CONFIG[inv.status] ?? STATUS_CONFIG.pending;
                 const StatusIcon = statusConfig.icon;
                 return (
-                  <TableRow key={inv.id}>
+                  <motion.tr
+                    key={inv.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}
+                    whileHover={{ backgroundColor: "var(--muted)" }}
+                  >
                     <TableCell>
                       <div>
                         <p className="font-medium">{inv.person_name}</p>
@@ -273,7 +316,7 @@ function InvitationTable({
                         </p>
                       )}
                     </TableCell>
-                  </TableRow>
+                  </motion.tr>
                 );
               })}
             </TableBody>

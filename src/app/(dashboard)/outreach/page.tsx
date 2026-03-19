@@ -56,6 +56,30 @@ const STATUS_COLORS: Record<string, string> = {
   bounced: "bg-red-600",
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function OutreachPage() {
   const [page, setPage] = useState(1);
   const [showNewCampaign, setShowNewCampaign] = useState(false);
@@ -94,68 +118,107 @@ export default function OutreachPage() {
             Manage email campaigns and outreach messages
           </p>
         </div>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => refetch()}>
-            <RefreshCw className="w-4 h-4 me-2" />
-            Refresh
-          </Button>
-          <NewCampaignDialog open={showNewCampaign} onOpenChange={setShowNewCampaign} />
-        </div>
+        <motion.div
+          className="flex gap-2"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          <motion.div variants={itemVariants}>
+            <Button variant="outline" onClick={() => refetch()}>
+              <RefreshCw className="w-4 h-4 me-2" />
+              Refresh
+            </Button>
+          </motion.div>
+          <motion.div variants={itemVariants}>
+            <NewCampaignDialog open={showNewCampaign} onOpenChange={setShowNewCampaign} />
+          </motion.div>
+        </motion.div>
       </div>
 
       {/* Stats Row */}
-      <div className="grid gap-4 sm:grid-cols-4">
-        <StatsCard
-          title="Total Sent"
-          value={statsData?.total_sent ?? 0}
-          icon={Send}
-          loading={statsLoading}
-        />
-        <StatsCard
-          title="Open Rate"
-          value={statsData ? `${Math.round(statsData.open_rate * 100)}%` : "0%"}
-          icon={Eye}
-          loading={statsLoading}
-        />
-        <StatsCard
-          title="Reply Rate"
-          value={statsData ? `${Math.round(statsData.reply_rate * 100)}%` : "0%"}
-          icon={Reply}
-          loading={statsLoading}
-        />
-        <StatsCard
-          title="Replied"
-          value={statsData?.total_replied ?? 0}
-          icon={TrendingUp}
-          loading={statsLoading}
-        />
-      </div>
+      <motion.div
+        className="grid gap-4 sm:grid-cols-4"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Total Sent"
+            value={statsData?.total_sent ?? 0}
+            icon={Send}
+            loading={statsLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Open Rate"
+            value={statsData ? `${Math.round(statsData.open_rate * 100)}%` : "0%"}
+            icon={Eye}
+            loading={statsLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Reply Rate"
+            value={statsData ? `${Math.round(statsData.reply_rate * 100)}%` : "0%"}
+            icon={Reply}
+            loading={statsLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <StatsCard
+            title="Replied"
+            value={statsData?.total_replied ?? 0}
+            icon={TrendingUp}
+            loading={statsLoading}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Campaigns */}
       {campaigns.length > 0 && (
-        <Card>
-          <CardHeader>
-            <CardTitle>Active Campaigns</CardTitle>
-            <CardDescription>{campaigns.length} campaigns</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-              {campaigns.filter((c) => c.status === "active").map((campaign) => (
-                <div key={campaign.campaign_id} className="p-4 rounded-lg border">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{campaign.name}</span>
-                    <Badge variant="outline" className="text-xs">{campaign.type}</Badge>
-                  </div>
-                  <div className="flex gap-4 text-xs text-muted-foreground">
-                    <span>Sent: {campaign.sent_count}</span>
-                    <span>Opened: {campaign.opened_count}</span>
-                    <span>Replied: {campaign.replied_count}</span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle>Active Campaigns</CardTitle>
+              <CardDescription>{campaigns.length} campaigns</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <motion.div
+                className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {campaigns.filter((c) => c.status === "active").map((campaign) => (
+                  <motion.div
+                    key={campaign.campaign_id}
+                    variants={itemVariants}
+                    whileHover={{ scale: 1.02 }}
+                    transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+                    className="p-4 rounded-lg border"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-medium text-sm">{campaign.name}</span>
+                      <Badge variant="outline" className="text-xs">{campaign.type}</Badge>
+                    </div>
+                    <div className="flex gap-4 text-xs text-muted-foreground">
+                      <span>Sent: {campaign.sent_count}</span>
+                      <span>Opened: {campaign.opened_count}</span>
+                      <span>Replied: {campaign.replied_count}</span>
+                    </div>
+                  </motion.div>
+                ))}
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* Messages Table */}
@@ -194,8 +257,19 @@ export default function OutreachPage() {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {messages.map((msg) => (
-                      <TableRow key={msg.message_id}>
+                    {messages.map((msg, index) => (
+                      <motion.tr
+                        key={msg.message_id}
+                        initial={{opacity:0,x:-10}}
+                        animate={{opacity:1,x:0}}
+                        transition={{
+                          type: "spring" as const,
+                          stiffness: 100,
+                          damping: 15,
+                          delay: index * 0.03,
+                        }}
+                        whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
+                      >
                         <TableCell className="font-medium max-w-[250px] truncate">
                           {msg.subject}
                         </TableCell>
@@ -224,7 +298,7 @@ export default function OutreachPage() {
                             ? new Date(msg.replied_at).toLocaleDateString()
                             : "—"}
                         </TableCell>
-                      </TableRow>
+                      </motion.tr>
                     ))}
                   </TableBody>
                 </Table>
@@ -276,21 +350,23 @@ function StatsCard({
   loading: boolean;
 }) {
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-muted-foreground">{title}</p>
-            {loading ? (
-              <Skeleton className="h-8 w-12 mt-1" />
-            ) : (
-              <p className="text-2xl font-bold">{value}</p>
-            )}
+    <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}>
+      <Card>
+        <CardContent className="p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-muted-foreground">{title}</p>
+              {loading ? (
+                <Skeleton className="h-8 w-12 mt-1" />
+              ) : (
+                <p className="text-2xl font-bold">{value}</p>
+              )}
+            </div>
+            <Icon className="w-8 h-8 text-muted-foreground opacity-50" />
           </div>
-          <Icon className="w-8 h-8 text-muted-foreground opacity-50" />
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 

@@ -49,6 +49,42 @@ import type {
 } from "@/types/api";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
+const cardHoverVariants = {
+  initial: { scale: 1 },
+  whileHover: {
+    scale: 1.02,
+    transition: {
+      type: "spring" as const,
+      stiffness: 120,
+      damping: 12,
+    },
+  },
+} as any;
+
 export default function AnalyticsPage() {
   const [isClient, setIsClient] = useState(false);
 
@@ -120,54 +156,71 @@ export default function AnalyticsPage() {
       )}
 
       {/* Overview Stats Grid */}
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6">
-        <OverviewCard
-          title="Total Jobs"
-          value={overviewQuery.data?.total_jobs_discovered}
-          icon={Briefcase}
-          isLoading={overviewQuery.isLoading}
-        />
-        <OverviewCard
-          title="Applications"
-          value={overviewQuery.data?.total_applications}
-          icon={FileText}
-          isLoading={overviewQuery.isLoading}
-        />
-        <OverviewCard
-          title="Interviews"
-          value={overviewQuery.data?.interview_count}
-          icon={Users}
-          isLoading={overviewQuery.isLoading}
-        />
-        <OverviewCard
-          title="Offers"
-          value={overviewQuery.data?.offer_count}
-          icon={CheckCircle2}
-          isLoading={overviewQuery.isLoading}
-        />
-        <OverviewCard
-          title="Response Rate"
-          value={
-            overviewQuery.data?.response_rate
-              ? `${overviewQuery.data.response_rate.toFixed(1)}%`
-              : undefined
-          }
-          icon={TrendingUp}
-          isLoading={overviewQuery.isLoading}
-          isFinal={true}
-        />
-        <OverviewCard
-          title="Acceptance Rate"
-          value={
-            overviewQuery.data?.acceptance_rate
-              ? `${overviewQuery.data.acceptance_rate.toFixed(1)}%`
-              : undefined
-          }
-          icon={CheckCircle2}
-          isLoading={overviewQuery.isLoading}
-          isFinal={true}
-        />
-      </div>
+      <motion.div
+        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-6"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Total Jobs"
+            value={overviewQuery.data?.total_jobs_discovered}
+            icon={Briefcase}
+            isLoading={overviewQuery.isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Applications"
+            value={overviewQuery.data?.total_applications}
+            icon={FileText}
+            isLoading={overviewQuery.isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Interviews"
+            value={overviewQuery.data?.interview_count}
+            icon={Users}
+            isLoading={overviewQuery.isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Offers"
+            value={overviewQuery.data?.offer_count}
+            icon={CheckCircle2}
+            isLoading={overviewQuery.isLoading}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Response Rate"
+            value={
+              overviewQuery.data?.response_rate
+                ? `${overviewQuery.data.response_rate.toFixed(1)}%`
+                : undefined
+            }
+            icon={TrendingUp}
+            isLoading={overviewQuery.isLoading}
+            isFinal={true}
+          />
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <OverviewCard
+            title="Acceptance Rate"
+            value={
+              overviewQuery.data?.acceptance_rate
+                ? `${overviewQuery.data.acceptance_rate.toFixed(1)}%`
+                : undefined
+            }
+            icon={CheckCircle2}
+            isLoading={overviewQuery.isLoading}
+            isFinal={true}
+          />
+        </motion.div>
+      </motion.div>
 
       {/* Charts Grid */}
       <div className="grid gap-6 lg:grid-cols-2">
@@ -176,6 +229,7 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
+          whileHover={{ scale: 1.01 }}
         >
           <Card>
             <CardHeader>
@@ -224,6 +278,7 @@ export default function AnalyticsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
+          whileHover={{ scale: 1.01 }}
         >
           <Card>
             <CardHeader>
@@ -277,6 +332,7 @@ export default function AnalyticsPage() {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
+        whileHover={{ scale: 1.01 }}
       >
         <Card>
           <CardHeader>
@@ -385,56 +441,69 @@ export default function AnalyticsPage() {
             <CardTitle>Key Metrics Summary</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            <motion.div
+              className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
+              variants={containerVariants}
+              initial="hidden"
+              animate="visible"
+            >
               {overviewQuery.data && (
                 <>
-                  <MetricItem
-                    label="Application Rate"
-                    value={
-                      overviewQuery.data.total_jobs_discovered > 0
-                        ? (
-                            (overviewQuery.data.total_applications /
-                              overviewQuery.data.total_jobs_discovered) *
-                            100
-                          ).toFixed(1) + "%"
-                        : "0%"
-                    }
-                    description="% of jobs applied to"
-                  />
-                  <MetricItem
-                    label="Interview Conversion"
-                    value={
-                      overviewQuery.data.total_applications > 0
-                        ? (
-                            (overviewQuery.data.interview_count /
-                              overviewQuery.data.total_applications) *
-                            100
-                          ).toFixed(1) + "%"
-                        : "0%"
-                    }
-                    description="% of applications with interviews"
-                  />
-                  <MetricItem
-                    label="Offer Conversion"
-                    value={
-                      overviewQuery.data.interview_count > 0
-                        ? (
-                            (overviewQuery.data.offer_count /
-                              overviewQuery.data.interview_count) *
-                            100
-                          ).toFixed(1) + "%"
-                        : "0%"
-                    }
-                    description="% of interviews resulting in offers"
-                  />
-                  <MetricItem
-                    label="Active Applications"
-                    value={overviewQuery.data.active_applications.toString()}
-                    description="Currently in pipeline"
-                  />
+                  <motion.div variants={itemVariants}>
+                    <MetricItem
+                      label="Application Rate"
+                      value={
+                        overviewQuery.data.total_jobs_discovered > 0
+                          ? (
+                              (overviewQuery.data.total_applications /
+                                overviewQuery.data.total_jobs_discovered) *
+                              100
+                            ).toFixed(1) + "%"
+                          : "0%"
+                      }
+                      description="% of jobs applied to"
+                    />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <MetricItem
+                      label="Interview Conversion"
+                      value={
+                        overviewQuery.data.total_applications > 0
+                          ? (
+                              (overviewQuery.data.interview_count /
+                                overviewQuery.data.total_applications) *
+                              100
+                            ).toFixed(1) + "%"
+                          : "0%"
+                      }
+                      description="% of applications with interviews"
+                    />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <MetricItem
+                      label="Offer Conversion"
+                      value={
+                        overviewQuery.data.interview_count > 0
+                          ? (
+                              (overviewQuery.data.offer_count /
+                                overviewQuery.data.interview_count) *
+                              100
+                            ).toFixed(1) + "%"
+                          : "0%"
+                      }
+                      description="% of interviews resulting in offers"
+                    />
+                  </motion.div>
+                  <motion.div variants={itemVariants}>
+                    <MetricItem
+                      label="Active Applications"
+                      value={overviewQuery.data.active_applications.toString()}
+                      description="Currently in pipeline"
+                    />
+                  </motion.div>
                 </>
               )}
-            </div>
+            </motion.div>
           </CardContent>
         </Card>
       </motion.div>
@@ -459,30 +528,32 @@ function OverviewCard({
   isFinal?: boolean;
 }) {
   return (
-    <Card>
-      <CardContent className="p-6">
-        <div className="flex items-center justify-between">
-          <div className="flex-1">
-            <p className="text-sm font-medium text-muted-foreground">{title}</p>
-            {isLoading ? (
-              <Skeleton className="h-8 w-20 mt-2" />
-            ) : (
-              <motion.p
-                className="text-2xl font-bold mt-2"
-                initial={{ opacity: 0, scale: 0.8 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.3 }}
-              >
-                {value ?? "—"}
-              </motion.p>
-            )}
+    <motion.div whileHover="whileHover" initial="initial" variants={cardHoverVariants}>
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between">
+            <div className="flex-1">
+              <p className="text-sm font-medium text-muted-foreground">{title}</p>
+              {isLoading ? (
+                <Skeleton className="h-8 w-20 mt-2" />
+              ) : (
+                <motion.p
+                  className="text-2xl font-bold mt-2"
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  {value ?? "—"}
+                </motion.p>
+              )}
+            </div>
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Icon className="w-5 h-5 text-primary" />
+            </div>
           </div>
-          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-            <Icon className="w-5 h-5 text-primary" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -513,10 +584,14 @@ function MetricItem({
   description: string;
 }) {
   return (
-    <div className="p-4 rounded-lg border border-border/50 hover:border-border transition-colors">
+    <motion.div
+      className="p-4 rounded-lg border border-border/50 hover:border-border transition-colors"
+      whileHover={{ scale: 1.02 }}
+      transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+    >
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
       <p className="text-2xl font-bold mt-2">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
-    </div>
+    </motion.div>
   );
 }

@@ -68,6 +68,30 @@ const INTERACTION_ICON: Record<string, React.ElementType> = {
   note: FileText,
 };
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: {
+    opacity: 1,
+    x: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function RecruitersPage() {
   const queryClient = useQueryClient();
   const [search, setSearch] = useState("");
@@ -162,7 +186,13 @@ export default function RecruitersPage() {
                         key={recruiter.contact_id}
                         initial={{opacity:0,x:-10}}
                         animate={{opacity:1,x:0}}
-                        transition={{delay: index * 0.03}}
+                        transition={{
+                          type: "spring" as const,
+                          stiffness: 100,
+                          damping: 15,
+                          delay: index * 0.03,
+                        }}
+                        whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
                         className="hover:bg-muted/50 transition-colors"
                       >
                         <TableCell>
@@ -277,7 +307,18 @@ export default function RecruitersPage() {
               selectedRecruiter.interaction_log.map((log, idx) => {
                 const LogIcon = INTERACTION_ICON[log.type] ?? MessageSquare;
                 return (
-                  <div key={idx} className="flex gap-3 p-3 rounded-lg border">
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      type: "spring" as const,
+                      stiffness: 100,
+                      damping: 15,
+                      delay: idx * 0.05,
+                    }}
+                    className="flex gap-3 p-3 rounded-lg border"
+                  >
                     <div className="p-1.5 rounded-md bg-muted shrink-0">
                       <LogIcon className="w-4 h-4 text-muted-foreground" />
                     </div>
@@ -294,7 +335,7 @@ export default function RecruitersPage() {
                         <Badge variant="outline" className="text-xs mt-1">{log.status}</Badge>
                       )}
                     </div>
-                  </div>
+                  </motion.div>
                 );
               })
             ) : (

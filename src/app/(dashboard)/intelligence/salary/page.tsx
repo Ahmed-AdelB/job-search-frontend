@@ -5,6 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
+import { motion } from "motion/react";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -37,6 +38,30 @@ function formatSalary(amount: number, currency: string): string {
     maximumFractionDigits: 0,
   }).format(amount);
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
 
 export default function SalaryPage() {
   const { data, isLoading } = useQuery({
@@ -74,41 +99,52 @@ export default function SalaryPage() {
       </div>
 
       {/* Summary */}
-      <div className="grid gap-4 sm:grid-cols-3">
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Avg Median Salary</p>
-                <p className="text-2xl font-bold">{formatSalary(avgMedian, topCurrency)}</p>
+      <motion.div
+        className="grid gap-4 sm:grid-cols-3"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Avg Median Salary</p>
+                  <p className="text-2xl font-bold">{formatSalary(avgMedian, topCurrency)}</p>
+                </div>
+                <DollarSign className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <DollarSign className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Top P90</p>
-                <p className="text-2xl font-bold text-green-600">{formatSalary(topP90, topCurrency)}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Top P90</p>
+                  <p className="text-2xl font-bold text-green-600">{formatSalary(topP90, topCurrency)}</p>
+                </div>
+                <TrendingUp className="w-8 h-8 text-green-600 opacity-50" />
               </div>
-              <TrendingUp className="w-8 h-8 text-green-600 opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-muted-foreground">Data Points</p>
-                <p className="text-2xl font-bold">{totalSamples.toLocaleString()}</p>
+            </CardContent>
+          </Card>
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Data Points</p>
+                  <p className="text-2xl font-bold">{totalSamples.toLocaleString()}</p>
+                </div>
+                <Users className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
-              <Users className="w-8 h-8 text-muted-foreground opacity-50" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
 
       {/* Salary Table */}
       <Card>
@@ -151,7 +187,16 @@ export default function SalaryPage() {
                     const range = b.percentile_90 - b.percentile_25;
                     const medianPct = range > 0 ? ((b.percentile_50 - b.percentile_25) / range) * 100 : 50;
                     return (
-                      <TableRow key={idx}>
+                      <motion.tr
+                        key={idx}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: idx * 0.05 }}
+                        whileHover={{
+                          backgroundColor: "var(--muted)",
+                          scale: 1.01,
+                        }}
+                      >
                         <TableCell className="font-medium">{b.title}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
@@ -172,27 +217,33 @@ export default function SalaryPage() {
                           {formatSalary(b.percentile_90, b.currency)}
                         </TableCell>
                         <TableCell>
-                          <div className="w-32">
+                          <motion.div
+                            className="w-32"
+                            whileHover={{ scale: 1.05 }}
+                            transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
+                          >
                             <div className="relative h-3 bg-muted rounded-full overflow-hidden">
                               <div
                                 className="absolute h-full bg-gradient-to-r from-blue-200 via-blue-500 to-green-500 rounded-full"
                                 style={{ left: "0%", right: "0%" }}
                               />
-                              <div
+                              <motion.div
                                 className="absolute w-1.5 h-full bg-primary rounded-full"
                                 style={{ left: `${medianPct}%` }}
+                                whileHover={{ scaleY: 1.5 }}
+                                transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
                               />
                             </div>
                             <div className="flex justify-between text-[10px] text-muted-foreground mt-0.5">
                               <span>{(b.percentile_25 / 1000).toFixed(0)}k</span>
                               <span>{(b.percentile_90 / 1000).toFixed(0)}k</span>
                             </div>
-                          </div>
+                          </motion.div>
                         </TableCell>
                         <TableCell className="text-end text-sm text-muted-foreground">
                           {b.sample_size.toLocaleString()}
                         </TableCell>
-                      </TableRow>
+                      </motion.tr>
                     );
                   })}
                 </TableBody>

@@ -36,6 +36,30 @@ import {
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/api-client";
 import type { Profile, UpdateProfileRequest, Resume, ResumesResponse, OnboardingStatus, ParsedProfileData } from "@/types/api";
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function ProfilePage() {
   const queryClient = useQueryClient();
 
@@ -69,21 +93,40 @@ export default function ProfilePage() {
 
       {/* Onboarding Progress */}
       {onboarding && !onboarding.completed_at && (
-        <Card className="border-blue-200 dark:border-blue-800">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-medium">Profile Setup Progress</p>
-              <span className="text-sm text-muted-foreground">Step {onboarding.step}/4</span>
-            </div>
-            <Progress value={(onboarding.step / 4) * 100} className="h-2" />
-            <div className="flex gap-4 mt-3 text-xs">
-              <StepIndicator done={onboarding.email_verified} label="Email Verified" />
-              <StepIndicator done={onboarding.profile_completed} label="Profile" />
-              <StepIndicator done={onboarding.resume_uploaded} label="Resume" />
-              <StepIndicator done={onboarding.preferences_set} label="Preferences" />
-            </div>
-          </CardContent>
-        </Card>
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
+        >
+          <Card className="border-blue-200 dark:border-blue-800">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-sm font-medium">Profile Setup Progress</p>
+                <span className="text-sm text-muted-foreground">Step {onboarding.step}/4</span>
+              </div>
+              <Progress value={(onboarding.step / 4) * 100} className="h-2" />
+              <motion.div
+                className="flex gap-4 mt-3 text-xs"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                <motion.div variants={itemVariants}>
+                  <StepIndicator done={onboarding.email_verified} label="Email Verified" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <StepIndicator done={onboarding.profile_completed} label="Profile" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <StepIndicator done={onboarding.resume_uploaded} label="Resume" />
+                </motion.div>
+                <motion.div variants={itemVariants}>
+                  <StepIndicator done={onboarding.preferences_set} label="Preferences" />
+                </motion.div>
+              </motion.div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       <Tabs defaultValue="info">
@@ -136,9 +179,18 @@ export default function ProfilePage() {
                 </CardContent>
               </Card>
             ) : (
-              resumes.map((resume) => (
-                <ResumeCard key={resume.id} resume={resume} />
-              ))
+              <motion.div
+                className="space-y-4"
+                variants={containerVariants}
+                initial="hidden"
+                animate="visible"
+              >
+                {resumes.map((resume) => (
+                  <motion.div key={resume.id} variants={itemVariants}>
+                    <ResumeCard resume={resume} />
+                  </motion.div>
+                ))}
+              </motion.div>
             )}
           </div>
         </TabsContent>
@@ -149,14 +201,18 @@ export default function ProfilePage() {
 
 function StepIndicator({ done, label }: { done: boolean; label: string }) {
   return (
-    <div className="flex items-center gap-1">
+    <motion.div
+      className="flex items-center gap-1"
+      whileHover={{ scale: 1.05 }}
+      transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+    >
       {done ? (
         <CheckCircle2 className="w-3.5 h-3.5 text-green-600" />
       ) : (
         <div className="w-3.5 h-3.5 rounded-full border-2 border-muted-foreground/30" />
       )}
       <span className={done ? "text-green-700 dark:text-green-400" : "text-muted-foreground"}>{label}</span>
-    </div>
+    </motion.div>
   );
 }
 
@@ -176,76 +232,99 @@ function ProfileForm({ profile }: { profile: Profile }) {
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Personal Information</CardTitle>
-        <CardDescription>Update your profile details</CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <User className="w-3.5 h-3.5" /> Full Name
-            </Label>
-            <Input
-              value={form.name ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card>
+        <CardHeader>
+          <CardTitle>Personal Information</CardTitle>
+          <CardDescription>Update your profile details</CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <motion.div
+            className="grid gap-4 sm:grid-cols-2"
+            variants={containerVariants}
+            initial="hidden"
+            animate="visible"
+          >
+            <motion.div variants={itemVariants} className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <User className="w-3.5 h-3.5" /> Full Name
+              </Label>
+              <Input
+                value={form.name ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              />
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <Mail className="w-3.5 h-3.5" /> Email
+              </Label>
+              <Input value={profile.email} disabled className="bg-muted" />
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <Phone className="w-3.5 h-3.5" /> Phone
+              </Label>
+              <Input
+                value={form.phone ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                placeholder="+353 ..."
+              />
+            </motion.div>
+            <motion.div variants={itemVariants} className="space-y-1.5">
+              <Label className="flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5" /> Location
+              </Label>
+              <Input
+                value={form.location ?? ""}
+                onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
+                placeholder="Dublin, Ireland"
+              />
+            </motion.div>
+          </motion.div>
+          <motion.div
+            className="space-y-1.5"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.2 }}
+          >
+            <Label>Bio</Label>
+            <Textarea
+              value={form.bio ?? ""}
+              onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
+              placeholder="A brief professional summary..."
+              rows={4}
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <Mail className="w-3.5 h-3.5" /> Email
-            </Label>
-            <Input value={profile.email} disabled className="bg-muted" />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <Phone className="w-3.5 h-3.5" /> Phone
-            </Label>
-            <Input
-              value={form.phone ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
-              placeholder="+353 ..."
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label className="flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5" /> Location
-            </Label>
-            <Input
-              value={form.location ?? ""}
-              onChange={(e) => setForm((f) => ({ ...f, location: e.target.value }))}
-              placeholder="Dublin, Ireland"
-            />
-          </div>
-        </div>
-        <div className="space-y-1.5">
-          <Label>Bio</Label>
-          <Textarea
-            value={form.bio ?? ""}
-            onChange={(e) => setForm((f) => ({ ...f, bio: e.target.value }))}
-            placeholder="A brief professional summary..."
-            rows={4}
-          />
-        </div>
-        <Button
-          onClick={() => updateMutation.mutate(form)}
-          disabled={updateMutation.isPending}
-        >
-          {updateMutation.isPending ? (
-            <Loader2 className="w-4 h-4 me-2 animate-spin" />
-          ) : (
-            <Save className="w-4 h-4 me-2" />
-          )}
-          Save Changes
-        </Button>
-        {updateMutation.isSuccess && (
-          <p className="text-sm text-green-600 flex items-center gap-1">
-            <CheckCircle2 className="w-4 h-4" /> Profile updated successfully
-          </p>
-        )}
-      </CardContent>
-    </Card>
+          </motion.div>
+          <motion.div
+            className="space-y-3"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4, delay: 0.25 }}
+          >
+            <Button
+              onClick={() => updateMutation.mutate(form)}
+              disabled={updateMutation.isPending}
+            >
+              {updateMutation.isPending ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Save className="w-4 h-4 me-2" />
+              )}
+              Save Changes
+            </Button>
+            {updateMutation.isSuccess && (
+              <p className="text-sm text-green-600 flex items-center gap-1">
+                <CheckCircle2 className="w-4 h-4" /> Profile updated successfully
+              </p>
+            )}
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -282,36 +361,44 @@ function ResumeUpload() {
   }, [handleFile]);
 
   return (
-    <Card>
-      <CardContent className="p-4">
-        <div
-          className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
-            dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
-          }`}
-          onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
-          onDragLeave={() => setDragActive(false)}
-          onDrop={handleDrop}
-          onClick={() => fileInputRef.current?.click()}
-        >
-          {uploadMutation.isPending ? (
-            <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-primary" />
-          ) : (
-            <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-          )}
-          <p className="text-sm font-medium">
-            {uploadMutation.isPending ? "Uploading..." : "Drop your resume here or click to browse"}
-          </p>
-          <p className="text-xs text-muted-foreground mt-1">PDF or DOCX, up to 10MB</p>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".pdf,.docx"
-            className="hidden"
-            onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-          />
-        </div>
-      </CardContent>
-    </Card>
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      <Card>
+        <CardContent className="p-4">
+          <motion.div
+            className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
+              dragActive ? "border-primary bg-primary/5" : "border-muted-foreground/30 hover:border-primary/50"
+            }`}
+            onDragOver={(e) => { e.preventDefault(); setDragActive(true); }}
+            onDragLeave={() => setDragActive(false)}
+            onDrop={handleDrop}
+            onClick={() => fileInputRef.current?.click()}
+            whileHover={{ scale: 1.01 }}
+            transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+          >
+            {uploadMutation.isPending ? (
+              <Loader2 className="w-8 h-8 mx-auto mb-2 animate-spin text-primary" />
+            ) : (
+              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+            )}
+            <p className="text-sm font-medium">
+              {uploadMutation.isPending ? "Uploading..." : "Drop your resume here or click to browse"}
+            </p>
+            <p className="text-xs text-muted-foreground mt-1">PDF or DOCX, up to 10MB</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".pdf,.docx"
+              className="hidden"
+              onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
+            />
+          </motion.div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
 
@@ -331,74 +418,84 @@ function ResumeCard({ resume }: { resume: Resume }) {
   const parsed = resume.parsed_data as ParsedProfileData | undefined;
 
   return (
-    <Card className={resume.is_primary ? "border-primary" : ""}>
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-md bg-muted">
-              <FileText className="w-5 h-5 text-muted-foreground" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <p className="font-medium">{resume.filename}</p>
-                {resume.is_primary && (
-                  <Badge className="bg-primary text-xs">
-                    <Star className="w-3 h-3 me-1" /> Primary
-                  </Badge>
-                )}
+    <motion.div
+      whileHover={{ scale: 1.01 }}
+      transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
+    >
+      <Card className={resume.is_primary ? "border-primary" : ""}>
+        <CardContent className="p-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 rounded-md bg-muted">
+                <FileText className="w-5 h-5 text-muted-foreground" />
               </div>
-              <p className="text-xs text-muted-foreground">
-                {(resume.file_size / 1024).toFixed(1)} KB · Uploaded {new Date(resume.uploaded_at).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-1">
-            {!resume.is_primary && (
-              <Button variant="ghost" size="sm" onClick={() => setPrimaryMutation.mutate()} disabled={setPrimaryMutation.isPending}>
-                <Star className="w-4 h-4" />
-              </Button>
-            )}
-            <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
-              <Trash2 className="w-4 h-4 text-destructive" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Parsed Data Preview */}
-        {parsed && (
-          <div className="mt-3 pt-3 border-t space-y-2">
-            {parsed.skills?.length > 0 && (
-              <div className="flex items-start gap-2">
-                <Award className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                <div className="flex flex-wrap gap-1">
-                  {parsed.skills.slice(0, 10).map((skill) => (
-                    <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
-                  ))}
-                  {parsed.skills.length > 10 && (
-                    <Badge variant="outline" className="text-xs">+{parsed.skills.length - 10} more</Badge>
+              <div>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium">{resume.filename}</p>
+                  {resume.is_primary && (
+                    <Badge className="bg-primary text-xs">
+                      <Star className="w-3 h-3 me-1" /> Primary
+                    </Badge>
                   )}
                 </div>
-              </div>
-            )}
-            {parsed.experience?.length > 0 && (
-              <div className="flex items-start gap-2">
-                <Briefcase className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
                 <p className="text-xs text-muted-foreground">
-                  {parsed.experience.length} positions · Latest: {parsed.experience[0]?.title} at {parsed.experience[0]?.company}
+                  {(resume.file_size / 1024).toFixed(1)} KB · Uploaded {new Date(resume.uploaded_at).toLocaleDateString()}
                 </p>
               </div>
-            )}
-            {parsed.education?.length > 0 && (
-              <div className="flex items-start gap-2">
-                <GraduationCap className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
-                <p className="text-xs text-muted-foreground">
-                  {parsed.education[0]?.degree} · {parsed.education[0]?.school}
-                </p>
-              </div>
-            )}
+            </div>
+            <div className="flex gap-1">
+              {!resume.is_primary && (
+                <Button variant="ghost" size="sm" onClick={() => setPrimaryMutation.mutate()} disabled={setPrimaryMutation.isPending}>
+                  <Star className="w-4 h-4" />
+                </Button>
+              )}
+              <Button variant="ghost" size="sm" onClick={() => deleteMutation.mutate()} disabled={deleteMutation.isPending}>
+                <Trash2 className="w-4 h-4 text-destructive" />
+              </Button>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+
+          {/* Parsed Data Preview */}
+          {parsed && (
+            <motion.div
+              className="mt-3 pt-3 border-t space-y-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.3, delay: 0.1 }}
+            >
+              {parsed.skills?.length > 0 && (
+                <div className="flex items-start gap-2">
+                  <Award className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                  <div className="flex flex-wrap gap-1">
+                    {parsed.skills.slice(0, 10).map((skill) => (
+                      <Badge key={skill} variant="outline" className="text-xs">{skill}</Badge>
+                    ))}
+                    {parsed.skills.length > 10 && (
+                      <Badge variant="outline" className="text-xs">+{parsed.skills.length - 10} more</Badge>
+                    )}
+                  </div>
+                </div>
+              )}
+              {parsed.experience?.length > 0 && (
+                <div className="flex items-start gap-2">
+                  <Briefcase className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    {parsed.experience.length} positions · Latest: {parsed.experience[0]?.title} at {parsed.experience[0]?.company}
+                  </p>
+                </div>
+              )}
+              {parsed.education?.length > 0 && (
+                <div className="flex items-start gap-2">
+                  <GraduationCap className="w-3.5 h-3.5 mt-0.5 text-muted-foreground shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    {parsed.education[0]?.degree} · {parsed.education[0]?.school}
+                  </p>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }

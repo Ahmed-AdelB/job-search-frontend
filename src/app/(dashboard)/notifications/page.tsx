@@ -26,6 +26,30 @@ const ITEMS_PER_PAGE = 10
 
 type FilterType = "all" | "info" | "success" | "warning" | "error" | "unread"
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.08,
+      delayChildren: 0.05,
+    },
+  },
+} as const;
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: "spring" as const,
+      stiffness: 100,
+      damping: 15,
+    },
+  },
+} as any;
+
 export default function NotificationsPage() {
   const [currentFilter, setCurrentFilter] = useState<FilterType>("all")
   const [currentPage, setCurrentPage] = useState(1)
@@ -96,26 +120,35 @@ export default function NotificationsPage() {
   return (
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
-          <p className="text-muted-foreground">
-            {unreadCount > 0
-              ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
-              : "All caught up"}
-          </p>
-        </div>
+      <motion.div
+        className="flex items-center justify-between"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <div>
+            <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+            <p className="text-muted-foreground">
+              {unreadCount > 0
+                ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
+                : "All caught up"}
+            </p>
+          </div>
+        </motion.div>
 
         {unreadCount > 0 && (
-          <Button
-            onClick={handleMarkAllAsRead}
-            disabled={isMarkingAllRead || notifications.length === 0}
-            variant="outline"
-          >
-            Mark all as read
-          </Button>
+          <motion.div variants={itemVariants}>
+            <Button
+              onClick={handleMarkAllAsRead}
+              disabled={isMarkingAllRead || notifications.length === 0}
+              variant="outline"
+            >
+              Mark all as read
+            </Button>
+          </motion.div>
         )}
-      </div>
+      </motion.div>
 
       {/* Tabs and Content */}
       <Card>
@@ -191,14 +224,22 @@ export default function NotificationsPage() {
 
               {/* Notification List */}
               {!isLoading && notifications.length > 0 && (
-                <div className="space-y-2">
+                <motion.div
+                  className="space-y-2"
+                  variants={containerVariants}
+                  initial="hidden"
+                  animate="visible"
+                >
                   {notifications.map((notification) => {
                     const typeConfig = getNotificationTypeConfig(notification.type)
                     const hasSafeUrl = isSafeUrl(notification.action_url || "")
 
                     return (
-                      <div
+                      <motion.div
                         key={notification.id}
+                        variants={itemVariants}
+                        whileHover={{ scale: 1.01 }}
+                        transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
                         className={`group flex gap-4 rounded-lg border p-4 transition-colors ${
                           !notification.read
                             ? "bg-muted/50"
@@ -287,10 +328,10 @@ export default function NotificationsPage() {
                             <Trash2 className="h-4 w-4" />
                           </Button>
                         </div>
-                      </div>
+                      </motion.div>
                     )
                   })}
-                </div>
+                </motion.div>
               )}
 
               {/* Pagination */}
