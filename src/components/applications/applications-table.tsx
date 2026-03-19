@@ -34,9 +34,9 @@ import { MoreHorizontal, ArrowUpDown, Eye, Trash2, RotateCcw } from "lucide-reac
 interface ApplicationsTableProps {
   data: Application[]
   isLoading?: boolean
-  onViewDetails?: (applicationId: number) => void
-  onWithdraw?: (applicationId: number) => void
-  onDelete?: (applicationId: number) => void
+  onViewDetails?: (applicationId: string) => void
+  onWithdraw?: (applicationId: string) => void
+  onDelete?: (applicationId: string) => void
 }
 
 function formatRelativeDate(dateString: string): string {
@@ -61,9 +61,9 @@ export function ApplicationsTable({
   onDelete,
 }: ApplicationsTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  const toggleExpandedRow = (appId: number) => {
+  const toggleExpandedRow = (appId: string) => {
     const newExpanded = new Set(expandedRows)
     if (newExpanded.has(appId)) {
       newExpanded.delete(appId)
@@ -169,19 +169,19 @@ export function ApplicationsTable({
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => onViewDetails?.(app.id)}>
+              <DropdownMenuItem onClick={() => onViewDetails?.(app.application_id)}>
                 <Eye className="mr-2 h-4 w-4" />
                 View Details
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onWithdraw?.(app.id)}
+                onClick={() => onWithdraw?.(app.application_id)}
                 className="text-yellow-600"
               >
                 <RotateCcw className="mr-2 h-4 w-4" />
                 Withdraw
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onDelete?.(app.id)}
+                onClick={() => onDelete?.(app.application_id)}
                 className="text-red-600"
               >
                 <Trash2 className="mr-2 h-4 w-4" />
@@ -235,7 +235,7 @@ export function ApplicationsTable({
                 <React.Fragment key={row.id}>
                   <TableRow
                     className="hover:bg-muted/50 cursor-pointer"
-                    onClick={() => toggleExpandedRow(row.original.id)}
+                    onClick={() => toggleExpandedRow(row.original.application_id)}
                   >
                     {row.getVisibleCells().map((cell) => (
                       <TableCell key={cell.id} className="py-3">
@@ -248,7 +248,7 @@ export function ApplicationsTable({
                   </TableRow>
 
                   {/* Expandable Detail Row */}
-                  {expandedRows.has(row.original.id) && (
+                  {expandedRows.has(row.original.application_id) && (
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableCell colSpan={columns.length} className="py-4">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

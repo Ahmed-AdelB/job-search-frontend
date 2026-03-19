@@ -32,7 +32,7 @@ export function JobCard({
     return "bg-green-100 text-green-900 dark:bg-green-900 dark:text-green-100"
   }
 
-  const isGhostJob = job.ghost_score ? job.ghost_score > 70 : false
+  const isGhostJob = job.ghost_score && job.ghost_score > 70
 
   return (
     <Card
@@ -48,9 +48,11 @@ export function JobCard({
           <h3 className="font-semibold text-base truncate">{job.title}</h3>
           <p className="text-sm text-muted-foreground truncate">{job.company}</p>
         </div>
-        <div className={cn("px-2 py-1 rounded font-semibold text-sm", getScoreColor(job.score))}>
-          {job.score}
-        </div>
+        {job.score && (
+          <div className={cn("px-2 py-1 rounded font-semibold text-sm", getScoreColor(job.score))}>
+            {job.score}
+          </div>
+        )}
       </div>
 
       {/* Location and Remote */}
@@ -62,7 +64,7 @@ export function JobCard({
           <Badge variant="secondary" className="text-xs">
             {job.remote_type === "remote" && "100% Remote"}
             {job.remote_type === "hybrid" && "Hybrid"}
-            {job.remote_type === "onsite" && "On-site"}
+            {job.remote_type === "on-site" && "On-site"}
           </Badge>
         )}
         <Badge variant="outline" className="text-xs">
@@ -113,7 +115,7 @@ export function JobCard({
       {job.requirements && (
         <div className="text-sm mb-4 p-2 bg-muted rounded">
           <p className="font-medium text-xs mb-1">Requirements:</p>
-          <p className="text-muted-foreground line-clamp-2">{job.requirements}</p>
+          <p className="text-muted-foreground line-clamp-2">{job.requirements.join(", ")}</p>
         </div>
       )}
 

@@ -209,7 +209,7 @@ export default function TargetListPage() {
                 className="max-w-md"
               />
             </div>
-            <Select value={tierFilter} onValueChange={setTierFilter}>
+            <Select value={tierFilter} onValueChange={(v) => setTierFilter(v ?? "all")}>
               <SelectTrigger className="w-[120px]">
                 <SelectValue placeholder="Tier" />
               </SelectTrigger>
@@ -375,7 +375,7 @@ function CompanyForm({
         <div className="grid grid-cols-2 gap-4">
           <div className="space-y-1.5">
             <Label>Tier</Label>
-            <Select value={form.tier} onValueChange={(v) => setForm((f) => ({ ...f, tier: v as TierType }))}>
+            <Select value={form.tier} onValueChange={(v) => setForm((f) => ({ ...f, tier: (v ?? "B") as TierType }))}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="A">Tier A (Top priority)</SelectItem>
@@ -386,7 +386,7 @@ function CompanyForm({
           </div>
           <div className="space-y-1.5">
             <Label>Company Size</Label>
-            <Select value={form.company_size ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, company_size: v as CreateTargetCompanyRequest["company_size"] }))}>
+            <Select value={form.company_size ?? ""} onValueChange={(v) => setForm((f) => ({ ...f, company_size: (v ?? "medium") as CreateTargetCompanyRequest["company_size"] }))}>
               <SelectTrigger><SelectValue placeholder="Select size" /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="startup">Startup</SelectItem>

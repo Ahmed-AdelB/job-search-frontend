@@ -108,7 +108,7 @@ export default function LogsPage() {
                 className="max-w-sm"
               />
             </div>
-            <Select value={level} onValueChange={(v) => { setLevel(v); setPage(1); }}>
+            <Select value={level} onValueChange={(v) => { setLevel(v ?? "all"); setPage(1); }}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Log level" />
               </SelectTrigger>

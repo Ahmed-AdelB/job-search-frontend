@@ -45,10 +45,10 @@ import {
 interface JobTableProps {
   data: Job[]
   isLoading?: boolean
-  onApply?: (jobIds: number[]) => void
-  onArchive?: (jobIds: number[]) => void
-  onDelete?: (jobIds: number[]) => void
-  onStatusChange?: (jobId: number, status: string) => void
+  onApply?: (jobIds: string[]) => void
+  onArchive?: (jobIds: string[]) => void
+  onDelete?: (jobIds: string[]) => void
+  onStatusChange?: (jobId: string, status: string) => void
 }
 
 export function JobTable({
@@ -63,9 +63,9 @@ export function JobTable({
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({})
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [sorting, setSorting] = useState<SortingState>([])
-  const [expandedRows, setExpandedRows] = useState<Set<number>>(new Set())
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set())
 
-  const toggleExpandedRow = (jobId: number) => {
+  const toggleExpandedRow = (jobId: string) => {
     const newExpanded = new Set(expandedRows)
     if (newExpanded.has(jobId)) {
       newExpanded.delete(jobId)
@@ -87,8 +87,8 @@ export function JobTable({
       header: ({ table }) => (
         <Checkbox
           checked={
-            table.getIsAllPageRowsSelected() ||
-            (table.getIsSomePageRowsSelected() && "indeterminate")
+            (table.getIsAllPageRowsSelected() ||
+            (table.getIsSomePageRowsSelected() ? "indeterminate" : false)) as any
           }
           onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
           aria-label="Select all"
@@ -119,7 +119,8 @@ export function JobTable({
         </Button>
       ),
       cell: ({ row }) => {
-        const score = row.getValue("score") as number
+        const score = row.getValue("score") as number | undefined
+        if (!score) return "-"
         return (
           <div className={cn("font-semibold", getScoreColor(score))}>
             {score}
@@ -185,7 +186,7 @@ export function JobTable({
           <Badge variant="secondary" className="text-xs">
             {remote === "remote" && "100% Remote"}
             {remote === "hybrid" && "Hybrid"}
-            {remote === "onsite" && "On-site"}
+            {remote === "on-site" && "On-site"}
           </Badge>
         )
       },
@@ -219,17 +220,17 @@ export function JobTable({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuItem
-                onClick={() => onStatusChange?.(job.id, "applied")}
+                onClick={() => onStatusChange?.(job.job_id, "applied")}
               >
                 Apply Now
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onStatusChange?.(job.id, "archived")}
+                onClick={() => onStatusChange?.(job.job_id, "archived")}
               >
                 Archive
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => onDelete?.([job.id])}
+                onClick={() => onDelete?.([job.job_id])}
                 className="text-red-600"
               >
                 Delete
@@ -261,7 +262,7 @@ export function JobTable({
   })
 
   const selectedRows = table.getFilteredSelectedRowModel().rows
-  const selectedJobIds = selectedRows.map((row) => row.original.id)
+  const selectedJobIds = selectedRows.map((row) => row.original.job_id)
 
   return (
     <div className="space-y-4">
@@ -341,7 +342,7 @@ export function JobTable({
                   </TableRow>
 
                   {/* Expandable Detail Row */}
-                  {expandedRows.has(row.original.id) && (
+                  {expandedRows.has(row.original.job_id) && (
                     <TableRow className="bg-muted/40 hover:bg-muted/40">
                       <TableCell colSpan={columns.length} className="py-4">
                         <div className="space-y-3">
@@ -360,7 +361,9 @@ export function JobTable({
                                 Requirements
                               </h4>
                               <p className="text-sm text-muted-foreground line-clamp-3">
-                                {row.original.requirements}
+                                {Array.isArray(row.original.requirements)
+                                  ? row.original.requirements.join(", ")
+                                  : row.original.requirements}
                               </p>
                             </div>
                           )}

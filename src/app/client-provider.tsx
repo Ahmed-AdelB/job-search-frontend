@@ -33,7 +33,7 @@ export default function ClientProvider({ children }: ClientProviderProps) {
   )
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
       <QueryClientProvider client={queryClient}>
         <div lang={language} dir={language === "ar" ? "rtl" : "ltr"}>
           {children}

@@ -5,7 +5,7 @@ import { apiGet, apiPatch } from "@/lib/api-client"
 import type { Recruiter, RecruitersResponse } from "@/types/api"
 import { toast } from "sonner"
 
-interface RecruiterFilters {
+export interface RecruiterFilters {
   specialization?: string
   min_response_rate?: number
   search?: string
@@ -45,13 +45,13 @@ export function useRecruiters(filters?: RecruiterFilters) {
 }
 
 /**
- * Fetch a single recruiter by LinkedIn ID
+ * Fetch a single recruiter by contact ID
  */
-export function useRecruiter(linkedinId: string) {
+export function useRecruiter(contactId: string) {
   return useQuery({
-    queryKey: ["recruiters", linkedinId],
-    queryFn: () => apiGet<Recruiter>(`/api/recruiters/${linkedinId}`),
-    enabled: !!linkedinId,
+    queryKey: ["recruiters", contactId],
+    queryFn: () => apiGet<Recruiter>(`/api/recruiters/${contactId}`),
+    enabled: !!contactId,
     staleTime: 60000,
   })
 }
@@ -64,16 +64,16 @@ export function useUpdateRecruiter() {
 
   return useMutation({
     mutationFn: ({
-      linkedinId,
+      contactId,
       data,
     }: {
-      linkedinId: string
+      contactId: string
       data: Partial<Recruiter>
     }) =>
-      apiPatch<Recruiter>(`/api/recruiters/${linkedinId}`, data),
+      apiPatch<Recruiter>(`/api/recruiters/${contactId}`, data),
     onSuccess: (data) => {
       queryClient.invalidateQueries({ queryKey: ["recruiters"] })
-      queryClient.setQueryData(["recruiters", data.linkedin_id], data)
+      queryClient.setQueryData(["recruiters", data.contact_id], data)
       toast.success("Recruiter updated")
     },
     onError: () => {
@@ -100,14 +100,14 @@ export function useRecruitersBySpecialization(specialization?: string) {
 /**
  * Fetch recruiter recommendations
  */
-export function useRecruiterRecommendations(recruiterLinkedinId: string) {
+export function useRecruiterRecommendations(recruiterContactId: string) {
   return useQuery({
-    queryKey: ["recruiters", recruiterLinkedinId, "recommendations"],
+    queryKey: ["recruiters", recruiterContactId, "recommendations"],
     queryFn: () =>
       apiGet<{ recommended_outreach: string }>(
-        `/api/recruiters/${recruiterLinkedinId}/recommendations`
+        `/api/recruiters/${recruiterContactId}/recommendations`
       ),
-    enabled: !!recruiterLinkedinId,
+    enabled: !!recruiterContactId,
     staleTime: 60000,
   })
 }
@@ -120,6 +120,6 @@ export function useSpecializations() {
     queryKey: ["recruiters-specializations"],
     queryFn: () =>
       apiGet<{ specializations: string[] }>("/api/recruiters/specializations"),
-    staleTime: 3600000, // Cache for 1 hour
+    staleTime: 3600000,
   })
 }

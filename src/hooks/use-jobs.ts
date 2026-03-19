@@ -37,7 +37,7 @@ export function useJobs(filters?: JobFilters) {
 /**
  * Fetch a single job by ID
  */
-export function useJob(jobId: number) {
+export function useJob(jobId: string) {
   return useQuery({
     queryKey: ["jobs", jobId],
     queryFn: () => apiGet<Job>(`/api/jobs/${jobId}`),
@@ -57,13 +57,12 @@ export function useUpdateJobStatus() {
       jobId,
       status,
     }: {
-      jobId: number
+      jobId: string
       status: string
     }) => apiPatch<Job>(`/api/jobs/${jobId}`, { status }),
     onSuccess: (data) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
-      queryClient.setQueryData(["jobs", data.id], data)
+      queryClient.setQueryData(["jobs", data.job_id], data)
       toast.success("Job status updated")
     },
     onError: () => {
@@ -85,7 +84,7 @@ export function useBulkAction() {
       data,
     }: {
       action: string
-      jobIds: number[]
+      jobIds: string[]
       data?: Record<string, unknown>
     }) =>
       apiPut<{ count: number }>("/api/jobs/bulk-action", {
@@ -94,7 +93,6 @@ export function useBulkAction() {
         ...data,
       }),
     onSuccess: (data) => {
-      // Invalidate all jobs queries
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       toast.success(`Updated ${data.count} job(s)`)
     },
@@ -111,9 +109,8 @@ export function useDeleteJob() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (jobId: number) => apiDelete(`/api/jobs/${jobId}`),
+    mutationFn: (jobId: string) => apiDelete(`/api/jobs/${jobId}`),
     onSuccess: () => {
-      // Invalidate all jobs queries
       queryClient.invalidateQueries({ queryKey: ["jobs"] })
       toast.success("Job deleted")
     },

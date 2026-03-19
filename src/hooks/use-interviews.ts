@@ -5,7 +5,7 @@ import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api-client"
 import type { Interview, ApiListResponse } from "@/types/api"
 import { toast } from "sonner"
 
-interface InterviewFilters {
+export interface InterviewFilters {
   status?: string
   application_id?: string
   page?: number
@@ -14,7 +14,7 @@ interface InterviewFilters {
   sort_order?: "asc" | "desc"
 }
 
-interface ScheduleInterviewData {
+export interface ScheduleInterviewData {
   application_id?: string
   type: "phone" | "video" | "onsite" | "technical" | "behavioral" | "final"
   scheduled_at: string

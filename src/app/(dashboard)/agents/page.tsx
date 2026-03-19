@@ -241,7 +241,7 @@ export default function AgentsPage() {
                           Active
                         </span>
                       </div>
-                      <Progress value={undefined} className="h-1.5" />
+                      <Progress value={null} className="h-1.5" />
                     </div>
                   )}
 

@@ -257,8 +257,8 @@ function AppearanceTab({
 }: {
   theme: string;
   language: string;
-  setTheme: (t: string) => void;
-  setLanguage: (l: string) => void;
+  setTheme: (t: "light" | "dark" | "system") => void;
+  setLanguage: (l: "en" | "ar") => void;
 }) {
   return (
     <Card>
@@ -270,11 +270,11 @@ function AppearanceTab({
         <div className="space-y-3">
           <p className="font-medium">Theme</p>
           <div className="flex gap-3">
-            {[
-              { value: "system", label: "System" },
-              { value: "light", label: "Light" },
-              { value: "dark", label: "Dark" },
-            ].map((option) => (
+            {([
+              { value: "system" as const, label: "System" },
+              { value: "light" as const, label: "Light" },
+              { value: "dark" as const, label: "Dark" },
+            ]).map((option) => (
               <label key={option.value} className="flex items-center gap-2 cursor-pointer">
                 <input
                   type="radio"
@@ -296,7 +296,7 @@ function AppearanceTab({
               ? "Changing to English will switch the layout from RTL to LTR"
               : "Changing to Arabic will switch the layout to RTL"}
           </p>
-          <Select value={language} onValueChange={setLanguage}>
+          <Select value={language} onValueChange={(v) => setLanguage((v ?? "en") as "en" | "ar")}>
             <SelectTrigger className="w-[200px]">
               <SelectValue />
             </SelectTrigger>

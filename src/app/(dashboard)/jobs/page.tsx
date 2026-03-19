@@ -184,7 +184,7 @@ export default function JobsPage() {
                 className="max-w-md"
               />
             </div>
-            <Select value={status} onValueChange={(v) => { setStatus(v); setPage(1); }}>
+            <Select value={status} onValueChange={(v) => { setStatus(v ?? "all"); setPage(1); }}>
               <SelectTrigger className="w-[140px]">
                 <Filter className="w-4 h-4 me-2" />
                 <SelectValue placeholder="Status" />
@@ -199,7 +199,7 @@ export default function JobsPage() {
                 <SelectItem value="archived">Archived</SelectItem>
               </SelectContent>
             </Select>
-            <Select value={remoteType} onValueChange={(v) => { setRemoteType(v); setPage(1); }}>
+            <Select value={remoteType} onValueChange={(v) => { setRemoteType(v ?? "all"); setPage(1); }}>
               <SelectTrigger className="w-[140px]">
                 <SelectValue placeholder="Remote" />
               </SelectTrigger>

@@ -50,7 +50,7 @@ export function MobileNav() {
           <span className="sr-only">Open menu</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="start" className="w-72 p-0">
+      <SheetContent side="left" className="w-72 p-0">
         <div className="flex flex-col h-full">
           {/* Logo */}
           <div className="flex h-16 items-center px-4 border-b">

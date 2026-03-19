@@ -72,6 +72,10 @@ export interface Job {
   source: string;
   posted_at?: string;
   status: "new" | "applied" | "interview" | "offer" | "rejected" | "archived";
+  score?: number;
+  ghost_score?: number;
+  visa_sponsored?: boolean;
+  requirements?: string[];
   created_at: string;
   updated_at: string;
 }
@@ -86,6 +90,12 @@ export interface Application {
   cover_letter?: string;
   resume_url?: string;
   notes?: string;
+  job_title?: string;
+  company?: string;
+  ats_type?: string;
+  method?: string;
+  resume_version?: string;
+  confirmation_email?: string;
   created_at: string;
   updated_at: string;
 }
@@ -194,6 +204,12 @@ export interface Agent {
   schedule?: string;
   last_run_at?: string;
   next_run_at?: string;
+  circuit_state?: "closed" | "open" | "half-open";
+  consecutive_failures?: number;
+  error_message?: string;
+  poll_interval?: number;
+  total_runs?: number;
+  total_errors?: number;
   created_at: string;
   updated_at: string;
 }

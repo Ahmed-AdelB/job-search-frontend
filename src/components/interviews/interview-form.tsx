@@ -45,7 +45,7 @@ import type { Interview } from "@/types/api"
 const interviewFormSchema = z.object({
   type: z.enum(["phone", "video", "onsite", "technical", "behavioral", "final"]),
   scheduled_at: z.string().min(1, "Date and time are required"),
-  duration_minutes: z.coerce.number().min(15, "Duration must be at least 15 minutes").optional(),
+  duration_minutes: z.coerce.number().min(15, "Duration must be at least 15 minutes").optional() as z.ZodOptional<z.ZodNumber>,
   location: z.string().optional(),
   meeting_url: z.string().url("Invalid URL").optional().or(z.literal("")),
   interviewer_names: z.array(z.string()).optional(),
@@ -313,7 +313,7 @@ export function InterviewForm({ interview, onSuccess, trigger }: InterviewFormPr
                 </Button>
               </div>
 
-              {form.watch("interviewer_names")?.length > 0 && (
+              {(form.watch("interviewer_names")?.length ?? 0) > 0 && (
                 <div className="flex flex-wrap gap-2 mt-3">
                   {form.watch("interviewer_names")?.map((name, index) => (
                     <div

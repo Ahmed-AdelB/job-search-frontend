@@ -7,7 +7,7 @@ import { toast } from "sonner"
 
 export interface ApplicationFilters {
   status?: string
-  job_id?: number
+  job_id?: string
   page?: number
   per_page?: number
   sort_by?: string
@@ -22,7 +22,7 @@ export function useApplications(filters?: ApplicationFilters) {
 
   if (filters) {
     if (filters.status) queryParams.append("status", filters.status)
-    if (filters.job_id) queryParams.append("job_id", String(filters.job_id))
+    if (filters.job_id) queryParams.append("job_id", filters.job_id)
     if (filters.page) queryParams.append("page", String(filters.page))
     if (filters.per_page) queryParams.append("per_page", String(filters.per_page))
     if (filters.sort_by) queryParams.append("sort_by", filters.sort_by)
@@ -44,7 +44,7 @@ export function useApplications(filters?: ApplicationFilters) {
 /**
  * Fetch a single application by ID
  */
-export function useApplication(applicationId: number) {
+export function useApplication(applicationId: string) {
   return useQuery({
     queryKey: ["applications", applicationId],
     queryFn: () => apiGet<Application>(`/api/applications/${applicationId}`),
@@ -64,7 +64,7 @@ export function useUpdateApplication() {
       applicationId,
       data,
     }: {
-      applicationId: number
+      applicationId: string
       data: Partial<Application>
     }) =>
       apiPatch<Application>(
@@ -72,9 +72,8 @@ export function useUpdateApplication() {
         data
       ),
     onSuccess: (data) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["applications"] })
-      queryClient.setQueryData(["applications", data.id], data)
+      queryClient.setQueryData(["applications", data.application_id], data)
       toast.success("Application updated")
     },
     onError: () => {
@@ -90,15 +89,14 @@ export function useWithdrawApplication() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: (applicationId: number) =>
+    mutationFn: (applicationId: string) =>
       apiPost<Application>(
         `/api/applications/${applicationId}/withdraw`,
         {}
       ),
     onSuccess: (data) => {
-      // Invalidate relevant queries
       queryClient.invalidateQueries({ queryKey: ["applications"] })
-      queryClient.setQueryData(["applications", data.id], data)
+      queryClient.setQueryData(["applications", data.application_id], data)
       toast.success("Application withdrawn")
     },
     onError: () => {

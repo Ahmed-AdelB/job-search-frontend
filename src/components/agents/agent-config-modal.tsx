@@ -94,7 +94,7 @@ export function AgentConfigModal({
               type="number"
               min="60"
               max="3600"
-              value={formData.poll_interval || agent.poll_interval}
+              value={String(formData.poll_interval ?? agent.poll_interval ?? 300)}
               onChange={(e) =>
                 handleInputChange("poll_interval", parseInt(e.target.value))
               }

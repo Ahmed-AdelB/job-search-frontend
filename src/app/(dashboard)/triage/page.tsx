@@ -376,7 +376,7 @@ function ConfigTab() {
           </div>
           <Select
             value={config.digest_frequency}
-            onValueChange={(v) => handleChange({ digest_frequency: v as TriageConfig["digest_frequency"] })}
+            onValueChange={(v) => handleChange({ digest_frequency: (v ?? "daily") as TriageConfig["digest_frequency"] })}
           >
             <SelectTrigger className="w-[140px]">
               <SelectValue />

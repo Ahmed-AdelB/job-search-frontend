@@ -66,7 +66,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   };
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b bg-card/80 backdrop-blur px-4 sm:px-6">
+    <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b border-border/50 bg-background/60 backdrop-blur-xl px-4 sm:px-6">
       {/* Search */}
       <form onSubmit={handleSearch} className="flex-1 max-w-md hidden sm:block">
         <div className="relative">
@@ -152,7 +152,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               </Avatar>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent className="w-56" align="end" forceMount>
+          <DropdownMenuContent className="w-56" align="end">
             <DropdownMenuLabel className="font-normal">
               <div className="flex flex-col space-y-1">
                 <p className="text-sm font-medium">{user?.name || "User"}</p>

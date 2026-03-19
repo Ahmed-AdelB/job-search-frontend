@@ -341,7 +341,7 @@ function NewCampaignDialog({
           </div>
           <div className="space-y-2">
             <label className="text-sm font-medium">Campaign Type</label>
-            <Select value={type} onValueChange={setType}>
+            <Select value={type} onValueChange={(v) => setType(v ?? "email")}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>

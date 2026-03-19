@@ -98,8 +98,8 @@ export function SuccessChart({
                 borderRadius: "0.5rem",
                 color: "hsl(210 40% 98%)",
               }}
-              formatter={(value: number) => [
-                `${value.toFixed(1)}%`,
+              formatter={(value) => [
+                `${(value as number).toFixed(1)}%`,
                 "Success Rate",
               ]}
               labelFormatter={(label) => `Date: ${label}`}

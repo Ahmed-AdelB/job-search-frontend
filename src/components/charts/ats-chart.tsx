@@ -97,7 +97,7 @@ export function ATSChart({
                 borderRadius: "0.5rem",
                 color: "hsl(210 40% 98%)",
               }}
-              formatter={(value: number) => [value, "Applications"]}
+              formatter={(value) => [value as number, "Applications"]}
             />
             <Legend
               layout="vertical"

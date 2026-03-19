@@ -66,12 +66,12 @@ export function AgentCard({
     return <div className="w-2 h-2 rounded-full bg-yellow-500" />
   }
 
-  const lastRunTime = agent.last_run
-    ? formatDistanceToNow(new Date(agent.last_run), { addSuffix: true })
+  const lastRunTime = agent.last_run_at
+    ? formatDistanceToNow(new Date(agent.last_run_at), { addSuffix: true })
     : "Never"
 
-  const nextRunTime = agent.next_run
-    ? formatDistanceToNow(new Date(agent.next_run), { addSuffix: true })
+  const nextRunTime = agent.next_run_at
+    ? formatDistanceToNow(new Date(agent.next_run_at), { addSuffix: true })
     : "Not scheduled"
 
   return (
@@ -171,7 +171,7 @@ export function AgentCard({
         <div className="space-y-1 rounded-md bg-muted p-2">
           <p className="text-muted-foreground">Poll Interval</p>
           <p className="font-semibold text-foreground">
-            {(agent.poll_interval / 60).toFixed(0)} min
+            {((agent.poll_interval ?? 0) / 60).toFixed(0)} min
           </p>
         </div>
         <div className="space-y-1 rounded-md bg-muted p-2">
@@ -185,7 +185,7 @@ export function AgentCard({
         <div className="space-y-1 rounded-md bg-muted p-2">
           <p className="text-muted-foreground">Failures</p>
           <p className="font-semibold text-foreground">
-            {agent.consecutive_failures}/{agent.total_errors}
+            {agent.consecutive_failures ?? 0}/{agent.total_errors ?? 0}
           </p>
         </div>
       </div>
@@ -194,14 +194,14 @@ export function AgentCard({
       <div className="border-t border-border pt-3 space-y-2 text-xs">
         <div className="flex justify-between">
           <span className="text-muted-foreground">Total Runs:</span>
-          <span className="font-semibold text-foreground">{agent.total_runs}</span>
+          <span className="font-semibold text-foreground">{agent.total_runs ?? 0}</span>
         </div>
         <div className="flex justify-between">
           <span className="text-muted-foreground">Success Rate:</span>
           <span className="font-semibold text-foreground">
-            {agent.total_runs > 0
+            {(agent.total_runs ?? 0) > 0
               ? (
-                  ((agent.total_runs - agent.total_errors) / agent.total_runs) *
+                  (((agent.total_runs ?? 0) - (agent.total_errors ?? 0)) / (agent.total_runs ?? 1)) *
                   100
                 ).toFixed(0)
               : 0}

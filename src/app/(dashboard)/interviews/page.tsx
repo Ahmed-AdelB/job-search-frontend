@@ -174,7 +174,7 @@ export default function InterviewsPage() {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-1.5">
                   <Label>Type</Label>
-                  <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: v as Interview["type"] }))}>
+                  <Select value={form.type} onValueChange={(v) => setForm((f) => ({ ...f, type: (v ?? "phone") as Interview["type"] }))}>
                     <SelectTrigger><SelectValue /></SelectTrigger>
                     <SelectContent>
                       <SelectItem value="phone">Phone</SelectItem>
@@ -299,7 +299,7 @@ export default function InterviewsPage() {
               </CardTitle>
               <CardDescription>{total} total interviews</CardDescription>
             </div>
-            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v); setPage(1); }}>
+            <Select value={statusFilter} onValueChange={(v) => { setStatusFilter(v ?? "all"); setPage(1); }}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Status" />
               </SelectTrigger>
