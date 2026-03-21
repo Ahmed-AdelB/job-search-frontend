@@ -173,6 +173,13 @@ Object.defineProperty(window, "matchMedia", {
 // Mock scrollTo
 window.scrollTo = vi.fn() as unknown as typeof window.scrollTo;
 
+// Mock getAnimations - required for @base-ui/react ScrollArea
+if (!Element.prototype.getAnimations) {
+  Element.prototype.getAnimations = function() {
+    return [];
+  } as any;
+}
+
 // Mock localStorage for tests (jsdom provides one, but ensure it's clean)
 beforeEach(() => {
   localStorage.clear();
