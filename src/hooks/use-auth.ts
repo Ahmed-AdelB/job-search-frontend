@@ -19,7 +19,12 @@ interface UseAuthResult {
 }
 
 /** Allowed redirect path prefixes after login */
-const SAFE_REDIRECT_PREFIXES = ["/dashboard", "/profile", "/settings"];
+const SAFE_REDIRECT_PREFIXES = [
+  "/jobs", "/contacts", "/applications", "/agents", "/analytics",
+  "/outreach", "/profile", "/settings", "/billing", "/notifications",
+  "/intelligence", "/interviews", "/invitations", "/logs", "/portals",
+  "/recruiters", "/target-list", "/triage", "/deploy", "/admin", "/community",
+];
 
 function isSafeRedirectUrl(url: string): boolean {
   // Only allow relative paths starting with known prefixes
@@ -54,8 +59,8 @@ export function useAuth(requireAuth = false): UseAuthResult {
 
     // Redirect to login if auth is required but user is not authenticated
     if (requireAuth && !isAuth) {
-      const returnUrl = typeof window !== "undefined" ? window.location.pathname : "/"
-      const safeReturnUrl = isSafeRedirectUrl(returnUrl) ? returnUrl : "/dashboard"
+      const returnUrl = typeof window !== "undefined" ? window.location.pathname : "/jobs"
+      const safeReturnUrl = isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs"
       router.push(`/login?returnUrl=${encodeURIComponent(safeReturnUrl)}`)
     }
   }, [requireAuth, checkAuth, router])

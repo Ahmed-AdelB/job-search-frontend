@@ -33,7 +33,7 @@ export default function VerifyEmailPage() {
 
     const verifyEmail = async () => {
       try {
-        await apiPost("/auth/verify-email", { token });
+        await apiPost("/api/auth/verify-email", { token });
         setStatus("success");
         toast.success("Email verified successfully!", {
           description: "You can now log in to your account.",

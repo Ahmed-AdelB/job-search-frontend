@@ -5,7 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
@@ -32,10 +32,11 @@ export default function SignupPage() {
   const [validationError, setValidationError] = useState("");
 
   // Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push("/dashboard");
-    return null;
-  }
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace("/jobs");
+    }
+  }, [isAuthenticated, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

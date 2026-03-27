@@ -5,7 +5,7 @@
  * Author: Ahmed Adel Bakr Alderai
  */
 
-import { useState } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { useAuthStore } from "@/stores/auth-store";
@@ -17,8 +17,9 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
-export default function LoginPage() {
+function LoginForm() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { login, error, clearError, isAuthenticated } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -27,13 +28,14 @@ export default function LoginPage() {
     password: "",
   });
 
-  // Redirect if already authenticated
-  if (isAuthenticated) {
-    router.push("/dashboard");
-    return null;
-  }
-
-  const searchParams = useSearchParams();
+  // Redirect if already authenticated (in useEffect to avoid render loop)
+  useEffect(() => {
+    if (isAuthenticated) {
+      const returnUrl = searchParams.get("returnUrl");
+      const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs";
+      router.replace(redirectTo);
+    }
+  }, [isAuthenticated, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -44,13 +46,25 @@ export default function LoginPage() {
       const success = await login(formData.email, formData.password);
       if (success) {
         const returnUrl = searchParams.get("returnUrl");
-        const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/dashboard";
-        router.push(redirectTo);
+        const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs";
+        router.replace(redirectTo);
       }
     } finally {
       setIsLoading(false);
     }
   };
+
+  // Don't render form if already authenticated (redirecting)
+  if (isAuthenticated) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto mb-2" />
+          <p className="text-muted-foreground">Redirecting...</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
@@ -69,7 +83,7 @@ export default function LoginPage() {
               <AlertDescription>{error}</AlertDescription>
             </Alert>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
@@ -136,5 +150,19 @@ export default function LoginPage() {
         </div>
       </CardFooter>
     </Card>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense fallback={
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+        </CardContent>
+      </Card>
+    }>
+      <LoginForm />
+    </Suspense>
   );
 }

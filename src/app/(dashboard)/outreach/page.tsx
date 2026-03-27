@@ -154,7 +154,7 @@ export default function OutreachPage() {
         <motion.div variants={itemVariants}>
           <StatsCard
             title="Open Rate"
-            value={statsData ? `${Math.round(statsData.open_rate * 100)}%` : "0%"}
+            value={statsData?.open_rate != null ? `${Math.round(statsData.open_rate * 100)}%` : "0%"}
             icon={Eye}
             loading={statsLoading}
           />
@@ -162,7 +162,7 @@ export default function OutreachPage() {
         <motion.div variants={itemVariants}>
           <StatsCard
             title="Reply Rate"
-            value={statsData ? `${Math.round(statsData.reply_rate * 100)}%` : "0%"}
+            value={statsData?.reply_rate != null ? `${Math.round(statsData.reply_rate * 100)}%` : "0%"}
             icon={Reply}
             loading={statsLoading}
           />

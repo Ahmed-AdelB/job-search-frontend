@@ -46,7 +46,7 @@ export const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string): Promise<boolean> => {
         set({ isLoading: true, error: null });
         try {
-          const response = await apiPost<AuthResponse>("/auth/login", {
+          const response = await apiPost<AuthResponse>("/api/auth/login", {
             email,
             password,
           } as LoginRequest);
@@ -78,7 +78,7 @@ export const useAuthStore = create<AuthState>()(
       signup: async (email: string, password: string): Promise<boolean> => {
         set({ isLoading: true, error: null });
         try {
-          await apiPost<AuthResponse>("/auth/register", {
+          await apiPost<AuthResponse>("/api/auth/register", {
             email,
             password,
           } as RegisterRequest);

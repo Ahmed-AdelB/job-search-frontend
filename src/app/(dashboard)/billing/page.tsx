@@ -36,10 +36,38 @@ import type { BillingPlan, Subscription, Invoice, CheckoutSession, PortalSession
 
 const TIER_CONFIG: Record<string, { icon: React.ElementType; color: string; accent: string }> = {
   free: { icon: Star, color: "bg-gray-100 dark:bg-gray-800", accent: "border-gray-300" },
+  FREE: { icon: Star, color: "bg-gray-100 dark:bg-gray-800", accent: "border-gray-300" },
   starter: { icon: Zap, color: "bg-blue-50 dark:bg-blue-900/20", accent: "border-blue-400" },
+  PRO: { icon: Zap, color: "bg-blue-50 dark:bg-blue-900/20", accent: "border-blue-400" },
   professional: { icon: Crown, color: "bg-amber-50 dark:bg-amber-900/20", accent: "border-amber-400" },
+  PRO_PLUS: { icon: Crown, color: "bg-amber-50 dark:bg-amber-900/20", accent: "border-amber-400" },
   enterprise: { icon: Building2, color: "bg-purple-50 dark:bg-purple-900/20", accent: "border-purple-400" },
+  ENTERPRISE: { icon: Building2, color: "bg-purple-50 dark:bg-purple-900/20", accent: "border-purple-400" },
 };
+
+/** Convert features from API format (object or array) to display array */
+function normalizeFeatures(features: unknown): string[] {
+  if (Array.isArray(features)) return features;
+  if (features && typeof features === "object") {
+    return Object.entries(features as Record<string, boolean>)
+      .filter(([, enabled]) => enabled)
+      .map(([key]) => key.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()));
+  }
+  return [];
+}
+
+/** Normalize plan from API to expected shape */
+function normalizePlan(plan: Record<string, unknown>) {
+  return {
+    id: plan.id as string,
+    name: plan.name as string,
+    tier: (plan.tier ?? plan.id ?? "free") as string,
+    price_monthly: (plan.price_monthly ?? plan.price_eur ?? 0) as number,
+    price_annual: (plan.price_annual ?? ((plan.price_eur as number ?? 0) * 10)) as number,
+    features: normalizeFeatures(plan.features),
+    limits: (plan.limits ?? { jobs_per_day: plan.jobs_per_day ?? 0 }) as Record<string, number>,
+  };
+}
 
 const STATUS_COLOR: Record<string, string> = {
   active: "bg-green-600",
@@ -83,7 +111,7 @@ const itemVariants = {
 export default function BillingPage() {
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["billing", "plans"],
-    queryFn: () => apiGet<{ plans: BillingPlan[] }>("/api/billing/plans"),
+    queryFn: () => apiGet<{ plans: Record<string, unknown>[] }>("/api/billing/plans"),
   });
 
   const { data: subscription, isLoading: subLoading } = useQuery({
@@ -112,7 +140,7 @@ export default function BillingPage() {
   });
 
   const sub = subscription?.subscription;
-  const plansList = plans?.plans ?? [];
+  const plansList = (plans?.plans ?? []).map((p: Record<string, unknown>) => normalizePlan(p));
   const invoicesList = invoices?.invoices ?? [];
 
   return (
@@ -247,9 +275,11 @@ export default function BillingPage() {
                         <span className="text-3xl font-bold">${plan.price_monthly}</span>
                         <span className="text-sm text-muted-foreground">/mo</span>
                       </div>
-                      <p className="text-xs text-muted-foreground">
-                        or ${plan.price_annual}/yr (save {Math.round((1 - plan.price_annual / (plan.price_monthly * 12)) * 100)}%)
-                      </p>
+                      {plan.price_monthly > 0 && (
+                        <p className="text-xs text-muted-foreground">
+                          or ${plan.price_annual}/yr (save {Math.round((1 - plan.price_annual / (plan.price_monthly * 12)) * 100)}%)
+                        </p>
+                      )}
                     </div>
 
                     <ul className="space-y-1.5">

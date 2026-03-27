@@ -730,3 +730,128 @@ export interface Notification {
   action_url?: string;
   created_at: string;
 }
+
+// ============================================================================
+// Apply System
+// ============================================================================
+export interface ApplyRequest {
+  resume_id?: string;
+  cover_letter?: string;
+  answers?: Record<string, string>;
+}
+
+export interface ApplyResponse {
+  application_id: string;
+  status: string;
+  message: string;
+  ats_type?: string;
+}
+
+export interface ApplyStatus {
+  job_id: string;
+  status: "queued" | "in_progress" | "success" | "failed" | "rate_limited";
+  message?: string;
+  application_id?: string;
+  ats_type?: string;
+  submitted_at?: string;
+}
+
+export interface BatchApplyRequest {
+  job_ids: string[];
+  resume_id?: string;
+  cover_letter_template?: string;
+}
+
+export interface BatchApplyResponse {
+  queued: number;
+  skipped: number;
+  errors: string[];
+}
+
+export interface RateLimits {
+  max_per_hour: number;
+  max_per_day: number;
+  current_hour: number;
+  current_day: number;
+  reset_at: string;
+}
+
+export interface DryRunResult {
+  job_id: string;
+  ats_type: string;
+  fields_detected: string[];
+  can_auto_apply: boolean;
+  missing_info: string[];
+  estimated_time: number;
+}
+
+// ============================================================================
+// Portals
+// ============================================================================
+export interface Portal {
+  id: string;
+  name: string;
+  type: "linkedin" | "indeed" | "glassdoor" | "builtin" | "greenhouse" | "lever" | "workday" | "other";
+  url: string;
+  status: "active" | "inactive" | "error";
+  jobs_count: number;
+  last_sync?: string;
+  config?: Record<string, unknown>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface PortalsResponse {
+  portals: Portal[];
+  total: number;
+}
+
+// ============================================================================
+// GDPR
+// ============================================================================
+export interface GDPRExportRequest {
+  format?: "json" | "csv";
+}
+
+export interface GDPRExportResponse {
+  request_id: string;
+  status: "processing" | "ready" | "expired";
+  download_url?: string;
+  expires_at?: string;
+}
+
+export interface GDPRDeleteResponse {
+  request_id: string;
+  status: "scheduled" | "processing" | "completed";
+  scheduled_at?: string;
+}
+
+// ============================================================================
+// Work Mode
+// ============================================================================
+export interface WorkModeDetection {
+  work_mode: "remote" | "hybrid" | "onsite";
+  confidence: number;
+  reasoning: string;
+}
+
+export interface WorkModeStats {
+  total_analyzed: number;
+  remote_count: number;
+  hybrid_count: number;
+  onsite_count: number;
+}
+
+// ============================================================================
+// Employment Type
+// ============================================================================
+export interface EmploymentTypeDetection {
+  employment_type: "full-time" | "part-time" | "contract" | "freelance" | "internship" | "temporary";
+  confidence: number;
+  duration?: string;
+}
+
+export interface EmploymentTypeStats {
+  total_analyzed: number;
+  breakdown: Record<string, number>;
+}
