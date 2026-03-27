@@ -44,9 +44,18 @@ import {
   CheckCircle2,
   Clock,
   Loader2,
+  Download,
+  ThumbsUp,
+  ThumbsDown,
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type { ApplicationsResponse, Application } from "@/types/api";
+import {
+  useApproveApplication,
+  useRejectApplication,
+  useRetryApplication,
+  useExportApplications,
+} from "@/hooks/use-applications";
 
 const STATUS_CONFIG: Record<string, { color: string; icon: React.ElementType }> = {
   draft: { color: "bg-gray-500", icon: FileText },
@@ -71,8 +80,8 @@ const containerVariants: Variants = {
 
 const rowVariants: Variants = {
   hidden: { opacity: 0, x: -20 },
-  visible: { 
-    opacity: 1, 
+  visible: {
+    opacity: 1,
     x: 0,
     transition: {
       type: "spring",
@@ -84,8 +93,8 @@ const rowVariants: Variants = {
 
 const badgeVariants: Variants = {
   initial: { scale: 0.8, opacity: 0 },
-  animate: { 
-    scale: 1, 
+  animate: {
+    scale: 1,
     opacity: 1,
     transition: {
       type: "spring",
@@ -101,6 +110,12 @@ export default function ApplicationsPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [page, setPage] = useState(1);
   const perPage = 25;
+
+  // Hooks for actions
+  const approveMutation = useApproveApplication();
+  const rejectMutation = useRejectApplication();
+  const retryMutation = useRetryApplication();
+  const exportMutation = useExportApplications();
 
   const { data, isLoading } = useQuery({
     queryKey: ["applications", search, statusFilter, page],
@@ -139,22 +154,53 @@ export default function ApplicationsPage() {
     {} as Record<string, number>
   );
 
+  const handleApprove = (appId: string) => {
+    approveMutation.mutate(appId);
+  };
+
+  const handleReject = (appId: string) => {
+    rejectMutation.mutate(appId);
+  };
+
+  const handleRetry = (appId: string) => {
+    retryMutation.mutate(appId);
+  };
+
+  const handleExport = () => {
+    exportMutation.mutate(statusFilter !== "all" ? statusFilter : undefined);
+  };
+
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: "easeOut" }}
     >
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
-        <p className="text-muted-foreground">
-          Track and manage your {total} job applications
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
+          <p className="text-muted-foreground">
+            Track and manage your {total} job applications
+          </p>
+        </div>
+        <Button
+          onClick={handleExport}
+          disabled={exportMutation.isPending || total === 0}
+          variant="outline"
+          className="gap-2"
+        >
+          {exportMutation.isPending ? (
+            <Loader2 className="h-4 w-4 animate-spin" />
+          ) : (
+            <Download className="h-4 w-4" />
+          )}
+          Export CSV
+        </Button>
       </div>
 
       {/* Summary Cards */}
-      <motion.div 
+      <motion.div
         className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -168,19 +214,19 @@ export default function ApplicationsPage() {
               key={s}
               initial={{ opacity: 0, y: 20, scale: 0.95 }}
               animate={{ opacity: 1, y: 0, scale: 1 }}
-              transition={{ 
+              transition={{
                 delay: 0.1 + index * 0.05,
                 type: "spring",
                 stiffness: 100,
                 damping: 15,
               }}
-              whileHover={{ 
+              whileHover={{
                 scale: 1.03,
                 boxShadow: "0 10px 40px -10px rgba(0, 0, 0, 0.2)",
                 transition: { duration: 0.2 }
               }}
             >
-              <Card 
+              <Card
                 className="cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => { setStatusFilter(s); setPage(1); }}
               >
@@ -275,7 +321,8 @@ export default function ApplicationsPage() {
                         <TableHead>Applied</TableHead>
                         <TableHead>Resume</TableHead>
                         <TableHead>Notes</TableHead>
-                        <TableHead className="w-[60px]">Actions</TableHead>
+                        <TableHead className="w-[120px]">Quick Actions</TableHead>
+                        <TableHead className="w-[60px]">Menu</TableHead>
                       </TableRow>
                     </TableHeader>
                     <motion.tbody
@@ -287,11 +334,15 @@ export default function ApplicationsPage() {
                         {applications.map((app) => {
                           const config = STATUS_CONFIG[app.status] ?? STATUS_CONFIG.draft;
                           const StatusIcon = config.icon;
+                          const canApprove = app.status === "submitted" || app.status === "screening";
+                          const canReject = app.status !== "rejected" && app.status !== "withdrawn";
+                          const canRetry = app.status === "rejected" || app.status === "withdrawn";
+
                           return (
                             <motion.tr
                               key={app.application_id}
                               variants={rowVariants}
-                              whileHover={{ 
+                              whileHover={{
                                 backgroundColor: "rgba(var(--muted), 0.3)",
                                 transition: { duration: 0.15 }
                               }}
@@ -320,7 +371,7 @@ export default function ApplicationsPage() {
                               <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
                                 {app.applied_at
                                   ? new Date(app.applied_at).toLocaleDateString()
-                                  : "\u2014"}
+                                  : "—"}
                               </TableCell>
                               <TableCell>
                                 {app.resume_url ? (
@@ -333,7 +384,59 @@ export default function ApplicationsPage() {
                                 )}
                               </TableCell>
                               <TableCell className="max-w-[200px] text-sm truncate">
-                                {app.notes || "\u2014"}
+                                {app.notes || "—"}
+                              </TableCell>
+                              <TableCell>
+                                <div className="flex gap-1">
+                                  {canApprove && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleApprove(app.application_id)}
+                                      disabled={approveMutation.isPending}
+                                      title="Approve - mark as interview"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {approveMutation.isPending ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <ThumbsUp className="w-3 h-3 text-green-600" />
+                                      )}
+                                    </Button>
+                                  )}
+                                  {canReject && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleReject(app.application_id)}
+                                      disabled={rejectMutation.isPending}
+                                      title="Reject application"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {rejectMutation.isPending ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <ThumbsDown className="w-3 h-3 text-red-600" />
+                                      )}
+                                    </Button>
+                                  )}
+                                  {canRetry && (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => handleRetry(app.application_id)}
+                                      disabled={retryMutation.isPending}
+                                      title="Retry application"
+                                      className="h-8 w-8 p-0"
+                                    >
+                                      {retryMutation.isPending ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : (
+                                        <RotateCcw className="w-3 h-3 text-amber-600" />
+                                      )}
+                                    </Button>
+                                  )}
+                                </div>
                               </TableCell>
                               <TableCell>
                                 <DropdownMenu>
