@@ -39,7 +39,44 @@ import {
   Zap,
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
-import type { Agent, AgentAction } from "@/types/api";
+import type { AgentAction } from "@/types/api";
+
+/** API response shape for a single agent */
+interface AgentApiItem {
+  name: string;
+  poll_interval?: number;
+  batch_size?: number;
+  enabled?: boolean;
+  status: string;
+  [key: string]: unknown;
+}
+
+/** Friendly display names for agent names */
+const AGENT_DISPLAY: Record<string, { display_name: string; type: string }> = {
+  discovery: { display_name: "Job Discovery", type: "search" },
+  tailoring: { display_name: "CV Tailoring", type: "apply" },
+  application: { display_name: "Auto Apply", type: "apply" },
+  outreach: { display_name: "Recruiter Outreach", type: "email" },
+};
+
+/** Normalize API agent to the shape the page uses */
+function normalizeAgent(raw: AgentApiItem) {
+  const info = AGENT_DISPLAY[raw.name] ?? { display_name: raw.name, type: "custom" };
+  return {
+    agent_id: raw.name,
+    name: raw.name,
+    display_name: info.display_name,
+    type: info.type,
+    status: raw.status ?? "stopped",
+    poll_interval: raw.poll_interval,
+    config: { poll_interval: raw.poll_interval, batch_size: raw.batch_size },
+    last_run_at: undefined as string | undefined,
+    next_run_at: undefined as string | undefined,
+    schedule: undefined as string | undefined,
+  };
+}
+
+type NormalizedAgent = ReturnType<typeof normalizeAgent>;
 
 const STATUS_CONFIG: Record<string, { color: string; badge: string; icon: React.ElementType }> = {
   running: { color: "text-green-600", badge: "bg-green-600", icon: CheckCircle2 },
@@ -89,12 +126,16 @@ const pulseVariants = {
 
 export default function AgentsPage() {
   const queryClient = useQueryClient();
-  const [configAgent, setConfigAgent] = useState<Agent | null>(null);
+  const [configAgent, setConfigAgent] = useState<NormalizedAgent | null>(null);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ["agents"],
-    queryFn: () => apiGet<{ agents: Agent[] }>("/api/agents"),
+    queryFn: async () => {
+      const result = await apiGet<AgentApiItem[] | { agents: AgentApiItem[] }>("/api/agents");
+      const raw = Array.isArray(result) ? result : result.agents ?? [];
+      return raw.map(normalizeAgent);
+    },
     refetchInterval: 5000,
   });
 
@@ -139,7 +180,7 @@ export default function AgentsPage() {
     return () => eventSource.close();
   }, [queryClient]);
 
-  const openConfig = useCallback((agent: Agent) => {
+  const openConfig = useCallback((agent: NormalizedAgent) => {
     setConfigAgent(agent);
     const vals: Record<string, string> = {};
     if (agent.config) {
@@ -150,7 +191,7 @@ export default function AgentsPage() {
     setConfigValues(vals);
   }, []);
 
-  const agents = data?.agents ?? [];
+  const agents = data ?? [];
   const runningCount = agents.filter((a) => a.status === "running").length;
   const errorCount = agents.filter((a) => a.status === "error").length;
 
