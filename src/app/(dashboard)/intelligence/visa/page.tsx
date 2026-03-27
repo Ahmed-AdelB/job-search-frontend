@@ -66,7 +66,7 @@ const itemVariants = {
 export default function VisaPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["intelligence", "visa"],
-    queryFn: () => apiGet<{ scores: VisaScore[] }>("/api/v1/visa/scores"),
+    queryFn: () => apiGet<{ scores: VisaScore[] }>("/api/visa/scores"),
     staleTime: 5 * 60 * 1000,
   });
 

@@ -22,19 +22,23 @@ export function getToken(): string | null {
 }
 
 /**
- * Set JWT token in localStorage
+ * Set JWT token in localStorage and cookie (for middleware access)
  */
 export function setToken(token: string): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(TOKEN_KEY, token);
+  // Also set as cookie so Next.js middleware can read it
+  document.cookie = `${TOKEN_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`;
 }
 
 /**
- * Remove JWT token from localStorage
+ * Remove JWT token from localStorage and cookie
  */
 export function removeToken(): void {
   if (typeof window === "undefined") return;
   localStorage.removeItem(TOKEN_KEY);
+  // Also remove the cookie
+  document.cookie = `${TOKEN_KEY}=; path=/; max-age=0; SameSite=Lax`;
 }
 
 /**

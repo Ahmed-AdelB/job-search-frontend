@@ -60,13 +60,26 @@ export function useUpdateJobStatus() {
       jobId: string
       status: string
     }) => apiPatch<Job>(`/api/jobs/${jobId}`, { status }),
+    onMutate: async ({ jobId, status }) => {
+      await queryClient.cancelQueries({ queryKey: ["jobs"] })
+      const previousJob = queryClient.getQueryData<Job>(["jobs", jobId])
+      if (previousJob) {
+        queryClient.setQueryData(["jobs", jobId], { ...previousJob, status })
+      }
+      return { previousJob }
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] })
       queryClient.setQueryData(["jobs", data.job_id], data)
       toast.success("Job status updated")
     },
-    onError: () => {
+    onError: (_err, { jobId }, context) => {
+      if (context?.previousJob) {
+        queryClient.setQueryData(["jobs", jobId], context.previousJob)
+      }
       toast.error("Failed to update job status")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] })
     },
   })
 }
@@ -110,12 +123,23 @@ export function useDeleteJob() {
 
   return useMutation({
     mutationFn: (jobId: string) => apiDelete(`/api/jobs/${jobId}`),
+    onMutate: async (jobId) => {
+      await queryClient.cancelQueries({ queryKey: ["jobs"] })
+      const previousJob = queryClient.getQueryData<Job>(["jobs", jobId])
+      queryClient.removeQueries({ queryKey: ["jobs", jobId] })
+      return { previousJob }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] })
       toast.success("Job deleted")
     },
-    onError: () => {
+    onError: (_err, jobId, context) => {
+      if (context?.previousJob) {
+        queryClient.setQueryData(["jobs", jobId], context.previousJob)
+      }
       toast.error("Failed to delete job")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["jobs"] })
     },
   })
 }

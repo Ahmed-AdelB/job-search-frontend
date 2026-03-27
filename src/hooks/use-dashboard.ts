@@ -27,7 +27,7 @@ export function usePipelineStats() {
 export function useAnalyticsOverview() {
   return useQuery({
     queryKey: ["analytics", "overview"],
-    queryFn: () => apiGet<AnalyticsOverview>("/api/v1/analytics/overview"),
+    queryFn: () => apiGet<AnalyticsOverview>("/api/analytics/overview"),
     refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 30000, // Data is fresh for 30 seconds
   })
@@ -40,7 +40,7 @@ export function useFunnelData() {
   return useQuery({
     queryKey: ["analytics", "funnel"],
     queryFn: async () => {
-      const data = await apiGet<FunnelData[]>("/api/v1/analytics/funnel")
+      const data = await apiGet<FunnelData[]>("/api/analytics/funnel")
       return data
     },
     refetchInterval: 60000, // Refetch every 60 seconds
@@ -54,7 +54,7 @@ export function useFunnelData() {
 export function useTimelineData() {
   return useQuery({
     queryKey: ["analytics", "timeline"],
-    queryFn: () => apiGet<TimelineData[]>("/api/v1/analytics/timeline"),
+    queryFn: () => apiGet<TimelineData[]>("/api/analytics/timeline"),
     refetchInterval: 60000, // Refetch every 60 seconds
     staleTime: 30000, // Data is fresh for 30 seconds
   })

@@ -39,7 +39,7 @@ export interface CompanyData {
 export function useAnalyticsOverview() {
   return useQuery({
     queryKey: ["analytics", "overview"],
-    queryFn: () => apiGet<AnalyticsOverview>("/api/v1/analytics/overview"),
+    queryFn: () => apiGet<AnalyticsOverview>("/api/analytics/overview"),
     staleTime: 5 * 60 * 1000, // 5 minutes
     gcTime: 10 * 60 * 1000, // 10 minutes (formerly cacheTime)
   });
@@ -51,7 +51,7 @@ export function useAnalyticsOverview() {
 export function useFunnel() {
   return useQuery({
     queryKey: ["analytics", "funnel"],
-    queryFn: () => apiGet<FunnelData[]>("/api/v1/analytics/funnel"),
+    queryFn: () => apiGet<FunnelData[]>("/api/analytics/funnel"),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -63,7 +63,7 @@ export function useFunnel() {
 export function useByATS() {
   return useQuery({
     queryKey: ["analytics", "ats"],
-    queryFn: () => apiGet<ATSData[]>("/api/v1/analytics/by-ats"),
+    queryFn: () => apiGet<ATSData[]>("/api/analytics/by-ats"),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -78,7 +78,7 @@ export function useTimeline(days: 7 | 30 | 90 | "all" = 30) {
     queryKey: ["analytics", "timeline", days],
     queryFn: () =>
       apiGet<TimelineData[]>(
-        `/api/v1/analytics/timeline?days=${days === "all" ? -1 : days}`
+        `/api/analytics/timeline?days=${days === "all" ? -1 : days}`
       ),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
@@ -91,7 +91,7 @@ export function useTimeline(days: 7 | 30 | 90 | "all" = 30) {
 export function useTopSources() {
   return useQuery({
     queryKey: ["analytics", "sources"],
-    queryFn: () => apiGet<SourceData[]>("/api/v1/analytics/sources"),
+    queryFn: () => apiGet<SourceData[]>("/api/analytics/sources"),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });
@@ -103,7 +103,7 @@ export function useTopSources() {
 export function useTopCompanies() {
   return useQuery({
     queryKey: ["analytics", "companies"],
-    queryFn: () => apiGet<CompanyData[]>("/api/v1/analytics/companies"),
+    queryFn: () => apiGet<CompanyData[]>("/api/analytics/companies"),
     staleTime: 5 * 60 * 1000,
     gcTime: 10 * 60 * 1000,
   });

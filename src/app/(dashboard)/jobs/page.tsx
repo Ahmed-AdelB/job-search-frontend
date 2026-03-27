@@ -46,6 +46,7 @@ import {
   Clock,
 } from "lucide-react";
 import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
+import { useApplyToJob, useAutoApply, useDryRunApply } from "@/hooks/use-apply";
 import type { JobsResponse, Job } from "@/types/api";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -133,16 +134,9 @@ const AnimatedTableRow = ({
         backgroundColor: "rgba(var(--muted), 0.6)",
         transition: { duration: 0.15 },
       }}
-      className={`group relative ${className || ""}`}
+      className={`group relative before:absolute before:left-0 before:top-0 before:bottom-0 before:w-[3px] before:bg-primary before:scale-y-0 hover:before:scale-y-100 before:origin-top before:transition-transform before:duration-150 ${className || ""}`}
       {...props}
     >
-      {/* Left border accent on hover */}
-      <motion.div
-        className="absolute left-0 top-0 bottom-0 w-[3px] bg-primary origin-top"
-        initial={{ scaleY: 0 }}
-        whileHover={{ scaleY: 1 }}
-        transition={{ duration: 0.15 }}
-      />
       {children}
     </motion.tr>
   );
@@ -171,13 +165,13 @@ export default function JobsPage() {
       params.set("sort_order", sortOrder);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<JobsResponse>(`/api/v1/jobs?${params.toString()}`);
+      return apiGet<JobsResponse>(`/api/jobs?${params.toString()}`);
     },
   });
 
   const bulkActionMutation = useMutation({
     mutationFn: (payload: { job_ids: string[]; action: string }) =>
-      apiPost<{ status: string }>("/api/v1/jobs/bulk-action", payload),
+      apiPost<{ status: string }>("/api/jobs/bulk-action", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       setSelected(new Set());
@@ -185,9 +179,12 @@ export default function JobsPage() {
   });
 
   const deleteJobMutation = useMutation({
-    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/jobs/${id}`),
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/jobs/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
   });
+
+  const applyMutation = useApplyToJob();
+  const autoApplyMutation = useAutoApply();
 
   const jobs = data?.jobs ?? [];
   const total = data?.total ?? 0;
@@ -526,6 +523,19 @@ export default function JobsPage() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => applyMutation.mutate({ jobId: job.job_id })}
+                                >
+                                  <Briefcase className="w-4 h-4 me-2" />
+                                  Apply Now
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => autoApplyMutation.mutate(job.job_id)}
+                                >
+                                  <Briefcase className="w-4 h-4 me-2" />
+                                  Auto-Apply (ATS)
+                                </DropdownMenuItem>
+                                <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>
                                   <a href={job.url} target="_blank" rel="noopener noreferrer">
                                     <ExternalLink className="w-4 h-4 me-2" />

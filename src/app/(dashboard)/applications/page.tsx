@@ -110,19 +110,19 @@ export default function ApplicationsPage() {
       if (statusFilter !== "all") params.set("status", statusFilter);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<ApplicationsResponse>(`/api/v1/applications?${params.toString()}`);
+      return apiGet<ApplicationsResponse>(`/api/applications?${params.toString()}`);
     },
   });
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      apiPost<{ status: string }>(`/api/v1/applications/${id}/status`, { status }),
+      apiPost<{ status: string }>(`/api/applications/${id}/status`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 
   const reapplyMutation = useMutation({
     mutationFn: (id: string) =>
-      apiPost<{ status: string }>(`/api/v1/applications/${id}/reapply`, {}),
+      apiPost<{ status: string }>(`/api/applications/${id}/reapply`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["applications"] }),
   });
 

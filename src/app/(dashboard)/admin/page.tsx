@@ -120,7 +120,7 @@ export default function AdminPage() {
 function TenantsTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["admin", "tenants"],
-    queryFn: () => apiGet<{ tenants: Tenant[] }>("/api/v1/tenants"),
+    queryFn: () => apiGet<{ tenants: Tenant[] }>("/api/tenants"),
   });
 
   const tenants = data?.tenants ?? [];
@@ -195,17 +195,17 @@ function MaintenanceTab() {
   const queryClient = useQueryClient();
 
   const vacuumMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/maintenance/vacuum", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/maintenance/vacuum", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin"] }),
   });
 
   const cacheClearMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/maintenance/clear-cache", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/maintenance/clear-cache", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin"] }),
   });
 
   const healthCheckMutation = useMutation({
-    mutationFn: () => apiGet<{ status: string; checks: Record<string, boolean> }>("/api/v1/health"),
+    mutationFn: () => apiGet<{ status: string; checks: Record<string, boolean> }>("/api/health"),
   });
 
   return (
@@ -366,12 +366,12 @@ function TrashTab() {
     queryKey: ["admin", "trash"],
     queryFn: () =>
       apiGet<{ items: { id: string; type: string; name: string; deleted_at: string }[] }>(
-        "/api/v1/soft-delete/trash"
+        "/api/soft-delete/trash"
       ),
   });
 
   const restoreMutation = useMutation({
-    mutationFn: (id: string) => apiPost<{ status: string }>(`/api/v1/soft-delete/restore/${id}`, {}),
+    mutationFn: (id: string) => apiPost<{ status: string }>(`/api/soft-delete/restore/${id}`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["admin", "trash"] }),
   });
 

@@ -68,7 +68,7 @@ const itemVariants = {
 export default function InvitationsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["invitations"],
-    queryFn: () => apiGet<InvitationsResponse>("/api/v1/invitations"),
+    queryFn: () => apiGet<InvitationsResponse>("/api/invitations"),
   });
 
   const invitations = data?.invitations ?? [];
@@ -198,7 +198,7 @@ function InvitationTable({
 
   const respondMutation = useMutation({
     mutationFn: ({ id, action }: { id: string; action: "accept" | "decline" }) =>
-      apiPost<{ status: string }>(`/api/v1/invitations/${id}/${action}`, {}),
+      apiPost<{ status: string }>(`/api/invitations/${id}/${action}`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["invitations"] }),
   });
 

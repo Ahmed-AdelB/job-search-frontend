@@ -139,13 +139,13 @@ export default function InterviewsPage() {
       if (statusFilter !== "all") params.set("status", statusFilter);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<{ interviews: Interview[]; total: number }>(`/api/v1/interviews?${params.toString()}`);
+      return apiGet<{ interviews: Interview[]; total: number }>(`/api/interviews?${params.toString()}`);
     },
   });
 
   const createMutation = useMutation({
     mutationFn: (payload: Record<string, unknown>) =>
-      apiPost<Interview>("/api/v1/interviews", payload),
+      apiPost<Interview>("/api/interviews", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["interviews"] });
       setDialogOpen(false);
@@ -155,7 +155,7 @@ export default function InterviewsPage() {
 
   const updateStatusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) =>
-      apiPut<Interview>(`/api/v1/interviews/${id}`, { status }),
+      apiPut<Interview>(`/api/interviews/${id}`, { status }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["interviews"] }),
   });
 

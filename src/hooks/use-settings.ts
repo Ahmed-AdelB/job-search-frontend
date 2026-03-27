@@ -52,7 +52,7 @@ export interface AllSettings {
 export function useSettings() {
   return useQuery({
     queryKey: ["settings"],
-    queryFn: () => apiGet<AllSettings>("/api/v1/settings"),
+    queryFn: () => apiGet<AllSettings>("/api/settings"),
     staleTime: 10 * 60 * 1000, // 10 minutes
     gcTime: 30 * 60 * 1000, // 30 minutes
   });
@@ -66,7 +66,7 @@ export function useUpdateSettings() {
 
   return useMutation({
     mutationFn: (settings: AllSettings) =>
-      apiPut<AllSettings>("/api/v1/settings", settings),
+      apiPut<AllSettings>("/api/settings", settings),
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], data);
       toast.success("Settings updated successfully");
@@ -87,7 +87,7 @@ export function useUpdateGeneralSettings() {
 
   return useMutation({
     mutationFn: (settings: GeneralSettings) =>
-      apiPut<GeneralSettings>("/api/v1/settings/general", settings),
+      apiPut<GeneralSettings>("/api/settings/general", settings),
     onSuccess: (data) => {
       // Update the general part of the settings cache
       queryClient.setQueryData(["settings"], (prev: AllSettings) => ({
@@ -112,7 +112,7 @@ export function useUpdatePipelineSettings() {
 
   return useMutation({
     mutationFn: (settings: PipelineSettings) =>
-      apiPut<PipelineSettings>("/api/v1/settings/pipeline", settings),
+      apiPut<PipelineSettings>("/api/settings/pipeline", settings),
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], (prev: AllSettings) => ({
         ...prev,
@@ -134,7 +134,7 @@ export function useUpdatePipelineSettings() {
 export function useLLMConfig() {
   return useQuery({
     queryKey: ["settings", "llm"],
-    queryFn: () => apiGet<LLMConfig>("/api/v1/settings/llm"),
+    queryFn: () => apiGet<LLMConfig>("/api/settings/llm"),
     staleTime: 10 * 60 * 1000,
     gcTime: 30 * 60 * 1000,
   });
@@ -148,7 +148,7 @@ export function useUpdateLLMConfig() {
 
   return useMutation({
     mutationFn: (config: LLMConfig) =>
-      apiPut<LLMConfig>("/api/v1/settings/llm", config),
+      apiPut<LLMConfig>("/api/settings/llm", config),
     onSuccess: (data) => {
       queryClient.setQueryData(["settings", "llm"], data);
       queryClient.setQueryData(["settings"], (prev: AllSettings) => ({
@@ -173,7 +173,7 @@ export function useUpdateNotificationSettings() {
 
   return useMutation({
     mutationFn: (settings: NotificationSettings) =>
-      apiPut<NotificationSettings>("/api/v1/settings/notifications", settings),
+      apiPut<NotificationSettings>("/api/settings/notifications", settings),
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], (prev: AllSettings) => ({
         ...prev,
@@ -197,7 +197,7 @@ export function useUpdateAdvancedSettings() {
 
   return useMutation({
     mutationFn: (settings: AdvancedSettings) =>
-      apiPut<AdvancedSettings>("/api/v1/settings/advanced", settings),
+      apiPut<AdvancedSettings>("/api/settings/advanced", settings),
     onSuccess: (data) => {
       queryClient.setQueryData(["settings"], (prev: AllSettings) => ({
         ...prev,

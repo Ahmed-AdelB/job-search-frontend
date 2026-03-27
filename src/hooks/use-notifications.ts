@@ -34,8 +34,8 @@ export function useNotifications(filters?: NotificationsFilters) {
 
   const endpoint =
     queryParams.toString()
-      ? `/api/v1/notifications?${queryParams.toString()}`
-      : "/api/v1/notifications"
+      ? `/api/notifications?${queryParams.toString()}`
+      : "/api/notifications"
 
   return useQuery({
     queryKey: ["notifications", filters],
@@ -53,14 +53,33 @@ export function useMarkNotificationAsRead() {
   return useMutation({
     mutationFn: (notificationId: string) =>
       apiPatch<Notification>(
-        `/api/v1/notifications/${notificationId}`,
+        `/api/notifications/${notificationId}`,
         { read: true }
       ),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] })
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] })
+      const previousNotifications = queryClient.getQueriesData<NotificationsResponse>({ queryKey: ["notifications"] })
+      queryClient.setQueriesData<NotificationsResponse>(
+        { queryKey: ["notifications"] },
+        (old) => old ? {
+          ...old,
+          notifications: old.notifications.map((n) =>
+            n.id === notificationId ? { ...n, read: true } : n
+          ),
+        } : old
+      )
+      return { previousNotifications }
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotifications) {
+        for (const [key, data] of context.previousNotifications) {
+          if (data) queryClient.setQueryData(key, data)
+        }
+      }
       toast.error("Failed to mark notification as read")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
   })
 }
@@ -74,7 +93,7 @@ export function useMarkAllNotificationsAsRead() {
   return useMutation({
     mutationFn: () =>
       apiPost<{ count: number }>(
-        `/api/v1/notifications/mark-all-read`,
+        `/api/notifications/mark-all-read`,
         {}
       ),
     onSuccess: (data) => {
@@ -96,15 +115,35 @@ export function useDeleteNotification() {
   return useMutation({
     mutationFn: (notificationId: string) =>
       apiPost<{ success: boolean }>(
-        `/api/v1/notifications/${notificationId}/delete`,
+        `/api/notifications/${notificationId}/delete`,
         {}
       ),
+    onMutate: async (notificationId) => {
+      await queryClient.cancelQueries({ queryKey: ["notifications"] })
+      const previousNotifications = queryClient.getQueriesData<NotificationsResponse>({ queryKey: ["notifications"] })
+      queryClient.setQueriesData<NotificationsResponse>(
+        { queryKey: ["notifications"] },
+        (old) => old ? {
+          ...old,
+          notifications: old.notifications.filter((n) => n.id !== notificationId),
+          total: old.total - 1,
+        } : old
+      )
+      return { previousNotifications }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["notifications"] })
       toast.success("Notification deleted")
     },
-    onError: () => {
+    onError: (_err, _vars, context) => {
+      if (context?.previousNotifications) {
+        for (const [key, data] of context.previousNotifications) {
+          if (data) queryClient.setQueryData(key, data)
+        }
+      }
       toast.error("Failed to delete notification")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["notifications"] })
     },
   })
 }

@@ -94,19 +94,19 @@ export default function AgentsPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["agents"],
-    queryFn: () => apiGet<{ agents: Agent[] }>("/api/v1/agents"),
+    queryFn: () => apiGet<{ agents: Agent[] }>("/api/agents"),
     refetchInterval: 5000,
   });
 
   const actionMutation = useMutation({
     mutationFn: ({ agentId, action }: { agentId: string; action: string }) =>
-      apiPost<AgentAction>(`/api/v1/agents/${agentId}/${action}`, {}),
+      apiPost<AgentAction>(`/api/agents/${agentId}/${action}`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["agents"] }),
   });
 
   const configMutation = useMutation({
     mutationFn: ({ agentId, config }: { agentId: string; config: Record<string, unknown> }) =>
-      apiPost<{ status: string }>(`/api/v1/agents/${agentId}/config`, config),
+      apiPost<{ status: string }>(`/api/agents/${agentId}/config`, config),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] });
       setConfigAgent(null);
@@ -114,19 +114,19 @@ export default function AgentsPage() {
   });
 
   const startAllMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/agents/start-all", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/agents/start-all", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["agents"] }),
   });
 
   const stopAllMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/agents/stop-all", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/agents/stop-all", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["agents"] }),
   });
 
   // SSE for real-time agent events
   useEffect(() => {
     const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-    const eventSource = new EventSource(`${apiUrl}/api/v1/agents/events`);
+    const eventSource = new EventSource(`${apiUrl}/api/agents/events`);
 
     eventSource.onmessage = () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] });

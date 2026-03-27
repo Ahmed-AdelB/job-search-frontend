@@ -71,13 +71,26 @@ export function useUpdateApplication() {
         `/api/applications/${applicationId}`,
         data
       ),
+    onMutate: async ({ applicationId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["applications"] })
+      const previousApplication = queryClient.getQueryData<Application>(["applications", applicationId])
+      if (previousApplication) {
+        queryClient.setQueryData(["applications", applicationId], { ...previousApplication, ...data })
+      }
+      return { previousApplication }
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] })
       queryClient.setQueryData(["applications", data.application_id], data)
       toast.success("Application updated")
     },
-    onError: () => {
+    onError: (_err, { applicationId }, context) => {
+      if (context?.previousApplication) {
+        queryClient.setQueryData(["applications", applicationId], context.previousApplication)
+      }
       toast.error("Failed to update application")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] })
     },
   })
 }
@@ -94,13 +107,26 @@ export function useWithdrawApplication() {
         `/api/applications/${applicationId}/withdraw`,
         {}
       ),
+    onMutate: async (applicationId) => {
+      await queryClient.cancelQueries({ queryKey: ["applications"] })
+      const previousApplication = queryClient.getQueryData<Application>(["applications", applicationId])
+      if (previousApplication) {
+        queryClient.setQueryData(["applications", applicationId], { ...previousApplication, status: "withdrawn" })
+      }
+      return { previousApplication }
+    },
     onSuccess: (data) => {
-      queryClient.invalidateQueries({ queryKey: ["applications"] })
       queryClient.setQueryData(["applications", data.application_id], data)
       toast.success("Application withdrawn")
     },
-    onError: () => {
+    onError: (_err, applicationId, context) => {
+      if (context?.previousApplication) {
+        queryClient.setQueryData(["applications", applicationId], context.previousApplication)
+      }
       toast.error("Failed to withdraw application")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] })
     },
   })
 }

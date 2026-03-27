@@ -79,12 +79,12 @@ export default function ContactsPage() {
       if (search) params.set("search", search);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<ContactsResponse>(`/api/v1/contacts?${params.toString()}`);
+      return apiGet<ContactsResponse>(`/api/contacts?${params.toString()}`);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/contacts/${id}`),
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/contacts/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["contacts"] }),
   });
 

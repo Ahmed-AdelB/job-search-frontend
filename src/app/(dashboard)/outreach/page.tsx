@@ -87,7 +87,7 @@ export default function OutreachPage() {
 
   const { data: statsData, isLoading: statsLoading } = useQuery({
     queryKey: ["outreach", "stats"],
-    queryFn: () => apiGet<OutreachStats>("/api/v1/outreach/stats"),
+    queryFn: () => apiGet<OutreachStats>("/api/outreach/stats"),
     refetchInterval: 30000,
   });
 
@@ -95,13 +95,13 @@ export default function OutreachPage() {
     queryKey: ["outreach", "messages", page],
     queryFn: () =>
       apiGet<{ messages: OutreachMessage[]; total: number }>(
-        `/api/v1/outreach/messages?page=${page}&per_page=${perPage}`
+        `/api/outreach/messages?page=${page}&per_page=${perPage}`
       ),
   });
 
   const { data: campaignsData } = useQuery({
     queryKey: ["outreach", "campaigns"],
-    queryFn: () => apiGet<{ campaigns: OutreachCampaign[] }>("/api/v1/outreach/campaigns"),
+    queryFn: () => apiGet<{ campaigns: OutreachCampaign[] }>("/api/outreach/campaigns"),
   });
 
   const messages = messagesData?.messages ?? [];
@@ -383,7 +383,7 @@ function NewCampaignDialog({
 
   const createMutation = useMutation({
     mutationFn: (data: { name: string; type: string }) =>
-      apiPost<{ campaign_id: string }>("/api/v1/outreach/campaigns", data),
+      apiPost<{ campaign_id: string }>("/api/outreach/campaigns", data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["outreach"] });
       onOpenChange(false);

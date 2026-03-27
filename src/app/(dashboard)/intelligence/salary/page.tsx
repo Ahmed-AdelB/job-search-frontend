@@ -66,7 +66,7 @@ const itemVariants = {
 export default function SalaryPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["intelligence", "salary"],
-    queryFn: () => apiGet<{ benchmarks: SalaryBenchmark[] }>("/api/v1/salary/benchmarks"),
+    queryFn: () => apiGet<{ benchmarks: SalaryBenchmark[] }>("/api/salary/benchmarks"),
     staleTime: 5 * 60 * 1000,
   });
 

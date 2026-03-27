@@ -67,7 +67,7 @@ const itemVariants = {
 export default function SkillsPage() {
   const { data, isLoading } = useQuery({
     queryKey: ["intelligence", "skills-gap"],
-    queryFn: () => apiGet<{ analysis: SkillGapAnalysis }>("/api/v1/skills-gap/analysis"),
+    queryFn: () => apiGet<{ analysis: SkillGapAnalysis }>("/api/skills-gap/analysis"),
     staleTime: 5 * 60 * 1000,
   });
 

@@ -115,13 +115,13 @@ export default function TargetListPage() {
       const params = new URLSearchParams();
       if (search) params.set("search", search);
       if (tierFilter !== "all") params.set("tier", tierFilter);
-      return apiGet<TargetListResponse>(`/api/v1/target-list?${params.toString()}`);
+      return apiGet<TargetListResponse>(`/api/target-list?${params.toString()}`);
     },
   });
 
   const createMutation = useMutation({
     mutationFn: (payload: CreateTargetCompanyRequest) =>
-      apiPost<TargetCompany>("/api/v1/target-list", payload),
+      apiPost<TargetCompany>("/api/target-list", payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["target-list"] });
       setDialogOpen(false);
@@ -131,7 +131,7 @@ export default function TargetListPage() {
 
   const updateMutation = useMutation({
     mutationFn: ({ id, ...payload }: { id: string } & Partial<CreateTargetCompanyRequest>) =>
-      apiPut<TargetCompany>(`/api/v1/target-list/${id}`, payload),
+      apiPut<TargetCompany>(`/api/target-list/${id}`, payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["target-list"] });
       setEditTarget(null);
@@ -140,7 +140,7 @@ export default function TargetListPage() {
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/target-list/${id}`),
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/target-list/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["target-list"] }),
   });
 

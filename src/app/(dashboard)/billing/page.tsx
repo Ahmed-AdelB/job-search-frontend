@@ -83,29 +83,29 @@ const itemVariants = {
 export default function BillingPage() {
   const { data: plans, isLoading: plansLoading } = useQuery({
     queryKey: ["billing", "plans"],
-    queryFn: () => apiGet<{ plans: BillingPlan[] }>("/api/v1/billing/plans"),
+    queryFn: () => apiGet<{ plans: BillingPlan[] }>("/api/billing/plans"),
   });
 
   const { data: subscription, isLoading: subLoading } = useQuery({
     queryKey: ["billing", "subscription"],
-    queryFn: () => apiGet<{ subscription: Subscription }>("/api/v1/billing/subscription"),
+    queryFn: () => apiGet<{ subscription: Subscription }>("/api/billing/subscription"),
   });
 
   const { data: invoices, isLoading: invLoading } = useQuery({
     queryKey: ["billing", "invoices"],
-    queryFn: () => apiGet<{ invoices: Invoice[] }>("/api/v1/billing/invoices"),
+    queryFn: () => apiGet<{ invoices: Invoice[] }>("/api/billing/invoices"),
   });
 
   const checkoutMutation = useMutation({
     mutationFn: (planId: string) =>
-      apiPost<CheckoutSession>("/api/v1/checkout/session", { plan_id: planId }),
+      apiPost<CheckoutSession>("/api/checkout/session", { plan_id: planId }),
     onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
     },
   });
 
   const portalMutation = useMutation({
-    mutationFn: () => apiPost<PortalSession>("/api/v1/billing/portal", {}),
+    mutationFn: () => apiPost<PortalSession>("/api/billing/portal", {}),
     onSuccess: (data) => {
       if (data.url) window.location.href = data.url;
     },

@@ -95,21 +95,21 @@ export default function AnalyticsPage() {
   // Fetch analytics data
   const overviewQuery = useQuery({
     queryKey: ["analytics", "overview"],
-    queryFn: () => apiGet<AnalyticsOverview>("/api/v1/analytics/overview"),
+    queryFn: () => apiGet<AnalyticsOverview>("/api/analytics/overview"),
     refetchInterval: 60000,
     staleTime: 30000,
   });
 
   const funnelQuery = useQuery({
     queryKey: ["analytics", "funnel"],
-    queryFn: () => apiGet<FunnelMetrics>("/api/v1/analytics/funnel"),
+    queryFn: () => apiGet<FunnelMetrics>("/api/analytics/funnel"),
     refetchInterval: 60000,
     staleTime: 30000,
   });
 
   const timelineQuery = useQuery({
     queryKey: ["analytics", "timeline"],
-    queryFn: () => apiGet<TimelineMetrics>("/api/v1/analytics/timeline"),
+    queryFn: () => apiGet<TimelineMetrics>("/api/analytics/timeline"),
     refetchInterval: 60000,
     staleTime: 30000,
   });

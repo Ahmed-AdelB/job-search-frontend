@@ -86,17 +86,17 @@ export default function DeployPage() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["deploy", "status"],
-    queryFn: () => apiGet<DeployStatus>("/api/v1/deploy/status"),
+    queryFn: () => apiGet<DeployStatus>("/api/deploy/status"),
     refetchInterval: 10000,
   });
 
   const rebuildMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/deploy/rebuild", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/deploy/rebuild", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["deploy"] }),
   });
 
   const rollbackMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>("/api/v1/deploy/rollback", {}),
+    mutationFn: () => apiPost<{ status: string }>("/api/deploy/rollback", {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["deploy"] }),
   });
 

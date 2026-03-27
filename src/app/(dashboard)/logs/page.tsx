@@ -93,7 +93,7 @@ export default function LogsPage() {
       if (search) params.set("search", search);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<{ logs: LogEntry[]; total: number }>(`/api/v1/logs?${params.toString()}`);
+      return apiGet<{ logs: LogEntry[]; total: number }>(`/api/logs?${params.toString()}`);
     },
     refetchInterval: 15000,
   });

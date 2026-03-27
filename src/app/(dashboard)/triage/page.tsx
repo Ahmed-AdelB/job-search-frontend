@@ -133,7 +133,7 @@ export default function TriagePage() {
 function DigestTab() {
   const { data, isLoading, refetch, isFetching } = useQuery({
     queryKey: ["triage", "preview"],
-    queryFn: () => apiGet<{ preview: TriageDigestPreview }>("/api/v1/triage/preview"),
+    queryFn: () => apiGet<{ preview: TriageDigestPreview }>("/api/triage/preview"),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -316,7 +316,7 @@ function HistoryTab() {
     queryKey: ["triage", "history", page],
     queryFn: () =>
       apiGet<{ history: TriageDigestHistory[]; total: number }>(
-        `/api/v1/triage/history?page=${page}&per_page=${perPage}`
+        `/api/triage/history?page=${page}&per_page=${perPage}`
       ),
   });
 
@@ -426,7 +426,7 @@ function ConfigTab() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["triage", "config"],
-    queryFn: () => apiGet<{ config: TriageConfig }>("/api/v1/triage/config"),
+    queryFn: () => apiGet<{ config: TriageConfig }>("/api/triage/config"),
   });
 
   const [localConfig, setLocalConfig] = useState<TriageConfig | null>(null);
@@ -434,7 +434,7 @@ function ConfigTab() {
 
   const updateMutation = useMutation({
     mutationFn: (newConfig: TriageConfig) =>
-      apiPut<{ status: string }>("/api/v1/triage/config", newConfig),
+      apiPut<{ status: string }>("/api/triage/config", newConfig),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["triage", "config"] }),
   });
 

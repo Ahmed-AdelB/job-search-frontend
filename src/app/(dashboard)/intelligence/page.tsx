@@ -22,6 +22,8 @@ import {
   AlertTriangle,
   CheckCircle2,
   ArrowRight,
+  Briefcase,
+  Building2,
 } from "lucide-react";
 import { apiGet } from "@/lib/api-client";
 import type { SkillGapAnalysis, VisaScore, SalaryBenchmark, RemoteScore } from "@/types/api";
@@ -54,25 +56,25 @@ const itemVariants = {
 export default function IntelligencePage() {
   const { data: skillGap, isLoading: skillLoading } = useQuery({
     queryKey: ["intelligence", "skills-gap"],
-    queryFn: () => apiGet<SkillGapAnalysis>("/api/v1/skills-gap/analysis"),
+    queryFn: () => apiGet<SkillGapAnalysis>("/api/skills-gap/analysis"),
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: visa, isLoading: visaLoading } = useQuery({
     queryKey: ["intelligence", "visa"],
-    queryFn: () => apiGet<VisaScore>("/api/v1/visa/score"),
+    queryFn: () => apiGet<VisaScore>("/api/visa/score"),
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: salary, isLoading: salaryLoading } = useQuery({
     queryKey: ["intelligence", "salary"],
-    queryFn: () => apiGet<SalaryBenchmark>("/api/v1/salary/benchmark"),
+    queryFn: () => apiGet<SalaryBenchmark>("/api/salary/benchmark"),
     staleTime: 1000 * 60 * 5,
   });
 
   const { data: remote, isLoading: remoteLoading } = useQuery({
     queryKey: ["intelligence", "remote"],
-    queryFn: () => apiGet<RemoteScore>("/api/v1/remote-scoring/score"),
+    queryFn: () => apiGet<RemoteScore>("/api/remote-scoring/score"),
     staleTime: 1000 * 60 * 5,
   });
 
@@ -431,6 +433,59 @@ export default function IntelligencePage() {
             )}
           </CardContent>
         </Card>
+      </motion.div>
+
+      {/* Work Mode & Employment Type Links */}
+      <motion.div
+        className="grid gap-6 lg:grid-cols-2"
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+      >
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-indigo-600" />
+                    Work Mode Analysis
+                  </CardTitle>
+                  <CardDescription>
+                    Detect remote, hybrid, and on-site patterns across jobs
+                  </CardDescription>
+                </div>
+                <Link href="/dashboard/intelligence/work-mode">
+                  <Button variant="outline" size="sm">
+                    Analyze <ArrowRight className="w-4 h-4 ms-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
+        <motion.div variants={itemVariants}>
+          <Card>
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="flex items-center gap-2">
+                    <Briefcase className="w-5 h-5 text-teal-600" />
+                    Employment Type
+                  </CardTitle>
+                  <CardDescription>
+                    Detect full-time, part-time, contract, and freelance patterns
+                  </CardDescription>
+                </div>
+                <Link href="/dashboard/intelligence/employment-type">
+                  <Button variant="outline" size="sm">
+                    Analyze <ArrowRight className="w-4 h-4 ms-1" />
+                  </Button>
+                </Link>
+              </div>
+            </CardHeader>
+          </Card>
+        </motion.div>
       </motion.div>
     </div>
   );

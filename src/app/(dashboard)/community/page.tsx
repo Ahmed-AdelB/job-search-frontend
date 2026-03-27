@@ -122,11 +122,11 @@ function TrackedTab() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["communities"],
-    queryFn: () => apiGet<CommunitiesResponse>("/api/v1/community"),
+    queryFn: () => apiGet<CommunitiesResponse>("/api/community"),
   });
 
   const untrackMutation = useMutation({
-    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/community/${id}`),
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/community/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["communities"] }),
   });
 
@@ -258,13 +258,13 @@ function DiscoverTab() {
   const { data, isLoading } = useQuery({
     queryKey: ["communities", "recommendations"],
     queryFn: () =>
-      apiGet<CommunityRecommendationsResponse>("/api/v1/community/recommendations"),
+      apiGet<CommunityRecommendationsResponse>("/api/community/recommendations"),
     staleTime: 1000 * 60 * 10,
   });
 
   const trackMutation = useMutation({
     mutationFn: (rec: CommunityRecommendation) =>
-      apiPost<{ status: string }>("/api/v1/community", {
+      apiPost<{ status: string }>("/api/community", {
         name: rec.name,
         platform: rec.platform,
         url: rec.url,

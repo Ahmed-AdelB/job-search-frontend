@@ -92,12 +92,25 @@ export function useMarkCompleted() {
   return useMutation({
     mutationFn: (interviewId: string) =>
       apiPatch<Interview>(`/api/interviews/${interviewId}/mark-completed`, {}),
+    onMutate: async (interviewId) => {
+      await queryClient.cancelQueries({ queryKey: ["interviews"] })
+      const previousInterview = queryClient.getQueryData<Interview>(["interviews", interviewId])
+      if (previousInterview) {
+        queryClient.setQueryData(["interviews", interviewId], { ...previousInterview, status: "completed" })
+      }
+      return { previousInterview }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interviews"] })
       toast.success("Interview marked as completed")
     },
-    onError: () => {
+    onError: (_err, interviewId, context) => {
+      if (context?.previousInterview) {
+        queryClient.setQueryData(["interviews", interviewId], context.previousInterview)
+      }
       toast.error("Failed to mark interview as completed")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] })
     },
   })
 }
@@ -197,12 +210,23 @@ export function useDeleteInterview() {
   return useMutation({
     mutationFn: (interviewId: string) =>
       apiDelete(`/api/interviews/${interviewId}`),
+    onMutate: async (interviewId) => {
+      await queryClient.cancelQueries({ queryKey: ["interviews"] })
+      const previousInterview = queryClient.getQueryData<Interview>(["interviews", interviewId])
+      queryClient.removeQueries({ queryKey: ["interviews", interviewId] })
+      return { previousInterview }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interviews"] })
       toast.success("Interview deleted")
     },
-    onError: () => {
+    onError: (_err, interviewId, context) => {
+      if (context?.previousInterview) {
+        queryClient.setQueryData(["interviews", interviewId], context.previousInterview)
+      }
       toast.error("Failed to delete interview")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] })
     },
   })
 }

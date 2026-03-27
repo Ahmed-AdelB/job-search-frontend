@@ -65,17 +65,17 @@ export default function ProfilePage() {
 
   const { data: profileData, isLoading: profileLoading } = useQuery({
     queryKey: ["profile"],
-    queryFn: () => apiGet<{ profile: Profile }>("/api/v1/profiles/me"),
+    queryFn: () => apiGet<{ profile: Profile }>("/api/profiles/me"),
   });
 
   const { data: resumesData, isLoading: resumesLoading } = useQuery({
     queryKey: ["resumes"],
-    queryFn: () => apiGet<ResumesResponse>("/api/v1/profiles/resumes"),
+    queryFn: () => apiGet<ResumesResponse>("/api/profiles/resumes"),
   });
 
   const { data: onboardingData } = useQuery({
     queryKey: ["onboarding"],
-    queryFn: () => apiGet<{ status: OnboardingStatus }>("/api/v1/onboarding/status"),
+    queryFn: () => apiGet<{ status: OnboardingStatus }>("/api/onboarding/status"),
   });
 
   const profile = profileData?.profile;
@@ -227,7 +227,7 @@ function ProfileForm({ profile }: { profile: Profile }) {
 
   const updateMutation = useMutation({
     mutationFn: (data: UpdateProfileRequest) =>
-      apiPut<{ profile: Profile }>("/api/v1/profiles/me", data),
+      apiPut<{ profile: Profile }>("/api/profiles/me", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["profile"] }),
   });
 
@@ -338,7 +338,7 @@ function ResumeUpload() {
       const formData = new FormData();
       formData.append("file", file);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-      const res = await fetch(`${apiUrl}/api/v1/profiles/resumes`, {
+      const res = await fetch(`${apiUrl}/api/profiles/resumes`, {
         method: "POST",
         body: formData,
       });
@@ -406,12 +406,12 @@ function ResumeCard({ resume }: { resume: Resume }) {
   const queryClient = useQueryClient();
 
   const setPrimaryMutation = useMutation({
-    mutationFn: () => apiPost<{ status: string }>(`/api/v1/profiles/resumes/${resume.id}/primary`, {}),
+    mutationFn: () => apiPost<{ status: string }>(`/api/profiles/resumes/${resume.id}/primary`, {}),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
   });
 
   const deleteMutation = useMutation({
-    mutationFn: () => apiDelete<{ status: string }>(`/api/v1/profiles/resumes/${resume.id}`),
+    mutationFn: () => apiDelete<{ status: string }>(`/api/profiles/resumes/${resume.id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["resumes"] }),
   });
 

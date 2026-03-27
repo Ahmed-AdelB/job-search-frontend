@@ -28,8 +28,32 @@ export function useAgentAction(agentName: string, action: string) {
         `/api/agents/${agentName}/${action}`,
         {}
       ),
-    onSuccess: () => {
-      // Invalidate agent status queries
+    onMutate: async () => {
+      await queryClient.cancelQueries({ queryKey: ["agents"] })
+      const previousAgents = queryClient.getQueryData<Agent[]>(["agents", "status"])
+      if (previousAgents) {
+        const statusMap: Record<string, string> = {
+          start: "running",
+          stop: "stopped",
+          pause: "paused",
+          resume: "running",
+        }
+        const newStatus = statusMap[action] || action
+        queryClient.setQueryData(
+          ["agents", "status"],
+          previousAgents.map((a) =>
+            a.name === agentName ? { ...a, status: newStatus } : a
+          )
+        )
+      }
+      return { previousAgents }
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousAgents) {
+        queryClient.setQueryData(["agents", "status"], context.previousAgents)
+      }
+    },
+    onSettled: () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] })
       queryClient.invalidateQueries({ queryKey: ["agents", agentName] })
     },

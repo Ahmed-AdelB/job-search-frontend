@@ -41,9 +41,11 @@ import {
   Loader2,
   Save,
   Palette,
+  Shield,
 } from "lucide-react";
 import { apiGet, apiPut, apiPost } from "@/lib/api-client";
 import { usePreferencesStore } from "@/stores/preferences-store";
+import { useGDPRExport, useGDPRExportStatus, useGDPRDeleteAccount } from "@/hooks/use-gdpr";
 import type { PipelineSettings } from "@/types/api";
 
 interface NotificationSettings {
@@ -84,7 +86,7 @@ export default function SettingsPage() {
 
   const { data: settings, isLoading } = useQuery({
     queryKey: ["settings"],
-    queryFn: () => apiGet<SettingsResponse>("/api/v1/settings"),
+    queryFn: () => apiGet<SettingsResponse>("/api/settings"),
   });
 
   if (isLoading) {
@@ -123,7 +125,7 @@ export default function SettingsPage() {
       </div>
 
       <Tabs defaultValue="pipeline" className="w-full">
-        <TabsList className="grid w-full grid-cols-4">
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-5">
           <TabsTrigger value="pipeline">
             <Sliders className="w-4 h-4 me-2" />
             Pipeline
@@ -135,6 +137,10 @@ export default function SettingsPage() {
           <TabsTrigger value="notifications">
             <Bell className="w-4 h-4 me-2" />
             Notifications
+          </TabsTrigger>
+          <TabsTrigger value="privacy">
+            <Shield className="w-4 h-4 me-2" />
+            Privacy
           </TabsTrigger>
           <TabsTrigger value="account">
             <User className="w-4 h-4 me-2" />
@@ -155,6 +161,9 @@ export default function SettingsPage() {
         </TabsContent>
         <TabsContent value="notifications" className="space-y-4">
           <NotificationsTab initialSettings={settings?.notifications} />
+        </TabsContent>
+        <TabsContent value="privacy" className="space-y-4">
+          <PrivacyTab />
         </TabsContent>
         <TabsContent value="account" className="space-y-4">
           <AccountTab />
@@ -181,7 +190,7 @@ function PipelineTab({ initialSettings }: { initialSettings?: PipelineSettings }
 
   const saveMutation = useMutation({
     mutationFn: (data: PipelineSettings) =>
-      apiPut<{ status: string }>("/api/v1/settings/pipeline", data),
+      apiPut<{ status: string }>("/api/settings/pipeline", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings"] }),
   });
 
@@ -395,7 +404,7 @@ function NotificationsTab({ initialSettings }: { initialSettings?: NotificationS
 
   const saveMutation = useMutation({
     mutationFn: (data: NotificationSettings) =>
-      apiPut<{ status: string }>("/api/v1/settings/notifications", data),
+      apiPut<{ status: string }>("/api/settings/notifications", data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["settings"] }),
   });
 
@@ -472,6 +481,119 @@ function NotificationsTab({ initialSettings }: { initialSettings?: NotificationS
                 <CheckCircle2 className="w-4 h-4" /> Notification settings saved
               </motion.p>
             )}
+          </CardContent>
+        </Card>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+function PrivacyTab() {
+  const exportMutation = useGDPRExport();
+  const deleteMutation = useGDPRDeleteAccount();
+  const [deleteConfirm, setDeleteConfirm] = useState("");
+
+  return (
+    <motion.div
+      className="space-y-4"
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
+    >
+      {/* Data Export */}
+      <motion.div variants={itemVariants}>
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Download className="w-5 h-5" />
+              Export Your Data
+            </CardTitle>
+            <CardDescription>
+              Request a full export of all your data (GDPR compliant). You will be notified when the export is ready.
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <Button
+              onClick={() => exportMutation.mutate(undefined)}
+              disabled={exportMutation.isPending}
+            >
+              {exportMutation.isPending ? (
+                <Loader2 className="w-4 h-4 me-2 animate-spin" />
+              ) : (
+                <Download className="w-4 h-4 me-2" />
+              )}
+              Request Data Export
+            </Button>
+            {exportMutation.isSuccess && (
+              <motion.p
+                className="text-sm text-green-600 flex items-center gap-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                Export requested. You&apos;ll be notified when ready.
+              </motion.p>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
+
+      {/* Account Deletion */}
+      <motion.div variants={itemVariants}>
+        <Card className="border-destructive/30">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-destructive">
+              <Trash2 className="w-5 h-5" />
+              Delete Account & Data
+            </CardTitle>
+            <CardDescription>
+              Schedule permanent deletion of your account and all associated data.
+              You have 30 days to cancel after requesting deletion.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive">
+                  <Trash2 className="w-4 h-4 me-2" />
+                  Request Account Deletion
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5 text-destructive" />
+                    Delete Account & All Data
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="space-y-3">
+                    <span>
+                      This will schedule permanent deletion of your account, job data,
+                      applications, contacts, and all analytics. You have 30 days to cancel.
+                    </span>
+                    <div className="space-y-2 mt-3">
+                      <label className="text-sm font-medium">Type DELETE to confirm:</label>
+                      <Input
+                        value={deleteConfirm}
+                        onChange={(e) => setDeleteConfirm(e.target.value)}
+                        placeholder='Type "DELETE"'
+                        className="uppercase"
+                      />
+                    </div>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    disabled={deleteConfirm !== "DELETE" || deleteMutation.isPending}
+                    className="bg-destructive hover:bg-destructive/90"
+                    onClick={() => deleteMutation.mutate()}
+                  >
+                    {deleteMutation.isPending && <Loader2 className="w-4 h-4 me-2 animate-spin" />}
+                    Schedule Deletion
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </CardContent>
         </Card>
       </motion.div>

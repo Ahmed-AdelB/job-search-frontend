@@ -106,12 +106,12 @@ export default function RecruitersPage() {
       if (search) params.set("search", search);
       params.set("page", String(page));
       params.set("per_page", String(perPage));
-      return apiGet<RecruitersResponse>(`/api/v1/recruiters?${params.toString()}`);
+      return apiGet<RecruitersResponse>(`/api/recruiters?${params.toString()}`);
     },
   });
 
   const deleteMutation = useMutation({
-    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/v1/recruiters/${id}`),
+    mutationFn: (id: string) => apiDelete<{ status: string }>(`/api/recruiters/${id}`),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["recruiters"] }),
   });
 

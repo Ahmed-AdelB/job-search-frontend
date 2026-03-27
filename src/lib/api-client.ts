@@ -48,10 +48,11 @@ export async function apiFetch<T>(
 
     // Handle specific status codes
     if (response.status === 401) {
-      // Clear auth and redirect to login
-      localStorage.removeItem("auth-token");
-      localStorage.removeItem("auth-user");
+      // Clear auth from localStorage and cookie, then redirect
       if (typeof window !== "undefined") {
+        localStorage.removeItem("auth-token");
+        localStorage.removeItem("auth-user");
+        document.cookie = "auth-token=; path=/; max-age=0; SameSite=Lax";
         window.location.href = "/login";
       }
       throw new Error("Unauthorized - Please log in again");
