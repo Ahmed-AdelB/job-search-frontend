@@ -4,7 +4,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { screen, fireEvent } from "@testing-library/react";
+import { screen, fireEvent, act } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { renderWithProviders } from "@/__tests__/setup/render-with-providers";
 import { Sidebar } from "../sidebar";
@@ -24,8 +24,10 @@ describe("Sidebar Component", () => {
   });
 
   describe("Navigation Links", () => {
-    it("renders all navigation sections", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders all navigation sections", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Check for section labels
       expect(screen.getByText("Overview")).toBeInTheDocument();
@@ -35,8 +37,10 @@ describe("Sidebar Component", () => {
       expect(screen.getByText("System")).toBeInTheDocument();
     });
 
-    it("renders all navigation links with correct hrefs", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders all navigation links with correct hrefs", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Overview section
       expect(screen.getByRole("link", { name: /Dashboard/i })).toHaveAttribute("href", "/dashboard");
@@ -69,16 +73,20 @@ describe("Sidebar Component", () => {
       expect(screen.getByRole("link", { name: /Billing/i })).toHaveAttribute("href", "/dashboard/billing");
     });
 
-    it("has Portals link (recently added)", () => {
-      renderWithProviders(<Sidebar />);
+    it("has Portals link (recently added)", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const portalsLink = screen.getByRole("link", { name: /Portals/i });
       expect(portalsLink).toBeInTheDocument();
       expect(portalsLink).toHaveAttribute("href", "/dashboard/portals");
     });
 
-    it("renders Portals link in Pipeline section", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders Portals link in Pipeline section", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const portalsLink = screen.getByRole("link", { name: /Portals/i });
       expect(portalsLink).toBeInTheDocument();
@@ -90,8 +98,12 @@ describe("Sidebar Component", () => {
   });
 
   describe("Active Link Highlighting", () => {
-    it("highlights active link based on pathname", () => {
-      const { container } = renderWithProviders(<Sidebar />);
+    it("highlights active link based on pathname", async () => {
+      let container: HTMLElement;
+      await act(async () => {
+        const result = renderWithProviders(<Sidebar />);
+        container = result.container;
+      });
 
       // The Jobs link should be active because usePathname() returns "/dashboard/jobs"
       const jobsLink = screen.getByRole("link", { name: /^Jobs$/i });
@@ -102,16 +114,22 @@ describe("Sidebar Component", () => {
       expect(jobsLinkParent).toBeInTheDocument();
     });
 
-    it("applies correct styling to non-active links", () => {
-      renderWithProviders(<Sidebar />);
+    it("applies correct styling to non-active links", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Dashboard link should not be active (since we're on /dashboard/jobs)
       const dashboardLink = screen.getByRole("link", { name: /^Dashboard$/i });
       expect(dashboardLink).toBeInTheDocument();
     });
 
-    it("shows active indicator bar on active link", () => {
-      const { container } = renderWithProviders(<Sidebar />);
+    it("shows active indicator bar on active link", async () => {
+      let container: HTMLElement;
+      await act(async () => {
+        const result = renderWithProviders(<Sidebar />);
+        container = result.container;
+      });
 
       // The Jobs link is active, so there should be an active indicator
       const jobsLink = screen.getByRole("link", { name: /^Jobs$/i });
@@ -121,23 +139,29 @@ describe("Sidebar Component", () => {
   });
 
   describe("Logo and Branding", () => {
-    it("renders logo link to dashboard", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders logo link to dashboard", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Find the logo link by its text content "JobFlow"
       const logoLink = screen.getByRole("link", { name: /JobFlow/i });
       expect(logoLink).toHaveAttribute("href", "/dashboard");
     });
 
-    it("renders system status indicator", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders system status indicator", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Check for "System Online" text
       expect(screen.getByText(/System Online/i)).toBeInTheDocument();
     });
 
-    it("renders status pulse animation", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders status pulse animation", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Check for the pulsing dot (bg-success-500)
       const statusIndicator = document.querySelector(".bg-success-500");
@@ -146,8 +170,10 @@ describe("Sidebar Component", () => {
   });
 
   describe("Notification Badges", () => {
-    it("displays count badge for Alerts link", () => {
-      renderWithProviders(<Sidebar />);
+    it("displays count badge for Alerts link", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Find the badge element (should show "3" for Alerts)
       const badges = screen.getAllByText("3");
@@ -160,7 +186,9 @@ describe("Sidebar Component", () => {
       const user = userEvent.setup();
       const handleToggle = vi.fn();
 
-      renderWithProviders(<Sidebar isCollapsed={false} onToggle={handleToggle} />);
+      await act(async () => {
+        renderWithProviders(<Sidebar isCollapsed={false} onToggle={handleToggle} />);
+      });
 
       // Find and click the toggle button (ChevronLeft icon)
       const buttons = screen.getAllByRole("button");
@@ -173,23 +201,29 @@ describe("Sidebar Component", () => {
       expect(buttons.length).toBeGreaterThan(0);
     });
 
-    it("shows toggle button when expanded", () => {
-      renderWithProviders(<Sidebar isCollapsed={false} onToggle={vi.fn()} />);
+    it("shows toggle button when expanded", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar isCollapsed={false} onToggle={vi.fn()} />);
+      });
 
       const buttons = screen.getAllByRole("button");
       expect(buttons.length).toBeGreaterThan(0);
     });
 
-    it("shows collapsed toggle button when collapsed", () => {
-      renderWithProviders(<Sidebar isCollapsed={true} onToggle={vi.fn()} />);
+    it("shows collapsed toggle button when collapsed", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar isCollapsed={true} onToggle={vi.fn()} />);
+      });
 
       // When collapsed, a button should still be available
       const buttons = screen.getAllByRole("button");
       expect(buttons.length).toBeGreaterThan(0);
     });
 
-    it("renders sidebar element", () => {
-      renderWithProviders(<Sidebar isCollapsed={true} />);
+    it("renders sidebar element", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar isCollapsed={true} />);
+      });
 
       // After hover, the sidebar should be present
       const sidebar = screen.getByRole("complementary");
@@ -198,29 +232,37 @@ describe("Sidebar Component", () => {
   });
 
   describe("Sidebar Layout", () => {
-    it("renders as an aside element", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders as an aside element", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const sidebar = screen.getByRole("complementary");
       expect(sidebar).toBeInTheDocument();
     });
 
-    it("has fixed positioning", () => {
-      renderWithProviders(<Sidebar />);
+    it("has fixed positioning", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const sidebar = screen.getByRole("complementary");
       expect(sidebar).toHaveClass("fixed");
     });
 
-    it("has correct z-index for layering", () => {
-      renderWithProviders(<Sidebar />);
+    it("has correct z-index for layering", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const sidebar = screen.getByRole("complementary");
       expect(sidebar).toHaveClass("z-40");
     });
 
-    it("renders scroll area for navigation", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders scroll area for navigation", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // ScrollArea is rendered (contains nav items)
       const nav = screen.getByRole("navigation");
@@ -229,8 +271,10 @@ describe("Sidebar Component", () => {
   });
 
   describe("Href Validation", () => {
-    it("all links have href values", () => {
-      renderWithProviders(<Sidebar />);
+    it("all links have href values", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const links = screen.getAllByRole("link");
       links.forEach((link) => {
@@ -242,8 +286,10 @@ describe("Sidebar Component", () => {
       });
     });
 
-    it("href paths follow dashboard routing pattern", () => {
-      renderWithProviders(<Sidebar />);
+    it("href paths follow dashboard routing pattern", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const links = screen.getAllByRole("link");
       const validPaths = [
@@ -280,22 +326,28 @@ describe("Sidebar Component", () => {
   });
 
   describe("Accessibility", () => {
-    it("links have accessible names", () => {
-      renderWithProviders(<Sidebar />);
+    it("links have accessible names", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const links = screen.getAllByRole("link");
       expect(links.length).toBeGreaterThan(0);
     });
 
-    it("has navigation landmark", () => {
-      renderWithProviders(<Sidebar />);
+    it("has navigation landmark", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const nav = screen.getByRole("navigation");
       expect(nav).toBeInTheDocument();
     });
 
-    it("has complementary landmark for sidebar", () => {
-      renderWithProviders(<Sidebar />);
+    it("has complementary landmark for sidebar", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const sidebar = screen.getByRole("complementary");
       expect(sidebar).toBeInTheDocument();
@@ -303,19 +355,25 @@ describe("Sidebar Component", () => {
   });
 
   describe("Section Dividers", () => {
-    it("renders gradient dividers between sections", () => {
-      const { container } = renderWithProviders(<Sidebar />);
+    it("renders gradient dividers between sections", async () => {
+      let container: HTMLElement;
+      await act(async () => {
+        const result = renderWithProviders(<Sidebar />);
+        container = result.container;
+      });
 
       // Check for gradient divider elements (my-3 mx-2 h-px)
-      const dividers = container.querySelectorAll(".my-3.mx-2");
+      const dividers = container!.querySelectorAll(".my-3.mx-2");
       // There should be dividers between sections
       expect(dividers.length).toBeGreaterThan(0);
     });
   });
 
   describe("Complete Navigation Coverage", () => {
-    it("renders 21 navigation links total", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders 21 navigation links total", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       // Count all links (21 nav links + 1 logo = 22 total)
       const links = screen.getAllByRole("link");
@@ -323,8 +381,10 @@ describe("Sidebar Component", () => {
       expect(links.length).toBeGreaterThanOrEqual(20);
     });
 
-    it("renders all section headers", () => {
-      renderWithProviders(<Sidebar />);
+    it("renders all section headers", async () => {
+      await act(async () => {
+        renderWithProviders(<Sidebar />);
+      });
 
       const sections = ["Overview", "Pipeline", "Network", "Intelligence", "System"];
       sections.forEach((section) => {

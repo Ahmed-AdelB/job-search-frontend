@@ -5,7 +5,7 @@
 
 import "@testing-library/jest-dom/vitest";
 import { cleanup } from "@testing-library/react";
-import { afterEach, vi } from "vitest";
+import { afterEach, vi, beforeEach } from "vitest";
 import React from "react";
 import { server } from "./src/__mocks__/server";
 
@@ -179,6 +179,25 @@ if (!Element.prototype.getAnimations) {
     return [];
   } as any;
 }
+
+// Mock URL.createObjectURL and revokeObjectURL globally
+window.URL.createObjectURL = vi.fn(() => "blob:mock-url");
+window.URL.revokeObjectURL = vi.fn();
+
+// Mock HTMLAnchorElement.click to prevent jsdom navigation errors
+const originalCreateElement = document.createElement;
+document.createElement = vi.fn((tagName: string) => {
+  const element = originalCreateElement.call(document, tagName);
+
+  if (tagName.toLowerCase() === "a") {
+    // Mock the click method to prevent navigation errors
+    element.click = vi.fn(() => {
+      // Silently ignore the click - we're just testing the download flow
+    });
+  }
+
+  return element;
+}) as any;
 
 // Mock localStorage for tests (jsdom provides one, but ensure it's clean)
 beforeEach(() => {
