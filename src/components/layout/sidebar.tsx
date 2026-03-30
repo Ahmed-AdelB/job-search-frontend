@@ -173,15 +173,15 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
         "fixed inset-y-0 start-0 z-40 flex flex-col",
-        "border-e border-border/30",
+        "border-e border-white/10",
         "backdrop-blur-xl",
-        "dark:bg-white/5 bg-white/80",
+        "bg-background/80",
         "transition-shadow duration-300",
-        isHovered && !isCollapsed && "shadow-2xl shadow-brand-500/5"
+        isHovered && !isCollapsed && "shadow-2xl shadow-brand-500/10"
       )}
     >
       {/* Logo */}
-      <div className="flex h-14 items-center justify-between px-3 border-b border-border/30 shrink-0">
+      <div className="flex h-14 items-center justify-between px-3 border-b border-white/10 shrink-0">
         <Link href="/jobs" className="flex items-center gap-2.5 overflow-hidden">
           <motion.div
             whileHover={{ scale: 1.05 }}
@@ -232,7 +232,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={onToggle}
-            className="h-7 w-7 text-muted-foreground hover:text-foreground absolute -end-3 top-3.5 bg-card/80 backdrop-blur-sm border border-border/30 rounded-full shadow-sm hover:shadow-md hover:shadow-brand-500/20 transition-shadow"
+            className="h-7 w-7 text-muted-foreground hover:text-foreground absolute -end-3 top-3.5 bg-card/80 backdrop-blur-sm border border-white/10 rounded-full shadow-sm hover:shadow-md hover:shadow-brand-500/20 transition-shadow"
           >
             <ChevronRight className="w-3 h-3" />
           </Button>
@@ -287,8 +287,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                         {active && (
                           <motion.div
                             layoutId="activeIndicator"
-                            className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-e-full"
-                            style={{ backgroundColor: "var(--brand-500)" }}
+                            className="absolute start-0 top-1/2 -translate-y-1/2 w-[3px] h-5 rounded-e-full bg-gradient-to-b from-indigo-500 to-violet-500"
                             initial={{ scaleY: 0 }}
                             animate={{ scaleY: 1 }}
                             transition={{ type: "spring", stiffness: 500, damping: 30 }}
@@ -298,7 +297,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                         {/* Icon */}
                         <item.icon
                           className={cn(
-                            "w-4 h-4 shrink-0 transition-colors",
+                            "w-5 h-5 shrink-0 transition-colors",
                             active ? "text-brand-400" : "text-muted-foreground/70"
                           )}
                         />
@@ -332,7 +331,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
 
                         {/* Tooltip for collapsed mode */}
                         {!isActuallyExpanded && (
-                          <div className="absolute left-full ml-2 px-2 py-1 bg-popover border border-border/30 rounded-md text-xs font-medium text-popover-foreground opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-lg">
+                          <div className="absolute left-full ml-2 px-2 py-1 bg-popover border border-white/10 rounded-md text-xs font-medium text-popover-foreground opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all whitespace-nowrap z-50 shadow-lg">
                             {item.label}
                           </div>
                         )}
@@ -349,8 +348,8 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
                     className={cn(
                       "h-px",
                       isActuallyExpanded
-                        ? "bg-gradient-to-r from-transparent via-border/50 to-transparent"
-                        : "bg-border/30"
+                        ? "bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                        : "bg-white/10"
                     )}
                   />
                 </div>
@@ -360,12 +359,12 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
         </nav>
       </ScrollArea>
 
-      {/* Bottom Status Indicator - Optional mission control feel */}
-      <div className="shrink-0 p-3 border-t border-border/30">
+      {/* Bottom Status Indicator - Mission control feel */}
+      <div className="shrink-0 p-3 border-t border-white/10">
         <motion.div
           className={cn(
             "flex items-center gap-2 rounded-lg px-2 py-1.5",
-            "bg-white/5 dark:bg-white/5",
+            "bg-white/5",
             !isActuallyExpanded && "justify-center"
           )}
         >

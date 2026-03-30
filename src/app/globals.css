@@ -73,6 +73,15 @@
   --sidebar-accent-foreground: 240 6% 10%;
   --sidebar-border: 240 6% 93%;
   --sidebar-ring: 243 75% 59%;
+
+  /* Command Center Design System */
+  --primary: 239 84% 67%;     /* #4F46E5 indigo */
+  --primary-hover: 263 70% 58%; /* #7C3AED violet */
+  --accent: 187 92% 57%;      /* #22D3EE cyan */
+  --danger: 347 77% 60%;      /* #F43F5E rose */
+  --surface: 0 0% 100%;
+  --surface-hover: 0 0% 97%;
+  --border-subtle: 0 0% 0% / 0.05;
 }
 
 .dark {
@@ -105,6 +114,12 @@
   --sidebar-accent-foreground: 240 5% 80%;
   --sidebar-border: 240 4% 10%;
   --sidebar-ring: 250 89% 67%;
+
+  /* Command Center Design System Dark */
+  --surface: 240 10% 4%;       /* #0A0A0F near-black */
+  --surface-hover: 240 6% 8%;
+  --border-subtle: 0 0% 100% / 0.1;
+  --background: 240 10% 4%;   /* #0A0A0F */
 }
 
 /* ─── Base Styles ─── */
@@ -162,9 +177,18 @@ body {
 /* ─── Glassmorphism Utility ─── */
 
 .glass {
-  background: hsl(var(--card) / 0.6);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  background: hsl(var(--surface) / 0.6);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid hsl(var(--border-subtle));
+}
+
+.glass-card {
+  background: hsl(var(--surface) / 0.8);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid hsl(var(--border-subtle));
+  border-radius: 1rem;
 }
 
 .dark .glass {
@@ -214,12 +238,22 @@ body {
 }
 
 @keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+  0% { opacity: 0; transform: translateY(12px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes fadeDown {
+  0% { opacity: 0; transform: translateY(-12px); }
+  100% { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes slideInLeft {
   from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(12px); }
   to { opacity: 1; transform: translateX(0); }
 }
 
@@ -234,20 +268,34 @@ body {
 }
 
 @keyframes countUp {
-  from { opacity: 0; transform: translateY(8px); }
+  from { opacity: 0; transform: translateY(4px); }
   to { opacity: 1; transform: translateY(0); }
 }
 
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
 .animate-fade-in { animation: fadeIn 0.3s ease-out; }
-.animate-fade-up { animation: fadeUp 0.4s ease-out; }
+.animate-fade-up { animation: fadeUp 0.5s ease-out; }
+.animate-fade-down { animation: fadeDown 0.5s ease-out; }
 .animate-slide-in-left { animation: slideInLeft 0.3s ease-out; }
+.animate-slide-in-right { animation: slideInRight 0.3s ease-out; }
 .animate-pulse-dot { animation: pulse-dot 2s ease-in-out infinite; }
-.animate-count-up { animation: countUp 0.5s ease-out; }
+.animate-count-up { animation: countUp 0.6s ease-out; }
+.animate-pulse { animation: pulse 2s ease-in-out infinite; }
 
 .animate-shimmer {
   background: linear-gradient(90deg, transparent, hsl(var(--muted-foreground) / 0.08), transparent);
   background-size: 200% 100%;
-  animation: shimmer 1.5s ease-in-out infinite;
+  animation: shimmer 2s infinite linear;
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, hsl(var(--surface)) 25%, hsl(var(--surface-hover)) 50%, hsl(var(--surface)) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite linear;
 }
 
 /* Staggered animation delays */
@@ -257,6 +305,16 @@ body {
 .stagger-4 { animation-delay: 200ms; }
 .stagger-5 { animation-delay: 250ms; }
 .stagger-6 { animation-delay: 300ms; }
+
+.animate-stagger > * {
+  animation: fadeUp 0.5s ease-out both;
+}
+.animate-stagger > *:nth-child(1) { animation-delay: 0ms; }
+.animate-stagger > *:nth-child(2) { animation-delay: 75ms; }
+.animate-stagger > *:nth-child(3) { animation-delay: 150ms; }
+.animate-stagger > *:nth-child(4) { animation-delay: 225ms; }
+.animate-stagger > *:nth-child(5) { animation-delay: 300ms; }
+.animate-stagger > *:nth-child(6) { animation-delay: 375ms; }
 
 /* ─── RTL Support ─── */
 
