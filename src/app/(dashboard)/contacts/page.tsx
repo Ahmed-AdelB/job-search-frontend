@@ -96,7 +96,7 @@ export default function ContactsPage() {
     <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Contacts</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Contacts</h1>
           <p className="text-muted-foreground">
             Manage your professional network
           </p>
@@ -122,7 +122,7 @@ export default function ContactsPage() {
         </motion.div>
       </div>
 
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -139,9 +139,9 @@ export default function ContactsPage() {
         </CardContent>
       </Card>
 
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
         <CardHeader>
-          <CardTitle>Your Contacts</CardTitle>
+          <CardTitle className="font-display text-lg">Your Contacts</CardTitle>
           <CardDescription>{total} contacts in your network</CardDescription>
         </CardHeader>
         <CardContent>
@@ -165,7 +165,7 @@ export default function ContactsPage() {
               <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-white/5">
                       <TableHead>Name</TableHead>
                       <TableHead>Company</TableHead>
                       <TableHead>Position</TableHead>
@@ -178,6 +178,7 @@ export default function ContactsPage() {
                     {contacts.map((contact, index) => (
                       <motion.tr
                         key={contact.linkedin_id}
+                        className="hover:bg-white/5"
                         initial={{opacity:0,x:-10}}
                         animate={{opacity:1,x:0}}
                         transition={{
@@ -186,8 +187,6 @@ export default function ContactsPage() {
                           damping: 15,
                           delay: index * 0.03,
                         }}
-                        whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
-                        className="hover:bg-muted/50 transition-colors"
                       >
                         <TableCell>
                           <div>
@@ -199,21 +198,21 @@ export default function ContactsPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell className="text-sm">{contact.company || "\u2014"}</TableCell>
-                        <TableCell className="text-sm max-w-[200px] truncate">
+                        <TableCell className="text-sm font-medium">{contact.company || "\u2014"}</TableCell>
+                        <TableCell className="text-sm max-w-[200px] truncate font-medium">
                           {contact.position || "\u2014"}
                         </TableCell>
                         <TableCell>
                           {contact.score != null ? (
                             <Badge
                               variant="outline"
-                              className={
+                              className={`font-display ${
                                 contact.score >= 80
-                                  ? "border-green-300 text-green-700"
+                                  ? "bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400 border-emerald-500/30"
                                   : contact.score >= 50
-                                  ? "border-amber-300 text-amber-700"
-                                  : ""
-                              }
+                                  ? "bg-gradient-to-r from-amber-500/20 to-amber-400/20 text-amber-400 border-amber-500/30"
+                                  : "bg-gradient-to-r from-slate-500/20 to-slate-400/20"
+                              }`}
                             >
                               {contact.score}
                             </Badge>

@@ -139,7 +139,7 @@ export default function AnalyticsPage() {
     >
       {/* Page Header */}
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">Analytics</h1>
+        <h1 className="text-3xl font-display font-bold tracking-tight">Analytics</h1>
         <p className="text-muted-foreground mt-2">
           Track your job search performance and conversion metrics
         </p>
@@ -231,9 +231,9 @@ export default function AnalyticsPage() {
           transition={{ duration: 0.4, delay: 0.1 }}
           whileHover={{ scale: 1.01 }}
         >
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
-              <CardTitle>Pipeline Funnel</CardTitle>
+              <CardTitle className="font-display text-lg">Pipeline Funnel</CardTitle>
               <CardDescription>
                 Application progression through stages
               </CardDescription>
@@ -280,9 +280,9 @@ export default function AnalyticsPage() {
           transition={{ duration: 0.4, delay: 0.2 }}
           whileHover={{ scale: 1.01 }}
         >
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
-              <CardTitle>Jobs by Source</CardTitle>
+              <CardTitle className="font-display text-lg">Jobs by Source</CardTitle>
               <CardDescription>Where your job opportunities come from</CardDescription>
             </CardHeader>
             <CardContent>
@@ -334,9 +334,9 @@ export default function AnalyticsPage() {
         transition={{ duration: 0.4, delay: 0.3 }}
         whileHover={{ scale: 1.01 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardHeader>
-            <CardTitle>Activity Timeline</CardTitle>
+            <CardTitle className="font-display text-lg">Activity Timeline</CardTitle>
             <CardDescription>
               Applications, responses, and interviews over time
             </CardDescription>
@@ -436,9 +436,9 @@ export default function AnalyticsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardHeader>
-            <CardTitle>Key Metrics Summary</CardTitle>
+            <CardTitle className="font-display text-lg">Key Metrics Summary</CardTitle>
           </CardHeader>
           <CardContent>
             <motion.div
@@ -529,7 +529,7 @@ function OverviewCard({
 }) {
   return (
     <motion.div whileHover="whileHover" initial="initial" variants={cardHoverVariants}>
-      <Card>
+      <Card className="card-glow h-full">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -538,7 +538,7 @@ function OverviewCard({
                 <Skeleton className="h-8 w-20 mt-2" />
               ) : (
                 <motion.p
-                  className="text-2xl font-bold mt-2"
+                  className="text-2xl font-display font-bold mt-2"
                   initial={{ opacity: 0, scale: 0.8 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.3 }}
@@ -590,7 +590,7 @@ function MetricItem({
       transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
     >
       <p className="text-sm font-medium text-muted-foreground">{label}</p>
-      <p className="text-2xl font-bold mt-2">{value}</p>
+      <p className="text-2xl font-display font-bold mt-2">{value}</p>
       <p className="text-xs text-muted-foreground mt-1">{description}</p>
     </motion.div>
   );

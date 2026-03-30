@@ -87,7 +87,7 @@ export default function CommunityPage() {
       transition={{ duration: 0.4 }}
     >
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Community</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Community</h1>
         <p className="text-muted-foreground">
           Track and discover job seeker communities across platforms
         </p>
@@ -149,9 +149,9 @@ function TrackedTab() {
         />
       </div>
 
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Your Communities</CardTitle>
+          <CardTitle className="font-display text-lg">Your Communities</CardTitle>
           <CardDescription>{communities.length} tracked communities</CardDescription>
         </CardHeader>
         <CardContent>
@@ -170,7 +170,7 @@ function TrackedTab() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="table-row-hover">
                     <TableHead>Name</TableHead>
                     <TableHead>Platform</TableHead>
                     <TableHead>Members</TableHead>
@@ -182,6 +182,7 @@ function TrackedTab() {
                   {communities.map((community, index) => (
                     <motion.tr
                       key={community.id}
+                      className="table-row-hover"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
@@ -193,7 +194,7 @@ function TrackedTab() {
                     >
                       <TableCell>
                         <div className="flex items-center gap-2">
-                          <span className="font-medium">{community.name}</span>
+                          <span className="font-display font-medium">{community.name}</span>
                           {community.url && (
                             <a
                               href={community.url}
@@ -212,11 +213,19 @@ function TrackedTab() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={PLATFORM_COLORS[community.platform] ?? "bg-gray-500"}>
+                        <Badge className={`bg-gradient-to-r ${
+                          community.platform === "reddit"
+                            ? "from-orange-500/20 to-orange-400/20 text-orange-400"
+                            : community.platform === "discord"
+                            ? "from-indigo-500/20 to-indigo-400/20 text-indigo-400"
+                            : community.platform === "slack"
+                            ? "from-green-500/20 to-green-400/20 text-green-400"
+                            : "from-blue-500/20 to-blue-400/20 text-blue-400"
+                        }`}>
                           {PLATFORM_LABELS[community.platform] ?? community.platform}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-sm">
+                      <TableCell className="text-sm font-display">
                         {community.members_count?.toLocaleString() ?? "—"}
                       </TableCell>
                       <TableCell>
@@ -278,9 +287,9 @@ function DiscoverTab() {
   const recommendations = data?.recommendations ?? [];
 
   return (
-    <Card>
+    <Card className="card-glow">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 font-display text-lg">
           <TrendingUp className="w-5 h-5 text-primary" />
           Recommended Communities
         </CardTitle>
@@ -324,8 +333,16 @@ function DiscoverTab() {
               >
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
-                    <span className="font-medium">{rec.name}</span>
-                    <Badge className={PLATFORM_COLORS[rec.platform] ?? "bg-gray-500"}>
+                    <span className="font-display font-medium">{rec.name}</span>
+                    <Badge className={`bg-gradient-to-r ${
+                          rec.platform === "reddit"
+                            ? "from-orange-500/20 to-orange-400/20 text-orange-400"
+                            : rec.platform === "discord"
+                            ? "from-indigo-500/20 to-indigo-400/20 text-indigo-400"
+                            : rec.platform === "slack"
+                            ? "from-green-500/20 to-green-400/20 text-green-400"
+                            : "from-blue-500/20 to-blue-400/20 text-blue-400"
+                        }`}>
                       {PLATFORM_LABELS[rec.platform] ?? rec.platform}
                     </Badge>
                   </div>

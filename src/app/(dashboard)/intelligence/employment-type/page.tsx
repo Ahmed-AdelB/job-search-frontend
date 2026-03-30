@@ -84,7 +84,7 @@ export default function EmploymentTypePage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Employment Type Analysis</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Employment Type Analysis</h1>
           <p className="text-muted-foreground">
             Detect and analyze employment types across job postings
           </p>
@@ -92,9 +92,9 @@ export default function EmploymentTypePage() {
       </div>
 
       {/* Detection Tool */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Search className="w-5 h-5" />
             Detect Employment Type
           </CardTitle>
@@ -127,7 +127,7 @@ export default function EmploymentTypePage() {
                 animate={{ opacity: 1, scale: 1 }}
                 className="flex items-center gap-2"
               >
-                <Badge className={TYPE_COLORS[detectMutation.data.employment_type]?.bg ?? "bg-gray-500"}>
+                <Badge className={`bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400`}>
                   {detectMutation.data.employment_type}
                 </Badge>
                 <span className="text-sm text-muted-foreground">
@@ -163,16 +163,16 @@ export default function EmploymentTypePage() {
             const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <motion.div key={type} variants={itemVariants}>
-                <Card>
+                <Card className="card-glow">
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         <div className={`w-8 h-8 rounded-full ${bg} flex items-center justify-center`}>
                           <Icon className={`w-4 h-4 ${text}`} />
                         </div>
-                        <span className="font-medium capitalize">{type}</span>
+                        <span className="font-display font-medium capitalize">{type}</span>
                       </div>
-                      <span className="text-2xl font-bold">{count}</span>
+                      <span className="text-2xl font-display font-bold">{count}</span>
                     </div>
                     <Progress value={pct} className="h-2" />
                     <p className="text-sm text-muted-foreground">{pct}% of analyzed jobs</p>
@@ -183,7 +183,7 @@ export default function EmploymentTypePage() {
           })}
         </motion.div>
       ) : (
-        <Card>
+        <Card className="card-glow">
           <CardContent className="py-12 text-center text-muted-foreground">
             <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No employment type data available yet</p>

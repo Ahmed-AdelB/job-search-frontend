@@ -128,7 +128,7 @@ export default function NotificationsPage() {
       >
         <motion.div variants={itemVariants}>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Notifications</h1>
+            <h1 className="text-2xl font-display font-bold tracking-tight">Notifications</h1>
             <p className="text-muted-foreground">
               {unreadCount > 0
                 ? `You have ${unreadCount} unread notification${unreadCount > 1 ? "s" : ""}`
@@ -151,11 +151,11 @@ export default function NotificationsPage() {
       </motion.div>
 
       {/* Tabs and Content */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>Recent Notifications</CardTitle>
+              <CardTitle className="font-display">Recent Notifications</CardTitle>
               <CardDescription>
                 {total === 0 ? "No notifications" : `${total} total notification${total > 1 ? "s" : ""}`}
               </CardDescription>

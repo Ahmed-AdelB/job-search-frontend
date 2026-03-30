@@ -106,7 +106,7 @@ export default function LogsPage() {
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Logs</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Logs</h1>
           <p className="text-muted-foreground">
             View agent activity and system logs
           </p>
@@ -118,7 +118,7 @@ export default function LogsPage() {
       </div>
 
       {/* Filters */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-4">
           <motion.div
             className="flex flex-col sm:flex-row gap-3"
@@ -169,9 +169,9 @@ export default function LogsPage() {
       </Card>
 
       {/* Logs Table */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-display">
             <FileClock className="w-5 h-5" />
             Activity Logs
           </CardTitle>
@@ -210,7 +210,7 @@ export default function LogsPage() {
                       return (
                         <motion.tr
                           key={log.id}
-                          className={log.level === "ERROR" || log.level === "CRITICAL" ? config.bg : ""}
+                          className={`${log.level === "ERROR" || log.level === "CRITICAL" ? config.bg : ""} hover:bg-white/5`}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
                           transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}

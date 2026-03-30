@@ -81,7 +81,7 @@ export default function AdminPage() {
   return (
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Administration</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Administration</h1>
         <p className="text-muted-foreground">
           System management, tenants, and maintenance tools
         </p>
@@ -126,9 +126,9 @@ function TenantsTab() {
   const tenants = data?.tenants ?? [];
 
   return (
-    <Card>
+    <Card className="card-glow">
       <CardHeader>
-        <CardTitle>Tenant Management</CardTitle>
+        <CardTitle className="font-display text-lg">Tenant Management</CardTitle>
         <CardDescription>View and manage system tenants</CardDescription>
       </CardHeader>
       <CardContent>
@@ -147,7 +147,7 @@ function TenantsTab() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="table-row-hover">
                   <TableHead>Name</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
@@ -158,6 +158,7 @@ function TenantsTab() {
                 {tenants.map((tenant, index) => (
                   <motion.tr
                     key={tenant.id}
+                    className="table-row-hover"
                     initial={{opacity:0,x:-10}}
                     animate={{opacity:1,x:0}}
                     transition={{
@@ -166,14 +167,13 @@ function TenantsTab() {
                       damping: 15,
                       delay: index * 0.03,
                     }}
-                    whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
                   >
                     <TableCell className="font-medium">{tenant.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{tenant.plan}</Badge>
+                      <Badge variant="outline" className="bg-gradient-to-r from-slate-500/20 to-slate-400/20">{tenant.plan}</Badge>
                     </TableCell>
                     <TableCell>
-                      <Badge className={TENANT_STATUS_COLOR[tenant.status] ?? "bg-gray-500"}>
+                      <Badge className={`${TENANT_STATUS_COLOR[tenant.status] ?? "bg-gray-500"} bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400`}>
                         {tenant.status}
                       </Badge>
                     </TableCell>
@@ -210,9 +210,9 @@ function MaintenanceTab() {
 
   return (
     <div className="space-y-4">
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Maintenance Tasks</CardTitle>
+          <CardTitle className="font-display text-lg">Maintenance Tasks</CardTitle>
           <CardDescription>System maintenance and optimization tools</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -222,7 +222,7 @@ function MaintenanceTab() {
             transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
           >
             <div>
-              <h4 className="font-medium">Database Vacuum</h4>
+              <h4 className="font-display font-medium">Database Vacuum</h4>
               <p className="text-sm text-muted-foreground">Optimize database storage and performance</p>
             </div>
             <AlertDialog>
@@ -260,7 +260,7 @@ function MaintenanceTab() {
             transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
           >
             <div>
-              <h4 className="font-medium">Clear Cache</h4>
+              <h4 className="font-display font-medium">Clear Cache</h4>
               <p className="text-sm text-muted-foreground">Clear all application caches</p>
             </div>
             <Button
@@ -283,7 +283,7 @@ function MaintenanceTab() {
             transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
           >
             <div>
-              <h4 className="font-medium">Health Check</h4>
+              <h4 className="font-display font-medium">Health Check</h4>
               <p className="text-sm text-muted-foreground">Run system health diagnostics</p>
             </div>
             <Button
@@ -307,7 +307,7 @@ function MaintenanceTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <Card className="border-green-200 dark:border-green-800">
+              <Card className="card-glow border-green-200 dark:border-green-800">
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2 text-green-600 font-medium">
                     <CheckCircle2 className="w-5 h-5" />
@@ -378,9 +378,9 @@ function TrashTab() {
   const items = data?.items ?? [];
 
   return (
-    <Card>
+    <Card className="card-glow">
       <CardHeader>
-        <CardTitle>Trash / Soft-Deleted Items</CardTitle>
+        <CardTitle className="font-display text-lg">Trash / Soft-Deleted Items</CardTitle>
         <CardDescription>Restore or permanently delete soft-deleted items</CardDescription>
       </CardHeader>
       <CardContent>
@@ -399,7 +399,7 @@ function TrashTab() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="table-row-hover">
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Deleted</TableHead>
@@ -410,6 +410,7 @@ function TrashTab() {
                 {items.map((item, index) => (
                   <motion.tr
                     key={item.id}
+                    className="table-row-hover"
                     initial={{opacity:0,x:-10}}
                     animate={{opacity:1,x:0}}
                     transition={{
@@ -418,11 +419,10 @@ function TrashTab() {
                       damping: 15,
                       delay: index * 0.03,
                     }}
-                    whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
                   >
                     <TableCell className="font-medium">{item.name}</TableCell>
                     <TableCell>
-                      <Badge variant="outline">{item.type}</Badge>
+                      <Badge variant="outline" className="bg-gradient-to-r from-slate-500/20 to-slate-400/20">{item.type}</Badge>
                     </TableCell>
                     <TableCell className="text-sm text-muted-foreground">
                       {new Date(item.deleted_at).toLocaleDateString()}

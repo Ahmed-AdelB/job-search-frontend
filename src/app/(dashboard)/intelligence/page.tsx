@@ -81,7 +81,7 @@ export default function IntelligencePage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Intelligence Hub</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Intelligence Hub</h1>
         <p className="text-muted-foreground">
           AI-powered insights to optimize your job search strategy
         </p>
@@ -156,11 +156,11 @@ export default function IntelligencePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: 0.2 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 font-display text-lg">
                   <Target className="w-5 h-5 text-blue-600" />
                   Skills Gap Analysis
                 </CardTitle>
@@ -189,7 +189,7 @@ export default function IntelligencePage() {
                     Match Score
                   </span>
                   <Progress value={skillGap.match_percentage} className="flex-1 h-3" />
-                  <span className="text-sm font-bold w-12 text-end">
+                  <span className="text-sm font-display font-bold w-12 text-end">
                     {skillGap.match_percentage}%
                   </span>
                 </div>
@@ -201,12 +201,12 @@ export default function IntelligencePage() {
                     </h4>
                     <div className="flex flex-wrap gap-1">
                       {skillGap.possessed_skills.slice(0, 10).map((skill) => (
-                        <Badge key={skill} variant="secondary" className="text-xs">
+                        <Badge key={skill} variant="secondary" className="text-xs bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400">
                           {skill}
                         </Badge>
                       ))}
                       {skillGap.possessed_skills.length > 10 && (
-                        <Badge variant="outline" className="text-xs">
+                        <Badge variant="outline" className="text-xs bg-gradient-to-r from-slate-500/20 to-slate-400/20">
                           +{skillGap.possessed_skills.length - 10} more
                         </Badge>
                       )}
@@ -224,10 +224,10 @@ export default function IntelligencePage() {
                           variant="outline"
                           className={`text-xs ${
                             gap.importance === "critical"
-                              ? "border-red-300 text-red-700 dark:text-red-400"
+                              ? "bg-gradient-to-r from-red-500/20 to-red-400/20 text-red-400 border-red-500/30"
                               : gap.importance === "preferred"
-                              ? "border-amber-300 text-amber-700 dark:text-amber-400"
-                              : ""
+                              ? "bg-gradient-to-r from-amber-500/20 to-amber-400/20 text-amber-400 border-amber-500/30"
+                              : "bg-gradient-to-r from-slate-500/20 to-slate-400/20"
                           }`}
                         >
                           {gap.skill}
@@ -253,11 +253,11 @@ export default function IntelligencePage() {
       >
         {/* Salary Benchmark */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
                     <DollarSign className="w-5 h-5 text-amber-600" />
                     Salary Benchmark
                   </CardTitle>
@@ -293,7 +293,7 @@ export default function IntelligencePage() {
                         {row.label}
                       </span>
                       <Progress value={row.pct} className="flex-1 h-2" />
-                      <span className="text-sm font-medium w-28 text-end">
+                      <span className="text-sm font-display font-medium w-28 text-end">
                         {salary.currency} {row.value.toLocaleString()}
                       </span>
                     </div>
@@ -308,11 +308,11 @@ export default function IntelligencePage() {
 
         {/* Visa Eligibility */}
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
                     <Globe2 className="w-5 h-5 text-emerald-600" />
                     Visa Eligibility
                   </CardTitle>
@@ -336,25 +336,18 @@ export default function IntelligencePage() {
                 <div className="space-y-4">
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Occupation:</span>
-                    <Badge variant="secondary">{visa.occupation}</Badge>
+                    <Badge variant="secondary" className="bg-gradient-to-r from-blue-500/20 to-blue-400/20 text-blue-400">{visa.occupation}</Badge>
                   </div>
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Likelihood:</span>
                     <Badge
-                      variant={
+                      className={`bg-gradient-to-r ${
                         visa.sponsorship_likelihood === "high"
-                          ? "default"
+                          ? "from-emerald-500/20 to-emerald-400/20 text-emerald-400"
                           : visa.sponsorship_likelihood === "medium"
-                          ? "secondary"
-                          : "outline"
-                      }
-                      className={
-                        visa.sponsorship_likelihood === "high"
-                          ? "bg-green-600"
-                          : visa.sponsorship_likelihood === "medium"
-                          ? "bg-amber-500"
-                          : ""
-                      }
+                          ? "from-amber-500/20 to-amber-400/20 text-amber-400"
+                          : "from-slate-500/20 to-slate-400/20 text-slate-400"
+                      }`}
                     >
                       {visa.sponsorship_likelihood.toUpperCase()}
                     </Badge>
@@ -362,7 +355,7 @@ export default function IntelligencePage() {
                   <div className="flex items-center gap-3">
                     <span className="text-sm text-muted-foreground">Score:</span>
                     <Progress value={visa.eligibility_score} className="flex-1 h-3" />
-                    <span className="text-sm font-bold">{visa.eligibility_score}%</span>
+                    <span className="text-sm font-display font-bold">{visa.eligibility_score}%</span>
                   </div>
                   <div>
                     <span className="text-sm text-muted-foreground">Eligible Countries:</span>
@@ -390,9 +383,9 @@ export default function IntelligencePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: 0.3 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Wifi className="w-5 h-5 text-purple-600" />
               Remote Work Compatibility
             </CardTitle>
@@ -406,7 +399,7 @@ export default function IntelligencePage() {
             ) : remote ? (
               <div className="flex items-center gap-6">
                 <div className="text-center">
-                  <div className="text-4xl font-bold">{remote.remote_score}</div>
+                  <div className="text-4xl font-display font-bold">{remote.remote_score}</div>
                   <div className="text-sm text-muted-foreground">out of 100</div>
                 </div>
                 <div className="flex-1">
@@ -443,11 +436,11 @@ export default function IntelligencePage() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
                     <Building2 className="w-5 h-5 text-indigo-600" />
                     Work Mode Analysis
                   </CardTitle>
@@ -465,11 +458,11 @@ export default function IntelligencePage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle className="flex items-center gap-2">
+                  <CardTitle className="flex items-center gap-2 font-display text-lg">
                     <Briefcase className="w-5 h-5 text-teal-600" />
                     Employment Type
                   </CardTitle>
@@ -522,10 +515,10 @@ function IntelCard({
 
   return (
     <motion.div
-      whileHover={{ scale: 1.05, boxShadow: "0 10px 25px rgba(0, 0, 0, 0.1)" }}
+      whileHover={{ scale: 1.02 }}
       transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
     >
-      <Card>
+      <Card className="card-glow">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -533,7 +526,7 @@ function IntelCard({
               {loading ? (
                 <Skeleton className="h-8 w-20" />
               ) : (
-                <p className="text-2xl font-bold">{value ?? "—"}</p>
+                <p className="text-2xl font-display font-bold">{value ?? "—"}</p>
               )}
             </div>
             <div className={`w-10 h-10 rounded-full ${bgColor} flex items-center justify-center`}>

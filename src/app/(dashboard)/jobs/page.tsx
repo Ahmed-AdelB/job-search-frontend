@@ -241,7 +241,7 @@ export default function JobsPage() {
           animate={{ opacity: 1, x: 0 }}
           transition={{ delay: 0.1, duration: 0.3 }}
         >
-          <h1 className="text-2xl font-bold tracking-tight">Jobs</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Jobs</h1>
           <p className="text-muted-foreground">
             Browse and manage {total} job opportunities
           </p>
@@ -347,7 +347,7 @@ export default function JobsPage() {
           animate="visible"
           exit="exit"
         >
-          <Card>
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="p-4">
               <div className="flex flex-col sm:flex-row gap-3">
                 <div className="flex items-center gap-2 flex-1 relative">
@@ -410,9 +410,9 @@ export default function JobsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.25, duration: 0.3 }}
       >
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2">
               <Briefcase className="w-5 h-5" />
               Job Listings
             </CardTitle>
@@ -484,7 +484,7 @@ export default function JobsPage() {
                         <AnimatedTableRow
                           key={job.job_id}
                           index={index}
-                          className={selected.has(job.job_id) ? "bg-muted/50" : ""}
+                          className={selected.has(job.job_id) ? "bg-muted/50" : "hover:bg-white/5"}
                         >
                           <TableCell>
                             <Checkbox

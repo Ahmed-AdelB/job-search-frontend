@@ -265,7 +265,7 @@ export default function AgentsPage() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Agents</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Agents</h1>
           <p className="text-muted-foreground">
             Manage your AI automation agents
           </p>
@@ -304,34 +304,34 @@ export default function AgentsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1, duration: 0.3 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Total Agents</p>
-                <p className="text-2xl font-bold">{agents.length}</p>
+                <p className="text-2xl font-display font-bold">{agents.length}</p>
               </div>
               <Bot className="w-8 h-8 text-muted-foreground opacity-50" />
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="card-glow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Running</p>
-                <p className="text-2xl font-bold text-green-600">{runningCount}</p>
+                <p className="text-2xl font-display font-bold text-green-600">{runningCount}</p>
               </div>
               <Activity className="w-8 h-8 text-green-600 opacity-50" />
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card className="card-glow">
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-muted-foreground">Errors</p>
-                <p className="text-2xl font-bold text-red-600">{errorCount}</p>
+                <p className="text-2xl font-display font-bold text-red-600">{errorCount}</p>
               </div>
               <AlertTriangle className="w-8 h-8 text-red-600 opacity-50" />
             </div>
@@ -347,7 +347,7 @@ export default function AgentsPage() {
           ))}
         </div>
       ) : agents.length === 0 ? (
-        <Card>
+        <Card className="card-glow">
           <CardContent className="p-12 text-center text-muted-foreground">
             <Bot className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No agents configured. Start the agent orchestrator to register agents.</p>
@@ -378,7 +378,7 @@ export default function AgentsPage() {
                   transition: { type: "spring", stiffness: 400, damping: 17 }
                 }}
               >
-                <Card className={isError ? "border-red-300 dark:border-red-800" : ""}>
+                <Card className={`card-glow h-full ${isError ? "border-red-300 dark:border-red-800" : ""}`}>
                   <CardHeader className="pb-3">
                     <div className="flex items-start justify-between">
                       <div className="flex items-center gap-2">
@@ -386,11 +386,11 @@ export default function AgentsPage() {
                           <Zap className={`w-4 h-4 ${config.color}`} />
                         </div>
                         <div>
-                          <CardTitle className="text-base">{agent.display_name}</CardTitle>
+                          <CardTitle className="font-display text-base">{agent.display_name}</CardTitle>
                           <CardDescription className="text-xs">{agent.type}</CardDescription>
                         </div>
                       </div>
-                      <Badge className={config.badge}>
+                      <Badge className={`${config.badge} bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400`}>
                         {isRunning && (
                           <motion.span
                             className="inline-block w-1.5 h-1.5 rounded-full bg-white me-1"
@@ -520,18 +520,18 @@ export default function AgentsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.4 }}
       >
-        <h2 className="text-lg font-semibold mb-4">Pipeline Activity</h2>
+        <h2 className="text-lg font-display font-semibold mb-4">Pipeline Activity</h2>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           {/* Discovery Evidence */}
-          <Card>
+          <Card className="card-glow">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Search className="w-4 h-4 text-blue-500" />
-                <CardTitle className="text-sm">Discovery</CardTitle>
+                <CardTitle className="font-display text-sm">Discovery</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{activity?.discovery?.total ?? 0}</p>
+              <p className="text-2xl font-display font-bold">{activity?.discovery?.total ?? 0}</p>
               <p className="text-xs text-muted-foreground mb-3">pages scraped</p>
               {activity?.discovery?.sources && Object.keys(activity.discovery.sources).length > 0 && (
                 <div className="space-y-1.5">
@@ -544,7 +544,7 @@ export default function AgentsPage() {
                           <SourceIcon className="w-3 h-3" />
                           {info.label}
                         </span>
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-blue-500/20 to-blue-400/20 text-blue-400">
                           {count as number}
                         </Badge>
                       </div>
@@ -556,15 +556,15 @@ export default function AgentsPage() {
           </Card>
 
           {/* Scoring Evidence */}
-          <Card>
+          <Card className="card-glow">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Star className="w-4 h-4 text-yellow-500" />
-                <CardTitle className="text-sm">Scoring</CardTitle>
+                <CardTitle className="font-display text-sm">Scoring</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{activity?.scoring?.total ?? 0}</p>
+              <p className="text-2xl font-display font-bold">{activity?.scoring?.total ?? 0}</p>
               <p className="text-xs text-muted-foreground mb-3">total jobs</p>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
@@ -586,22 +586,22 @@ export default function AgentsPage() {
           </Card>
 
           {/* Applications Evidence */}
-          <Card>
+          <Card className="card-glow">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Send className="w-4 h-4 text-green-500" />
-                <CardTitle className="text-sm">Applications</CardTitle>
+                <CardTitle className="font-display text-sm">Applications</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{activity?.applications?.total ?? 0}</p>
+              <p className="text-2xl font-display font-bold">{activity?.applications?.total ?? 0}</p>
               <p className="text-xs text-muted-foreground mb-3">submitted</p>
               {activity?.applications?.statuses && Object.keys(activity.applications.statuses).length > 0 && (
                 <div className="space-y-1.5">
                   {Object.entries(activity.applications.statuses).map(([status, count]) => (
                     <div key={status} className="flex items-center justify-between text-xs">
                       <span className="text-muted-foreground capitalize">{status}</span>
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400">
                         {count as number}
                       </Badge>
                     </div>
@@ -612,15 +612,15 @@ export default function AgentsPage() {
           </Card>
 
           {/* Outreach & Contacts Evidence */}
-          <Card>
+          <Card className="card-glow">
             <CardHeader className="pb-2">
               <div className="flex items-center gap-2">
                 <Users className="w-4 h-4 text-purple-500" />
-                <CardTitle className="text-sm">Contacts & Outreach</CardTitle>
+                <CardTitle className="font-display text-sm">Contacts & Outreach</CardTitle>
               </div>
             </CardHeader>
             <CardContent>
-              <p className="text-2xl font-bold">{activity?.contacts?.total ?? 0}</p>
+              <p className="text-2xl font-display font-bold">{activity?.contacts?.total ?? 0}</p>
               <p className="text-xs text-muted-foreground mb-3">contacts</p>
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
@@ -657,23 +657,23 @@ export default function AgentsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4, duration: 0.4 }}
         >
-          <h2 className="text-lg font-semibold mb-4">Recent Runs</h2>
-          <Card>
+          <h2 className="text-lg font-display font-semibold mb-4">Recent Runs</h2>
+          <Card className="card-glow">
             <CardContent className="p-0">
               <div className="divide-y">
                 {runs.slice(0, 10).map((run) => (
                   <div key={run.run_id} className="flex items-center justify-between p-3 text-sm">
                     <div className="flex items-center gap-3">
                       <Badge
-                        className={
+                        className={`bg-gradient-to-r ${
                           run.status === "completed"
-                            ? "bg-green-600"
+                            ? "from-emerald-500/20 to-emerald-400/20 text-emerald-400"
                             : run.status === "running"
-                            ? "bg-blue-600"
+                            ? "from-blue-500/20 to-blue-400/20 text-blue-400"
                             : run.status === "error"
-                            ? "bg-red-600"
-                            : "bg-gray-500"
-                        }
+                            ? "from-red-500/20 to-red-400/20 text-red-400"
+                            : "from-slate-500/20 to-slate-400/20 text-slate-400"
+                        }`}
                       >
                         {run.status === "running" && (
                           <Loader2 className="w-3 h-3 me-1 animate-spin" />
@@ -706,8 +706,8 @@ export default function AgentsPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.5, duration: 0.4 }}
         >
-          <h2 className="text-lg font-semibold mb-4">Recent Discoveries</h2>
-          <Card>
+          <h2 className="text-lg font-display font-semibold mb-4">Recent Discoveries</h2>
+          <Card className="card-glow">
             <CardContent className="p-0">
               <div className="divide-y">
                 {activity.discovery.recent.map((item, idx) => {
@@ -722,7 +722,7 @@ export default function AgentsPage() {
                         </span>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <Badge variant="outline" className="text-xs">{info.label}</Badge>
+                        <Badge variant="outline" className="text-xs bg-gradient-to-r from-slate-500/20 to-slate-400/20">{info.label}</Badge>
                         {item.created_at && (
                           <span className="text-xs text-muted-foreground">
                             {new Date(item.created_at).toLocaleDateString()}

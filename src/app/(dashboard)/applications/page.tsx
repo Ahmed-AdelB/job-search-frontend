@@ -179,7 +179,7 @@ export default function ApplicationsPage() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Applications</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Applications</h1>
           <p className="text-muted-foreground">
             Track and manage your {total} job applications
           </p>
@@ -227,14 +227,14 @@ export default function ApplicationsPage() {
               }}
             >
               <Card
-                className="cursor-pointer hover:border-primary/50 transition-colors"
+                className="bg-white/5 backdrop-blur-xl border-white/10 card-glow cursor-pointer hover:border-primary/50 transition-colors"
                 onClick={() => { setStatusFilter(s); setPage(1); }}
               >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-muted-foreground capitalize">{s}</p>
-                      <p className="text-2xl font-bold">{counts[s] ?? 0}</p>
+                      <p className="text-2xl font-display font-bold">{counts[s] ?? 0}</p>
                     </div>
                     <StatusIcon className="w-6 h-6 text-muted-foreground opacity-60" />
                   </div>
@@ -251,7 +251,7 @@ export default function ApplicationsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2, duration: 0.3 }}
       >
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
           <CardContent className="p-4">
             <div className="flex flex-col sm:flex-row gap-3">
               <div className="flex items-center gap-2 flex-1">
@@ -290,9 +290,9 @@ export default function ApplicationsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3, duration: 0.3 }}
       >
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2 text-lg">
               <FileText className="w-5 h-5" />
               Applications
             </CardTitle>
@@ -315,7 +315,7 @@ export default function ApplicationsPage() {
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="hover:bg-white/5">
                         <TableHead>Job</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Applied</TableHead>
@@ -341,11 +341,8 @@ export default function ApplicationsPage() {
                           return (
                             <motion.tr
                               key={app.application_id}
+                              className="hover:bg-white/5"
                               variants={rowVariants}
-                              whileHover={{
-                                backgroundColor: "rgba(var(--muted), 0.3)",
-                                transition: { duration: 0.15 }
-                              }}
                             >
                               <TableCell>
                                 <div>
@@ -362,7 +359,7 @@ export default function ApplicationsPage() {
                                   animate="animate"
                                   key={app.status}
                                 >
-                                  <Badge className={`${config.color} text-xs`}>
+                                  <Badge className={`bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400 text-xs`}>
                                     <StatusIcon className="w-3 h-3 me-1" />
                                     {app.status}
                                   </Badge>
@@ -375,7 +372,7 @@ export default function ApplicationsPage() {
                               </TableCell>
                               <TableCell>
                                 {app.resume_url ? (
-                                  <Badge variant="outline" className="text-xs">
+                                  <Badge variant="outline" className="text-xs bg-gradient-to-r from-slate-500/20 to-slate-400/20">
                                     <FileText className="w-3 h-3 me-1" />
                                     Attached
                                   </Badge>

@@ -91,7 +91,7 @@ export default function SalaryPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Salary Benchmarks</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Salary Benchmarks</h1>
           <p className="text-muted-foreground">
             Salary data and compensation analysis for your target roles
           </p>
@@ -106,12 +106,12 @@ export default function SalaryPage() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Avg Median Salary</p>
-                  <p className="text-2xl font-bold">{formatSalary(avgMedian, topCurrency)}</p>
+                  <p className="text-2xl font-display font-bold">{formatSalary(avgMedian, topCurrency)}</p>
                 </div>
                 <DollarSign className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
@@ -119,12 +119,12 @@ export default function SalaryPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Top P90</p>
-                  <p className="text-2xl font-bold text-green-600">{formatSalary(topP90, topCurrency)}</p>
+                  <p className="text-2xl font-display font-bold text-green-600">{formatSalary(topP90, topCurrency)}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600 opacity-50" />
               </div>
@@ -132,12 +132,12 @@ export default function SalaryPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Data Points</p>
-                  <p className="text-2xl font-bold">{totalSamples.toLocaleString()}</p>
+                  <p className="text-2xl font-display font-bold">{totalSamples.toLocaleString()}</p>
                 </div>
                 <Users className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
@@ -147,9 +147,9 @@ export default function SalaryPage() {
       </motion.div>
 
       {/* Salary Table */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
             <BarChart3 className="w-5 h-5" />
             Salary Benchmarks by Role
           </CardTitle>
@@ -171,7 +171,7 @@ export default function SalaryPage() {
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="table-row-hover">
                     <TableHead>Role</TableHead>
                     <TableHead>Location</TableHead>
                     <TableHead className="text-end">P25</TableHead>
@@ -189,15 +189,12 @@ export default function SalaryPage() {
                     return (
                       <motion.tr
                         key={idx}
+                        className="table-row-hover"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: idx * 0.05 }}
-                        whileHover={{
-                          backgroundColor: "var(--muted)",
-                          scale: 1.01,
-                        }}
                       >
-                        <TableCell className="font-medium">{b.title}</TableCell>
+                        <TableCell className="font-display font-medium">{b.title}</TableCell>
                         <TableCell>
                           <div className="flex items-center gap-1 text-sm">
                             <MapPin className="w-3.5 h-3.5 text-muted-foreground" />
@@ -207,7 +204,7 @@ export default function SalaryPage() {
                         <TableCell className="text-end text-sm font-mono">
                           {formatSalary(b.percentile_25, b.currency)}
                         </TableCell>
-                        <TableCell className="text-end text-sm font-mono font-bold">
+                        <TableCell className="text-end text-sm font-mono font-display font-bold">
                           {formatSalary(b.percentile_50, b.currency)}
                         </TableCell>
                         <TableCell className="text-end text-sm font-mono">

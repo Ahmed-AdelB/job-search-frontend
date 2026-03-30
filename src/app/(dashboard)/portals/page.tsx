@@ -87,7 +87,7 @@ export default function PortalsPage() {
         transition={{ duration: 0.4 }}
       >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Portals</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Portals</h1>
           <p className="text-muted-foreground">Manage job portal integrations</p>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -115,7 +115,7 @@ export default function PortalsPage() {
     >
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Portals</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Portals</h1>
           <p className="text-muted-foreground">
             Manage job portal integrations and sync settings
           </p>
@@ -135,9 +135,9 @@ export default function PortalsPage() {
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.3 }}
           >
-            <Card>
+            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle>Register New Portal</CardTitle>
+                <CardTitle className="font-display">Register New Portal</CardTitle>
                 <CardDescription>Connect a new job board or portal</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -201,7 +201,7 @@ export default function PortalsPage() {
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.3 }}
         >
-          <Card>
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="py-12 text-center text-muted-foreground">
               <Globe className="w-12 h-12 mx-auto mb-4 opacity-50" />
               <p className="text-lg font-medium">No portals registered</p>
@@ -218,11 +218,11 @@ export default function PortalsPage() {
         >
           {portals.map((portal: Portal) => (
             <motion.div key={portal.id} variants={itemVariants}>
-              <Card className="relative overflow-hidden">
+              <Card className="bg-white/5 backdrop-blur-xl border-white/10 relative overflow-hidden">
                 <CardHeader className="pb-3">
                   <div className="flex items-start justify-between">
                     <div className="space-y-1">
-                      <CardTitle className="text-lg flex items-center gap-2">
+                      <CardTitle className="text-lg flex items-center gap-2 font-display">
                         <Globe className="w-4 h-4" />
                         {portal.name}
                       </CardTitle>
@@ -260,7 +260,7 @@ export default function PortalsPage() {
                   )}
                   {portal.jobs_count !== undefined && (
                     <p className="text-sm">
-                      <span className="font-semibold">{portal.jobs_count}</span> jobs imported
+                      <span className="font-display font-semibold">{portal.jobs_count}</span> jobs imported
                     </p>
                   )}
                   <div className="flex gap-2 pt-2">

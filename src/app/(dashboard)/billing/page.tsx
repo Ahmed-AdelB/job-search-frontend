@@ -151,16 +151,16 @@ export default function BillingPage() {
       transition={{ duration: 0.4 }}
     >
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Billing</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Billing</h1>
         <p className="text-muted-foreground">
           Manage your subscription and payments
         </p>
       </div>
 
       {/* Current Subscription */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Current Subscription</CardTitle>
+          <CardTitle className="font-display text-lg">Current Subscription</CardTitle>
           <CardDescription>Your active plan and billing details</CardDescription>
         </CardHeader>
         <CardContent>
@@ -172,23 +172,23 @@ export default function BillingPage() {
           ) : sub ? (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <Badge className={`${STATUS_COLOR[sub.status] ?? "bg-gray-500"} text-sm px-3 py-1`}>
+                <Badge className={`bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400 text-sm px-3 py-1`}>
                   {sub.status}
                 </Badge>
-                <span className="text-lg font-bold capitalize">{sub.tier} Plan</span>
+                <span className="text-lg font-display font-bold capitalize">{sub.tier} Plan</span>
               </div>
 
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                 <div className="p-4 rounded-lg border">
                   <p className="text-sm text-muted-foreground">Current Period Ends</p>
-                  <p className="font-medium">
+                  <p className="font-display font-medium">
                     {new Date(sub.current_period_end).toLocaleDateString()}
                   </p>
                 </div>
                 {sub.payment_method && (
                   <div className="p-4 rounded-lg border">
                     <p className="text-sm text-muted-foreground">Payment Method</p>
-                    <p className="font-medium flex items-center gap-2">
+                    <p className="font-display font-medium flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
                       {sub.payment_method.brand} **** {sub.payment_method.last4}
                     </p>
@@ -226,9 +226,9 @@ export default function BillingPage() {
       </Card>
 
       {/* Plans */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Available Plans</CardTitle>
+          <CardTitle className="font-display text-lg">Available Plans</CardTitle>
           <CardDescription>Choose the plan that fits your needs</CardDescription>
         </CardHeader>
         <CardContent>
@@ -267,12 +267,12 @@ export default function BillingPage() {
                   >
                     <div className="flex items-center gap-2">
                       <TierIcon className="w-5 h-5" />
-                      <h3 className="font-bold">{plan.name}</h3>
+                      <h3 className="font-display font-bold">{plan.name}</h3>
                     </div>
 
                     <div>
                       <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold">${plan.price_monthly}</span>
+                        <span className="text-3xl font-display font-bold">${plan.price_monthly}</span>
                         <span className="text-sm text-muted-foreground">/mo</span>
                       </div>
                       {plan.price_monthly > 0 && (
@@ -317,9 +317,9 @@ export default function BillingPage() {
       </Card>
 
       {/* Invoices */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Invoice History</CardTitle>
+          <CardTitle className="font-display text-lg">Invoice History</CardTitle>
           <CardDescription>Your past invoices and receipts</CardDescription>
         </CardHeader>
         <CardContent>
@@ -335,7 +335,7 @@ export default function BillingPage() {
             <div className="rounded-md border">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="table-row-hover">
                     <TableHead>Date</TableHead>
                     <TableHead>Amount</TableHead>
                     <TableHead>Status</TableHead>
@@ -346,6 +346,7 @@ export default function BillingPage() {
                   {invoicesList.map((inv, index) => (
                     <motion.tr
                       key={inv.id}
+                      className="table-row-hover"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
@@ -358,11 +359,17 @@ export default function BillingPage() {
                       <TableCell className="text-sm">
                         {new Date(inv.invoice_date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell className="font-medium">
+                      <TableCell className="font-display font-medium">
                         {(inv.amount / 100).toFixed(2)} {inv.currency.toUpperCase()}
                       </TableCell>
                       <TableCell>
-                        <Badge className={INVOICE_STATUS_COLOR[inv.status] ?? "bg-gray-500"}>
+                        <Badge className={`bg-gradient-to-r ${
+                          inv.status === "paid"
+                            ? "from-emerald-500/20 to-emerald-400/20 text-emerald-400"
+                            : inv.status === "open"
+                            ? "from-blue-500/20 to-blue-400/20 text-blue-400"
+                            : "from-slate-500/20 to-slate-400/20 text-slate-400"
+                        }`}>
                           {inv.status}
                         </Badge>
                       </TableCell>

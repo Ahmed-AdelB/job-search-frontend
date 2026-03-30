@@ -105,7 +105,7 @@ export default function DeployPage() {
   return (
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Deploy</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Deploy</h1>
         <p className="text-muted-foreground">
           Deploy and manage your job search agents
         </p>
@@ -119,7 +119,7 @@ export default function DeployPage() {
         variants={containerVariants as any}
       >
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -131,12 +131,12 @@ export default function DeployPage() {
                       variants={data.status === "running" ? pulseVariants : undefined}
                       animate={data.status === "running" ? "pulse" : undefined}
                     >
-                      <Badge className={`${statusConfig.color} mt-1`}>
+                      <Badge className={`bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400 mt-1`}>
                         {data.status}
                       </Badge>
                     </motion.div>
                   ) : (
-                    <p className="text-lg font-bold mt-1">Unknown</p>
+                    <p className="text-lg font-display font-bold mt-1">Unknown</p>
                   )}
                 </div>
                 <Activity className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -146,7 +146,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -154,7 +154,7 @@ export default function DeployPage() {
                   {isLoading ? (
                     <Skeleton className="h-8 w-24 mt-1" />
                   ) : (
-                    <p className="text-lg font-bold mt-1">{data?.version ?? "\u2014"}</p>
+                    <p className="text-lg font-display font-bold mt-1">{data?.version ?? "\u2014"}</p>
                   )}
                 </div>
                 <Server className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -164,7 +164,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -172,7 +172,7 @@ export default function DeployPage() {
                   {isLoading ? (
                     <Skeleton className="h-8 w-20 mt-1" />
                   ) : (
-                    <p className="text-lg font-bold mt-1">{data?.uptime ?? "\u2014"}</p>
+                    <p className="text-lg font-display font-bold mt-1">{data?.uptime ?? "\u2014"}</p>
                   )}
                 </div>
                 <Clock className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -182,7 +182,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -190,7 +190,7 @@ export default function DeployPage() {
                   {isLoading ? (
                     <Skeleton className="h-8 w-28 mt-1" />
                   ) : (
-                    <p className="text-sm font-medium mt-1">
+                    <p className="text-sm font-display font-medium mt-1">
                       {data?.last_deploy
                         ? new Date(data.last_deploy).toLocaleString()
                         : "\u2014"}
@@ -205,9 +205,9 @@ export default function DeployPage() {
       </motion.div>
 
       {/* Actions */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle>Deployment Actions</CardTitle>
+          <CardTitle className="font-display text-lg">Deployment Actions</CardTitle>
           <CardDescription>Manage deployment lifecycle</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -219,7 +219,7 @@ export default function DeployPage() {
             } as any}
           >
             <div>
-              <h4 className="font-medium">Rebuild & Deploy</h4>
+              <h4 className="font-display font-medium">Rebuild & Deploy</h4>
               <p className="text-sm text-muted-foreground">
                 Rebuild all services and deploy the latest version
               </p>
@@ -261,7 +261,7 @@ export default function DeployPage() {
             } as any}
           >
             <div>
-              <h4 className="font-medium">Rollback</h4>
+              <h4 className="font-display font-medium">Rollback</h4>
               <p className="text-sm text-muted-foreground">
                 Revert to the previous deployment version
               </p>

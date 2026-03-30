@@ -179,7 +179,7 @@ export default function InterviewsPage() {
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Interviews</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Interviews</h1>
           <p className="text-muted-foreground">
             Schedule and prepare for your interviews
           </p>
@@ -293,13 +293,13 @@ export default function InterviewsPage() {
         animate="visible"
       >
         <motion.div variants={cardVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Today</p>
                   <motion.p
-                    className="text-2xl font-bold"
+                    className="text-2xl font-display font-bold"
                     key={today.length}
                     initial={{ scale: 1.2, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -314,13 +314,13 @@ export default function InterviewsPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Upcoming</p>
                   <motion.p
-                    className="text-2xl font-bold"
+                    className="text-2xl font-display font-bold"
                     key={upcoming.length}
                     initial={{ scale: 1.2, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -335,13 +335,13 @@ export default function InterviewsPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total</p>
                   <motion.p
-                    className="text-2xl font-bold"
+                    className="text-2xl font-display font-bold"
                     key={total}
                     initial={{ scale: 1.2, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
@@ -363,11 +363,11 @@ export default function InterviewsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       >
-        <Card>
+        <Card className="card-glow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 font-display text-lg">
                   <Calendar className="w-5 h-5" />
                   Interview Schedule
                 </CardTitle>
@@ -403,7 +403,7 @@ export default function InterviewsPage() {
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow>
+                      <TableRow className="table-row-hover">
                         <TableHead>Type</TableHead>
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Duration</TableHead>
@@ -420,7 +420,7 @@ export default function InterviewsPage() {
                         return (
                           <motion.tr
                             key={interview.interview_id}
-                            className="border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted"
+                            className="table-row-hover border-b transition-colors data-[state=selected]:bg-muted"
                             variants={tableRowVariants}
                             initial="hidden"
                             animate="visible"
@@ -457,7 +457,15 @@ export default function InterviewsPage() {
                                   ease: "easeInOut",
                                 } : {}}
                               >
-                                <Badge className={STATUS_BADGE[interview.status] ?? "bg-gray-500"}>
+                                <Badge className={`bg-gradient-to-r ${
+                                  interview.status === "scheduled"
+                                    ? "from-blue-500/20 to-blue-400/20 text-blue-400"
+                                    : interview.status === "completed"
+                                    ? "from-emerald-500/20 to-emerald-400/20 text-emerald-400"
+                                    : interview.status === "cancelled"
+                                    ? "from-slate-500/20 to-slate-400/20 text-slate-400"
+                                    : "from-red-500/20 to-red-400/20 text-red-400"
+                                }`}>
                                   {interview.status}
                                 </Badge>
                               </motion.div>

@@ -85,7 +85,7 @@ export default function VisaPage() {
           </Link>
         </Button>
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Visa Sponsorship</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Visa Sponsorship</h1>
           <p className="text-muted-foreground">
             Visa eligibility scoring and sponsorship analysis
           </p>
@@ -100,12 +100,12 @@ export default function VisaPage() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Average Score</p>
-                  <p className="text-2xl font-bold">{avgScore}/100</p>
+                  <p className="text-2xl font-display font-bold">{avgScore}/100</p>
                 </div>
                 <Shield className="w-8 h-8 text-muted-foreground opacity-50" />
               </div>
@@ -113,12 +113,12 @@ export default function VisaPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">High Likelihood</p>
-                  <p className="text-2xl font-bold text-green-600">{highCount}</p>
+                  <p className="text-2xl font-display font-bold text-green-600">{highCount}</p>
                 </div>
                 <TrendingUp className="w-8 h-8 text-green-600 opacity-50" />
               </div>
@@ -126,12 +126,12 @@ export default function VisaPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card>
+          <Card className="card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Medium Likelihood</p>
-                  <p className="text-2xl font-bold text-amber-500">{mediumCount}</p>
+                  <p className="text-2xl font-display font-bold text-amber-500">{mediumCount}</p>
                 </div>
                 <Minus className="w-8 h-8 text-amber-500 opacity-50" />
               </div>
@@ -141,9 +141,9 @@ export default function VisaPage() {
       </motion.div>
 
       {/* Visa Scores Table */}
-      <Card>
+      <Card className="card-glow">
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
+          <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Globe className="w-5 h-5" />
             Visa Eligibility by Occupation
           </CardTitle>
@@ -165,7 +165,7 @@ export default function VisaPage() {
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="table-row-hover">
                     <TableHead>Occupation</TableHead>
                     <TableHead>Eligibility Score</TableHead>
                     <TableHead>Sponsorship Likelihood</TableHead>
@@ -180,15 +180,15 @@ export default function VisaPage() {
                     return (
                       <motion.tr
                         key={idx}
+                        className="table-row-hover"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: idx * 0.05 }}
-                        whileHover={{ backgroundColor: "var(--muted)" }}
                       >
                         <TableCell>
                           <div className="flex items-center gap-2">
                             <Briefcase className="w-4 h-4 text-muted-foreground shrink-0" />
-                            <span className="font-medium">{score.occupation}</span>
+                            <span className="font-display font-medium">{score.occupation}</span>
                           </div>
                         </TableCell>
                         <TableCell>
@@ -202,11 +202,17 @@ export default function VisaPage() {
                                 style={{ width: `${score.eligibility_score}%` }}
                               />
                             </div>
-                            <span className="text-sm font-medium">{score.eligibility_score}</span>
+                            <span className="text-sm font-display font-medium">{score.eligibility_score}</span>
                           </div>
                         </TableCell>
                         <TableCell>
-                          <Badge className={config.badge}>
+                          <Badge className={`bg-gradient-to-r ${
+                            score.sponsorship_likelihood === "high"
+                              ? "from-emerald-500/20 to-emerald-400/20 text-emerald-400"
+                              : score.sponsorship_likelihood === "medium"
+                              ? "from-amber-500/20 to-amber-400/20 text-amber-400"
+                              : "from-red-500/20 to-red-400/20 text-red-400"
+                          }`}>
                             <LikelihoodIcon className="w-3 h-3 me-1" />
                             {score.sponsorship_likelihood}
                           </Badge>
@@ -214,7 +220,7 @@ export default function VisaPage() {
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
                             {score.eligible_countries.slice(0, 3).map((country) => (
-                              <Badge key={country} variant="outline" className="text-xs">
+                              <Badge key={country} variant="outline" className="text-xs bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400">
                                 <MapPin className="w-3 h-3 me-1" />
                                 {country}
                               </Badge>

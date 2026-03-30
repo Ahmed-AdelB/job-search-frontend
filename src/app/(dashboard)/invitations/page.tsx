@@ -80,7 +80,7 @@ export default function InvitationsPage() {
   return (
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Invitations</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Invitations</h1>
         <p className="text-muted-foreground">
           Manage job referrals and network invitations
         </p>
@@ -169,7 +169,7 @@ function StatsCard({
   loading: boolean;
 }) {
   return (
-    <Card>
+    <Card className="card-glow">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -177,7 +177,7 @@ function StatsCard({
             {loading ? (
               <Skeleton className="h-8 w-12 mt-1" />
             ) : (
-              <p className="text-2xl font-bold">{value}</p>
+              <p className="text-2xl font-display font-bold">{value}</p>
             )}
           </div>
           <Icon className="w-8 h-8 text-muted-foreground opacity-50" />
@@ -230,7 +230,7 @@ function InvitationTable({
   }
 
   return (
-    <Card>
+    <Card className="card-glow">
       <CardContent className="p-0">
         <div className="rounded-md border-0">
           <Table>
