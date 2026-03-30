@@ -42,11 +42,12 @@ import {
   ArrowUpDown,
   Filter,
   MapPin,
+  Zap,
   Building2,
   Clock,
 } from "lucide-react";
 import { apiGet, apiPost, apiDelete } from "@/lib/api-client";
-import { useApplyToJob, useAutoApply, useDryRunApply } from "@/hooks/use-apply";
+import { useApplyToJob, useAutoApply, useDryRunApply, useLinkedInEasyApply, useBatchLinkedInEasyApply } from "@/hooks/use-apply";
 import type { JobsResponse, Job } from "@/types/api";
 
 const STATUS_COLOR: Record<string, string> = {
@@ -185,6 +186,8 @@ export default function JobsPage() {
 
   const applyMutation = useApplyToJob();
   const autoApplyMutation = useAutoApply();
+  const linkedInEasyApplyMutation = useLinkedInEasyApply();
+  const batchLinkedInMutation = useBatchLinkedInEasyApply();
 
   const jobs = data?.jobs ?? [];
   const total = data?.total ?? 0;
@@ -315,6 +318,25 @@ export default function JobsPage() {
             </motion.div>
           )
         ))}
+      </motion.div>
+
+      {/* LinkedIn Easy Apply Batch Action */}
+      <motion.div
+        className="flex gap-2"
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2, duration: 0.3 }}
+      >
+        <Button
+          variant="default"
+          size="sm"
+          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+          onClick={() => batchLinkedInMutation.mutate()}
+          disabled={batchLinkedInMutation.isPending}
+        >
+          <Zap className="w-4 h-4" />
+          {batchLinkedInMutation.isPending ? "Applying..." : "Batch LinkedIn Easy Apply"}
+        </Button>
       </motion.div>
 
       {/* Filters with slide-in animation */}
@@ -502,11 +524,13 @@ export default function JobsPage() {
                               {job.status}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-sm">
+                          <TableCell className="text-sm whitespace-nowrap">
                             {job.salary_min && job.salary_max
                               ? `${(job.salary_min / 1000).toFixed(0)}k\u2013${(job.salary_max / 1000).toFixed(0)}k ${job.currency ?? ""}`
                               : job.salary_min
                               ? `${(job.salary_min / 1000).toFixed(0)}k+ ${job.currency ?? ""}`
+                              : job.salary_range
+                              ? job.salary_range
                               : "\u2014"}
                           </TableCell>
                           <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
@@ -534,6 +558,12 @@ export default function JobsPage() {
                                 >
                                   <Briefcase className="w-4 h-4 me-2" />
                                   Auto-Apply (ATS)
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => linkedInEasyApplyMutation.mutate({ jobId: job.job_id })}
+                                >
+                                  <Zap className="w-4 h-4 me-2" />
+                                  LinkedIn Easy Apply
                                 </DropdownMenuItem>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem asChild>

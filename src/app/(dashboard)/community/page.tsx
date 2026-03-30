@@ -122,7 +122,7 @@ function TrackedTab() {
 
   const { data, isLoading } = useQuery({
     queryKey: ["communities"],
-    queryFn: () => apiGet<CommunitiesResponse>("/api/community"),
+    queryFn: () => apiGet<CommunitiesResponse>("/api/community/communities"),
   });
 
   const untrackMutation = useMutation({
@@ -264,7 +264,7 @@ function DiscoverTab() {
 
   const trackMutation = useMutation({
     mutationFn: (rec: CommunityRecommendation) =>
-      apiPost<{ status: string }>("/api/community", {
+      apiPost<{ status: string }>("/api/community/communities", {
         name: rec.name,
         platform: rec.platform,
         url: rec.url,

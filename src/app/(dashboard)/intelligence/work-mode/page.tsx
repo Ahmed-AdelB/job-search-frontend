@@ -74,7 +74,7 @@ export default function WorkModePage() {
       transition={{ duration: 0.4 }}
     >
       <div className="flex items-center gap-4">
-        <Link href="/dashboard/intelligence">
+        <Link href="/intelligence">
           <Button variant="ghost" size="icon" aria-label="Go back to intelligence hub">
             <ArrowLeft className="w-4 h-4" />
           </Button>

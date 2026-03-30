@@ -43,7 +43,7 @@ export default function NotFound() {
                 Back to Home
               </Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/jobs">
               <Button variant="outline" className="w-full">
                 <MessageSquare className="w-4 h-4 mr-2" />
                 Go to Dashboard

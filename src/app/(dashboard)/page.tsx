@@ -52,13 +52,13 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, ease: "easeOut", delay: 0.1 }}
         >
-          <Link href="/dashboard/agents">
+          <Link href="/agents">
             <Button variant="outline" className="gap-2">
               <Bot className="w-4 h-4" />
               Agents
             </Button>
           </Link>
-          <Link href="/dashboard/jobs">
+          <Link href="/jobs">
             <Button className="gap-2 gradient-brand border-0 text-white shadow-lg shadow-indigo-500/25 hover:shadow-indigo-500/40 transition-shadow">
               <Zap className="w-4 h-4" />
               Launch Pipeline
@@ -417,8 +417,8 @@ const aiSuggestions = [
 ];
 
 const quickActions = [
-  { href: "/dashboard/jobs", icon: Briefcase, label: "Browse Jobs" },
-  { href: "/dashboard/applications", icon: FileText, label: "Applications" },
-  { href: "/dashboard/outreach", icon: Mail, label: "Send Outreach" },
-  { href: "/dashboard/agents", icon: Bot, label: "Manage Agents" },
+  { href: "/jobs", icon: Briefcase, label: "Browse Jobs" },
+  { href: "/applications", icon: FileText, label: "Applications" },
+  { href: "/outreach", icon: Mail, label: "Send Outreach" },
+  { href: "/agents", icon: Bot, label: "Manage Agents" },
 ];

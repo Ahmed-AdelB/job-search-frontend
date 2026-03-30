@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * Agents Page - AI agent control panel
+ * Agents Page - AI agent control panel with pipeline activity evidence
  * Author: Ahmed Adel Bakr Alderai
  */
 
@@ -37,6 +37,15 @@ import {
   XCircle,
   AlertTriangle,
   Zap,
+  Search,
+  Star,
+  Send,
+  Users,
+  FileText,
+  Globe,
+  Mail,
+  Phone,
+  Linkedin,
 } from "lucide-react";
 import { apiGet, apiPost } from "@/lib/api-client";
 import type { AgentAction } from "@/types/api";
@@ -47,8 +56,49 @@ interface AgentApiItem {
   poll_interval?: number;
   batch_size?: number;
   enabled?: boolean;
+  is_running?: boolean;
   status: string;
   [key: string]: unknown;
+}
+
+/** Pipeline activity response from /api/pipeline/activity */
+interface PipelineActivity {
+  discovery: {
+    total: number;
+    recent: Array<{ url: string; source: string; created_at: string }>;
+    sources: Record<string, number>;
+  };
+  scoring: {
+    total: number;
+    scored: number;
+    avg_score: number;
+  };
+  applications: {
+    total: number;
+    recent: Array<{ id: number; job_id: number; status: string; created_at: string }>;
+    statuses: Record<string, number>;
+  };
+  outreach: {
+    total: number;
+    recent: Array<Record<string, unknown>>;
+    statuses: Record<string, number>;
+  };
+  contacts: {
+    total: number;
+    recruiters: number;
+    with_email: number;
+  };
+}
+
+/** Pipeline run from /api/pipeline/runs */
+interface PipelineRun {
+  run_id: string;
+  stage: string;
+  status: string;
+  started_at: number;
+  duration_seconds: number;
+  result: boolean;
+  error?: string;
 }
 
 /** Friendly display names for agent names */
@@ -87,41 +137,18 @@ const STATUS_CONFIG: Record<string, { color: string; badge: string; icon: React.
   stopped: { color: "text-gray-500", badge: "bg-gray-500", icon: Square },
 };
 
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.1,
-    },
-  },
-};
-
-const cardVariants = {
-  hidden: { opacity: 0, y: 30, scale: 0.95 },
-  visible: { 
-    opacity: 1, 
-    y: 0, 
-    scale: 1,
-    transition: {
-      type: "spring",
-      stiffness: 100,
-      damping: 15,
-    },
-  },
-};
-
-const pulseVariants = {
-  pulse: {
-    scale: [1, 1.2, 1],
-    opacity: [1, 0.7, 1],
-    transition: {
-      duration: 2,
-      repeat: Infinity,
-      ease: "easeInOut",
-    },
-  },
+/** Source display names for the discovery evidence section */
+const SOURCE_LABELS: Record<string, { label: string; icon: React.ElementType }> = {
+  linkedin_jobs: { label: "LinkedIn Jobs", icon: Linkedin },
+  linkedin_posts: { label: "LinkedIn Posts", icon: FileText },
+  linkedin_groups: { label: "LinkedIn Groups", icon: Users },
+  indeed: { label: "Indeed", icon: Globe },
+  glassdoor: { label: "Glassdoor", icon: Globe },
+  company_careers: { label: "Company Careers", icon: Globe },
+  irishjobs: { label: "IrishJobs.ie", icon: Globe },
+  indeed_ie: { label: "Indeed IE", icon: Globe },
+  indeed_uk: { label: "Indeed UK", icon: Globe },
+  reed: { label: "Reed", icon: Globe },
 };
 
 export default function AgentsPage() {
@@ -129,14 +156,47 @@ export default function AgentsPage() {
   const [configAgent, setConfigAgent] = useState<NormalizedAgent | null>(null);
   const [configValues, setConfigValues] = useState<Record<string, string>>({});
 
+  // Fetch agents
   const { data, isLoading } = useQuery({
     queryKey: ["agents"],
     queryFn: async () => {
-      const result = await apiGet<AgentApiItem[] | { agents: AgentApiItem[] }>("/api/agents");
-      const raw = Array.isArray(result) ? result : result.agents ?? [];
+      const result = await apiGet<
+        | AgentApiItem[]
+        | { agents: AgentApiItem[] | Record<string, AgentApiItem> }
+      >("/api/agents/status");
+      let raw: AgentApiItem[];
+      if (Array.isArray(result)) {
+        raw = result;
+      } else if (result.agents) {
+        if (Array.isArray(result.agents)) {
+          raw = result.agents;
+        } else {
+          raw = Object.entries(result.agents).map(([key, val]) => ({
+            ...val,
+            name: val.name ?? key,
+            status: val.is_running ? "running" : val.status ?? "stopped",
+          }));
+        }
+      } else {
+        raw = [];
+      }
       return raw.map(normalizeAgent);
     },
     refetchInterval: 5000,
+  });
+
+  // Fetch pipeline activity for evidence
+  const { data: activity } = useQuery({
+    queryKey: ["pipeline-activity"],
+    queryFn: () => apiGet<PipelineActivity>("/api/pipeline/activity"),
+    refetchInterval: 10000,
+  });
+
+  // Fetch recent pipeline runs
+  const { data: runs } = useQuery({
+    queryKey: ["pipeline-runs"],
+    queryFn: () => apiGet<PipelineRun[]>("/api/pipeline/runs"),
+    refetchInterval: 10000,
   });
 
   const actionMutation = useMutation({
@@ -171,6 +231,7 @@ export default function AgentsPage() {
 
     eventSource.onmessage = () => {
       queryClient.invalidateQueries({ queryKey: ["agents"] });
+      queryClient.invalidateQueries({ queryKey: ["pipeline-activity"] });
     };
 
     eventSource.onerror = () => {
@@ -196,7 +257,7 @@ export default function AgentsPage() {
   const errorCount = agents.filter((a) => a.status === "error").length;
 
   return (
-    <motion.div 
+    <motion.div
       className="space-y-6"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -237,7 +298,7 @@ export default function AgentsPage() {
       </div>
 
       {/* Summary Cards */}
-      <motion.div 
+      <motion.div
         className="grid gap-4 sm:grid-cols-3"
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
@@ -306,13 +367,13 @@ export default function AgentsPage() {
                 key={agent.agent_id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ 
-                  duration: 0.4, 
+                transition={{
+                  duration: 0.4,
                   delay: index * 0.08,
                   ease: "easeOut"
                 }}
-                whileHover={{ 
-                  scale: 1.02, 
+                whileHover={{
+                  scale: 1.02,
                   y: -2,
                   transition: { type: "spring", stiffness: 400, damping: 17 }
                 }}
@@ -333,12 +394,12 @@ export default function AgentsPage() {
                         {isRunning && (
                           <motion.span
                             className="inline-block w-1.5 h-1.5 rounded-full bg-white me-1"
-                            animate={{ 
+                            animate={{
                               scale: [1, 1.2, 1],
                               opacity: [1, 0.7, 1]
                             }}
-                            transition={{ 
-                              duration: 1.5, 
+                            transition={{
+                              duration: 1.5,
                               repeat: Infinity,
                               ease: "easeInOut"
                             }}
@@ -451,6 +512,230 @@ export default function AgentsPage() {
             );
           })}
         </div>
+      )}
+
+      {/* Pipeline Activity Evidence */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.3, duration: 0.4 }}
+      >
+        <h2 className="text-lg font-semibold mb-4">Pipeline Activity</h2>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          {/* Discovery Evidence */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Search className="w-4 h-4 text-blue-500" />
+                <CardTitle className="text-sm">Discovery</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{activity?.discovery?.total ?? 0}</p>
+              <p className="text-xs text-muted-foreground mb-3">pages scraped</p>
+              {activity?.discovery?.sources && Object.keys(activity.discovery.sources).length > 0 && (
+                <div className="space-y-1.5">
+                  {Object.entries(activity.discovery.sources).map(([source, count]) => {
+                    const info = SOURCE_LABELS[source] ?? { label: source, icon: Globe };
+                    const SourceIcon = info.icon;
+                    return (
+                      <div key={source} className="flex items-center justify-between text-xs">
+                        <span className="flex items-center gap-1.5 text-muted-foreground">
+                          <SourceIcon className="w-3 h-3" />
+                          {info.label}
+                        </span>
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                          {count as number}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Scoring Evidence */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Star className="w-4 h-4 text-yellow-500" />
+                <CardTitle className="text-sm">Scoring</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{activity?.scoring?.total ?? 0}</p>
+              <p className="text-xs text-muted-foreground mb-3">total jobs</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Scored</span>
+                  <span className="font-medium">{activity?.scoring?.scored ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">Avg Score</span>
+                  <span className="font-medium">{activity?.scoring?.avg_score ?? 0}</span>
+                </div>
+                {(activity?.scoring?.total ?? 0) > 0 && (
+                  <Progress
+                    value={((activity?.scoring?.scored ?? 0) / (activity?.scoring?.total ?? 1)) * 100}
+                    className="h-1.5 mt-2"
+                  />
+                )}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Applications Evidence */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Send className="w-4 h-4 text-green-500" />
+                <CardTitle className="text-sm">Applications</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{activity?.applications?.total ?? 0}</p>
+              <p className="text-xs text-muted-foreground mb-3">submitted</p>
+              {activity?.applications?.statuses && Object.keys(activity.applications.statuses).length > 0 && (
+                <div className="space-y-1.5">
+                  {Object.entries(activity.applications.statuses).map(([status, count]) => (
+                    <div key={status} className="flex items-center justify-between text-xs">
+                      <span className="text-muted-foreground capitalize">{status}</span>
+                      <Badge variant="secondary" className="text-xs px-1.5 py-0">
+                        {count as number}
+                      </Badge>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Outreach & Contacts Evidence */}
+          <Card>
+            <CardHeader className="pb-2">
+              <div className="flex items-center gap-2">
+                <Users className="w-4 h-4 text-purple-500" />
+                <CardTitle className="text-sm">Contacts & Outreach</CardTitle>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <p className="text-2xl font-bold">{activity?.contacts?.total ?? 0}</p>
+              <p className="text-xs text-muted-foreground mb-3">contacts</p>
+              <div className="space-y-1.5">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Users className="w-3 h-3" />
+                    Recruiters
+                  </span>
+                  <span className="font-medium">{activity?.contacts?.recruiters ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Mail className="w-3 h-3" />
+                    With Email
+                  </span>
+                  <span className="font-medium">{activity?.contacts?.with_email ?? 0}</span>
+                </div>
+                <div className="flex items-center justify-between text-xs">
+                  <span className="flex items-center gap-1.5 text-muted-foreground">
+                    <Send className="w-3 h-3" />
+                    Messages Sent
+                  </span>
+                  <span className="font-medium">{activity?.outreach?.total ?? 0}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </motion.div>
+
+      {/* Recent Pipeline Runs */}
+      {runs && runs.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4, duration: 0.4 }}
+        >
+          <h2 className="text-lg font-semibold mb-4">Recent Runs</h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {runs.slice(0, 10).map((run) => (
+                  <div key={run.run_id} className="flex items-center justify-between p-3 text-sm">
+                    <div className="flex items-center gap-3">
+                      <Badge
+                        className={
+                          run.status === "completed"
+                            ? "bg-green-600"
+                            : run.status === "running"
+                            ? "bg-blue-600"
+                            : run.status === "error"
+                            ? "bg-red-600"
+                            : "bg-gray-500"
+                        }
+                      >
+                        {run.status === "running" && (
+                          <Loader2 className="w-3 h-3 me-1 animate-spin" />
+                        )}
+                        {run.status}
+                      </Badge>
+                      <span className="font-mono text-xs text-muted-foreground">{run.run_id}</span>
+                      <span className="text-muted-foreground capitalize">{run.stage}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                      {run.duration_seconds > 0 && (
+                        <span>{Math.round(run.duration_seconds)}s</span>
+                      )}
+                      {run.started_at && (
+                        <span>{new Date(run.started_at * 1000).toLocaleTimeString()}</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Recent Discovery Activity */}
+      {activity?.discovery?.recent && activity.discovery.recent.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5, duration: 0.4 }}
+        >
+          <h2 className="text-lg font-semibold mb-4">Recent Discoveries</h2>
+          <Card>
+            <CardContent className="p-0">
+              <div className="divide-y">
+                {activity.discovery.recent.map((item, idx) => {
+                  const info = SOURCE_LABELS[item.source] ?? { label: item.source, icon: Globe };
+                  const SourceIcon = info.icon;
+                  return (
+                    <div key={idx} className="flex items-center justify-between p-3 text-sm">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <SourceIcon className="w-4 h-4 text-muted-foreground shrink-0" />
+                        <span className="truncate text-muted-foreground" title={item.url}>
+                          {item.url.replace(/^https?:\/\//, "").substring(0, 60)}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <Badge variant="outline" className="text-xs">{info.label}</Badge>
+                        {item.created_at && (
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(item.created_at).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
       )}
 
       {/* Config Dialog */}

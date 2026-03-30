@@ -168,7 +168,7 @@ export default function IntelligencePage() {
                   Compare your skills against market requirements
                 </CardDescription>
               </div>
-              <Link href="/dashboard/intelligence/skills">
+              <Link href="/intelligence/skills">
                 <Button variant="outline" size="sm">
                   Details <ArrowRight className="w-4 h-4 ms-1" />
                 </Button>
@@ -263,7 +263,7 @@ export default function IntelligencePage() {
                   </CardTitle>
                   <CardDescription>Market salary ranges for your role</CardDescription>
                 </div>
-                <Link href="/dashboard/intelligence/salary">
+                <Link href="/intelligence/salary">
                   <Button variant="outline" size="sm">
                     Details <ArrowRight className="w-4 h-4 ms-1" />
                   </Button>
@@ -318,7 +318,7 @@ export default function IntelligencePage() {
                   </CardTitle>
                   <CardDescription>Sponsorship likelihood by country</CardDescription>
                 </div>
-                <Link href="/dashboard/intelligence/visa">
+                <Link href="/intelligence/visa">
                   <Button variant="outline" size="sm">
                     Details <ArrowRight className="w-4 h-4 ms-1" />
                   </Button>
@@ -455,7 +455,7 @@ export default function IntelligencePage() {
                     Detect remote, hybrid, and on-site patterns across jobs
                   </CardDescription>
                 </div>
-                <Link href="/dashboard/intelligence/work-mode">
+                <Link href="/intelligence/work-mode">
                   <Button variant="outline" size="sm">
                     Analyze <ArrowRight className="w-4 h-4 ms-1" />
                   </Button>
@@ -477,7 +477,7 @@ export default function IntelligencePage() {
                     Detect full-time, part-time, contract, and freelance patterns
                   </CardDescription>
                 </div>
-                <Link href="/dashboard/intelligence/employment-type">
+                <Link href="/intelligence/employment-type">
                   <Button variant="outline" size="sm">
                     Analyze <ArrowRight className="w-4 h-4 ms-1" />
                   </Button>

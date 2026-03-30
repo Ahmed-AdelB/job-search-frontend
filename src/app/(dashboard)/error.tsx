@@ -57,7 +57,7 @@ export default function DashboardError({ error, reset }: DashboardErrorProps) {
               <RotateCcw className="w-4 h-4 mr-2" />
               Try Again
             </Button>
-            <Link href="/dashboard" className="flex-1">
+            <Link href="/jobs" className="flex-1">
               <Button
                 variant="outline"
                 className="w-full"
