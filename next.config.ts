@@ -16,6 +16,20 @@ const nextConfig: NextConfig = {
   /* Redirect trailing slashes */
   trailingSlash: false,
 
+  /* Rewrite /dashboard/* to /* since (dashboard) route group doesn't create URL segments */
+  async rewrites() {
+    return [
+      {
+        source: "/dashboard",
+        destination: "/jobs",
+      },
+      {
+        source: "/dashboard/:path*",
+        destination: "/:path*",
+      },
+    ]
+  },
+
   /* Configure headers for security */
   async headers() {
     return [
