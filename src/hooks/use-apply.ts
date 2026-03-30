@@ -73,6 +73,69 @@ export function useAutoApply() {
 }
 
 /**
+ * Apply to a job via LinkedIn Easy Apply with CV optimization
+ */
+export function useLinkedInEasyApply() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ jobId, dryRun }: { jobId: string; dryRun?: boolean }) =>
+      apiPost<{
+        success: boolean
+        job_id: number
+        company: string
+        title: string
+        channel: string
+        cv_tailored: boolean
+        dry_run: boolean
+        error?: string
+      }>(`/api/apply/linkedin-easy-apply/${jobId}`, { dry_run: dryRun ?? false }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] })
+      queryClient.invalidateQueries({ queryKey: ["jobs"] })
+      queryClient.invalidateQueries({ queryKey: ["apply", "status"] })
+      if (result.dry_run) {
+        toast.info(`Dry run complete for ${result.title} at ${result.company}`)
+      } else if (result.success) {
+        toast.success(`LinkedIn Easy Apply sent: ${result.title} at ${result.company}${result.cv_tailored ? " (CV optimized)" : ""}`)
+      } else {
+        toast.error(`Application failed: ${result.error || "Unknown error"}`)
+      }
+    },
+    onError: (error: Error) => {
+      toast.error("LinkedIn Easy Apply failed", { description: error.message })
+    },
+  })
+}
+
+/**
+ * Batch apply to top-scored LinkedIn jobs
+ */
+export function useBatchLinkedInEasyApply() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: () =>
+      apiPost<{
+        success: boolean
+        total: number
+        applied: number
+        failed: number
+        skipped: number
+        results: Array<{ job_id: number; title: string; company: string; success: boolean; error?: string }>
+      }>("/api/apply/linkedin-easy-apply/batch", {}),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["applications"] })
+      queryClient.invalidateQueries({ queryKey: ["jobs"] })
+      toast.success(`Batch apply: ${result.applied} succeeded, ${result.failed} failed out of ${result.total}`)
+    },
+    onError: (error: Error) => {
+      toast.error("Batch LinkedIn Easy Apply failed", { description: error.message })
+    },
+  })
+}
+
+/**
  * Retry a failed application
  */
 export function useRetryApplication() {

@@ -191,12 +191,25 @@ export function useUpdateInterview() {
       data: Partial<Interview>
     }) =>
       apiPatch<Interview>(`/api/interviews/${interviewId}`, data),
+    onMutate: async ({ interviewId, data }) => {
+      await queryClient.cancelQueries({ queryKey: ["interviews"] })
+      const previousInterview = queryClient.getQueryData<Interview>(["interviews", interviewId])
+      if (previousInterview) {
+        queryClient.setQueryData(["interviews", interviewId], { ...previousInterview, ...data })
+      }
+      return { previousInterview }
+    },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["interviews"] })
       toast.success("Interview updated")
     },
-    onError: () => {
+    onError: (_err, { interviewId }, context) => {
+      if (context?.previousInterview) {
+        queryClient.setQueryData(["interviews", interviewId], context.previousInterview)
+      }
       toast.error("Failed to update interview")
+    },
+    onSettled: () => {
+      queryClient.invalidateQueries({ queryKey: ["interviews"] })
     },
   })
 }
