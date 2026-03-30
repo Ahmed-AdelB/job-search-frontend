@@ -28,12 +28,12 @@ export function Breadcrumbs() {
     const breadcrumbs: Breadcrumb[] = [
       {
         label: t("nav.dashboard"),
-        href: "/dashboard",
+        href: "/jobs",
       },
     ];
 
-    let currentPath = "/dashboard";
-    segments.forEach((segment, index) => {
+    let currentPath = "";
+    segments.forEach((segment) => {
       currentPath += `/${segment}`;
       const label = t(`nav.${segment}`) || segment.replace(/-/g, " ");
       breadcrumbs.push({

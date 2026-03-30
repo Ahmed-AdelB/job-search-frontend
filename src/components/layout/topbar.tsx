@@ -87,7 +87,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
-      router.push(`/dashboard/search?q=${encodeURIComponent(searchQuery)}`);
+      router.push(`/search?q=${encodeURIComponent(searchQuery)}`);
     }
   };
 
@@ -109,11 +109,11 @@ export function Topbar({ onMenuClick }: TopbarProps) {
     const breadcrumbs = [
       {
         label: "Dashboard",
-        href: "/dashboard",
+        href: "/jobs",
       },
     ];
 
-    let currentPath = "/dashboard";
+    let currentPath = "";
     segments.forEach((segment) => {
       currentPath += `/${segment}`;
       const label = segment.replace(/-/g, " ");
@@ -151,7 +151,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
           className="flex items-center gap-3 shrink-0"
         >
           <Link
-            href="/dashboard"
+            href="/jobs"
             className="flex items-center gap-2.5 group"
           >
             {/* Mission Control Indicator */}
@@ -521,7 +521,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               {/* Menu Items */}
               <DropdownMenuItem asChild>
                 <Link
-                  href="/dashboard/profile"
+                  href="/profile"
                   className="cursor-pointer flex items-center gap-2 text-sm focus:bg-white/50 dark:focus:bg-neutral-800/50"
                 >
                   <User className="w-4 h-4 text-muted-foreground" />
@@ -530,7 +530,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/dashboard/settings"
+                  href="/settings"
                   className="cursor-pointer flex items-center gap-2 text-sm focus:bg-white/50 dark:focus:bg-neutral-800/50"
                 >
                   <Settings className="w-4 h-4 text-muted-foreground" />
@@ -539,7 +539,7 @@ export function Topbar({ onMenuClick }: TopbarProps) {
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
                 <Link
-                  href="/dashboard/billing"
+                  href="/billing"
                   className="cursor-pointer flex items-center gap-2 text-sm focus:bg-white/50 dark:focus:bg-neutral-800/50"
                 >
                   <CreditCard className="w-4 h-4 text-muted-foreground" />

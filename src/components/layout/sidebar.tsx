@@ -28,6 +28,7 @@ import {
   CreditCard,
   User,
   Rocket,
+  Globe,
   FileClock,
   Shield,
   UsersRound,
@@ -48,46 +49,47 @@ const navSections = [
   {
     label: "Overview",
     items: [
-      { href: "/dashboard", icon: LayoutDashboard, label: "Dashboard" },
-      { href: "/dashboard/analytics", icon: BarChart3, label: "Analytics" },
-      { href: "/dashboard/notifications", icon: Bell, label: "Alerts", count: 3 },
+      { href: "/jobs", icon: LayoutDashboard, label: "Dashboard" },
+      { href: "/analytics", icon: BarChart3, label: "Analytics" },
+      { href: "/notifications", icon: Bell, label: "Alerts", count: 3 },
     ],
   },
   {
     label: "Pipeline",
     items: [
-      { href: "/dashboard/jobs", icon: Briefcase, label: "Jobs" },
-      { href: "/dashboard/applications", icon: FileText, label: "Applications" },
-      { href: "/dashboard/triage", icon: ListFilter, label: "Triage" },
-      { href: "/dashboard/targets", icon: Target, label: "Targets" },
+      { href: "/jobs", icon: Briefcase, label: "Jobs" },
+      { href: "/applications", icon: FileText, label: "Applications" },
+      { href: "/triage", icon: ListFilter, label: "Triage" },
+      { href: "/target-list", icon: Target, label: "Targets" },
+      { href: "/portals", icon: Globe, label: "Portals" },
     ],
   },
   {
     label: "Network",
     items: [
-      { href: "/dashboard/contacts", icon: Users, label: "Contacts" },
-      { href: "/dashboard/recruiters", icon: User, label: "Recruiters" },
-      { href: "/dashboard/outreach", icon: Mail, label: "Outreach" },
-      { href: "/dashboard/invitations", icon: MailOpen, label: "Invitations" },
-      { href: "/dashboard/interviews", icon: Calendar, label: "Interviews" },
+      { href: "/contacts", icon: Users, label: "Contacts" },
+      { href: "/recruiters", icon: User, label: "Recruiters" },
+      { href: "/outreach", icon: Mail, label: "Outreach" },
+      { href: "/invitations", icon: MailOpen, label: "Invitations" },
+      { href: "/interviews", icon: Calendar, label: "Interviews" },
     ],
   },
   {
     label: "Intelligence",
     items: [
-      { href: "/dashboard/agents", icon: Bot, label: "Agents" },
-      { href: "/dashboard/intelligence", icon: Brain, label: "Intel Hub" },
-      { href: "/dashboard/community", icon: UsersRound, label: "Community" },
+      { href: "/agents", icon: Bot, label: "Agents" },
+      { href: "/intelligence", icon: Brain, label: "Intel Hub" },
+      { href: "/community", icon: UsersRound, label: "Community" },
     ],
   },
   {
     label: "System",
     items: [
-      { href: "/dashboard/deploy", icon: Rocket, label: "Deploy" },
-      { href: "/dashboard/logs", icon: FileClock, label: "Logs" },
-      { href: "/dashboard/admin", icon: Shield, label: "Admin" },
-      { href: "/dashboard/settings", icon: Settings, label: "Settings" },
-      { href: "/dashboard/billing", icon: CreditCard, label: "Billing" },
+      { href: "/deploy", icon: Rocket, label: "Deploy" },
+      { href: "/logs", icon: FileClock, label: "Logs" },
+      { href: "/admin", icon: Shield, label: "Admin" },
+      { href: "/settings", icon: Settings, label: "Settings" },
+      { href: "/billing", icon: CreditCard, label: "Billing" },
     ],
   },
 ];
@@ -156,10 +158,10 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
   const isActuallyExpanded = !isCollapsed || isHovered;
 
   const isActive = (path: string) => {
-    if (path === "/dashboard") {
-      return pathname === "/dashboard" || pathname === "/dashboard/";
+    if (path === "/jobs" && pathname === "/") {
+      return true;
     }
-    return pathname.startsWith(path);
+    return pathname === path || pathname.startsWith(path + "/");
   };
 
   return (
@@ -180,7 +182,7 @@ export function Sidebar({ isCollapsed = false, onToggle }: SidebarProps) {
     >
       {/* Logo */}
       <div className="flex h-14 items-center justify-between px-3 border-b border-border/30 shrink-0">
-        <Link href="/dashboard" className="flex items-center gap-2.5 overflow-hidden">
+        <Link href="/jobs" className="flex items-center gap-2.5 overflow-hidden">
           <motion.div
             whileHover={{ scale: 1.05 }}
             className="w-8 h-8 rounded-xl gradient-brand flex items-center justify-center shrink-0 shadow-lg shadow-brand-500/20"
