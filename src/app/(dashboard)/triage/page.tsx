@@ -93,7 +93,7 @@ export default function TriagePage() {
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Triage</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Triage</h1>
           <p className="text-muted-foreground">
             Daily digest, job recommendations, and actionable alerts
           </p>
@@ -155,7 +155,7 @@ function DigestTab() {
           ))}
         </div>
       ) : !preview ? (
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardContent className="py-12">
             <div className="text-center text-muted-foreground">
               <ListFilter className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -171,9 +171,9 @@ function DigestTab() {
           variants={containerVariants as any}
         >
           <motion.div variants={itemVariants}>
-            <Card>
+            <Card className="bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
-                <CardTitle className="flex items-center gap-2">
+                <CardTitle className="flex items-center gap-2 font-display">
                   <Sparkles className="w-5 h-5 text-primary" />
                   Digest for {new Date(preview.date).toLocaleDateString()}
                 </CardTitle>
@@ -184,15 +184,15 @@ function DigestTab() {
               <CardContent>
                 <div className="grid gap-4 sm:grid-cols-3">
                   <div className="p-4 rounded-lg border text-center">
-                    <div className="text-3xl font-bold">{preview.jobs_discovered ?? 0}</div>
+                    <div className="text-3xl font-display font-bold">{preview.jobs_discovered ?? 0}</div>
                     <div className="text-sm text-muted-foreground">Jobs Discovered</div>
                   </div>
                   <div className="p-4 rounded-lg border text-center">
-                    <div className="text-3xl font-bold">{preview.recommended_actions.length}</div>
+                    <div className="text-3xl font-display font-bold">{preview.recommended_actions.length}</div>
                     <div className="text-sm text-muted-foreground">Recommended Actions</div>
                   </div>
                   <div className="p-4 rounded-lg border text-center">
-                    <div className="text-3xl font-bold">{preview.alerts.length}</div>
+                    <div className="text-3xl font-display font-bold">{preview.alerts.length}</div>
                     <div className="text-sm text-muted-foreground">Alerts</div>
                   </div>
                 </div>
@@ -202,9 +202,9 @@ function DigestTab() {
 
           {preview.recommended_actions.length > 0 && (
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="bg-white/5 backdrop-blur-xl border-white/10">
                 <CardHeader>
-                  <CardTitle>Recommended Actions</CardTitle>
+                  <CardTitle className="font-display">Recommended Actions</CardTitle>
                   <CardDescription>Steps to optimize your job search today</CardDescription>
                 </CardHeader>
                 <CardContent>
@@ -240,9 +240,9 @@ function DigestTab() {
 
           {preview.alerts.length > 0 && (
             <motion.div variants={itemVariants}>
-              <Card>
+              <Card className="bg-white/5 backdrop-blur-xl border-white/10">
                 <CardHeader>
-                  <CardTitle>Alerts</CardTitle>
+                  <CardTitle className="font-display">Alerts</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
                   <motion.div
@@ -325,9 +325,9 @@ function HistoryTab() {
   const totalPages = Math.max(1, Math.ceil(total / perPage));
 
   return (
-    <Card>
+    <Card className="bg-white/5 backdrop-blur-xl border-white/10">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
+        <CardTitle className="flex items-center gap-2 font-display">
           <History className="w-5 h-5" />
           Digest History
         </CardTitle>
@@ -362,6 +362,7 @@ function HistoryTab() {
                   {history.map((entry, index) => (
                     <motion.tr
                       key={entry.id}
+                      className="hover:bg-white/5"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{
@@ -374,8 +375,8 @@ function HistoryTab() {
                       <TableCell className="font-medium">
                         {new Date(entry.date).toLocaleDateString()}
                       </TableCell>
-                      <TableCell>{entry.jobs_discovered}</TableCell>
-                      <TableCell>{entry.recommended_actions.length}</TableCell>
+                      <TableCell className="font-display font-bold">{entry.jobs_discovered}</TableCell>
+                      <TableCell className="font-display font-bold">{entry.recommended_actions.length}</TableCell>
                       <TableCell>
                         <Badge variant="outline">{entry.alerts_count}</Badge>
                       </TableCell>
@@ -450,7 +451,7 @@ function ConfigTab() {
 
   if (!config) {
     return (
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="py-12">
           <div className="text-center text-muted-foreground">
             <Settings className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -466,9 +467,9 @@ function ConfigTab() {
   };
 
   return (
-    <Card>
+    <Card className="bg-white/5 backdrop-blur-xl border-white/10">
       <CardHeader>
-        <CardTitle>Triage Configuration</CardTitle>
+        <CardTitle className="font-display">Triage Configuration</CardTitle>
         <CardDescription>Configure how your daily digest is generated</CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

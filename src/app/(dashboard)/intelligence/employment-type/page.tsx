@@ -92,7 +92,7 @@ export default function EmploymentTypePage() {
       </div>
 
       {/* Detection Tool */}
-      <Card className="card-glow">
+      <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Search className="w-5 h-5" />
@@ -163,7 +163,7 @@ export default function EmploymentTypePage() {
             const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <motion.div key={type} variants={itemVariants}>
-                <Card className="card-glow">
+                <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -183,7 +183,7 @@ export default function EmploymentTypePage() {
           })}
         </motion.div>
       ) : (
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardContent className="py-12 text-center text-muted-foreground">
             <Briefcase className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No employment type data available yet</p>

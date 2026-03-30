@@ -104,7 +104,7 @@ export default function SkillsPage() {
           ))}
         </motion.div>
       ) : !analysis ? (
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardContent className="p-12 text-center text-muted-foreground">
             <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No skills analysis available. Upload a resume and apply to some jobs first.</p>
@@ -119,7 +119,7 @@ export default function SkillsPage() {
         >
           {/* Match Score */}
           <motion.div variants={itemVariants}>
-            <Card className="card-glow">
+            <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
               <CardContent className="p-6">
                 <div className="flex items-center gap-6">
                   <div className="relative w-24 h-24 shrink-0">
@@ -160,7 +160,7 @@ export default function SkillsPage() {
 
           {/* Possessed Skills */}
           <motion.div variants={itemVariants}>
-            <Card className="card-glow">
+            <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-display text-lg">
                   <CheckCircle2 className="w-5 h-5 text-green-600" />
@@ -195,7 +195,7 @@ export default function SkillsPage() {
 
           {/* Missing Skills */}
           <motion.div variants={itemVariants}>
-            <Card className="card-glow">
+            <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-display text-lg">
                   <AlertTriangle className="w-5 h-5 text-amber-500" />
@@ -209,7 +209,7 @@ export default function SkillsPage() {
                 <div className="rounded-md border">
                   <Table>
                     <TableHeader>
-                      <TableRow className="table-row-hover">
+                      <TableRow>
                         <TableHead>Skill</TableHead>
                         <TableHead>Importance</TableHead>
                         <TableHead>Recommendation</TableHead>
@@ -221,6 +221,7 @@ export default function SkillsPage() {
                         return (
                           <motion.tr
                             key={skill.skill}
+                            className="hover:bg-white/5"
                             initial={{ opacity: 0, x: -20 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}
@@ -236,7 +237,7 @@ export default function SkillsPage() {
                                   <Lightbulb className="w-3.5 h-3.5 mt-0.5 text-amber-500 shrink-0" />
                                   <span>{skill.recommendation}</span>
                                 </div>
-                              ) : "\u2014"}
+                              ) : "—"}
                             </TableCell>
                           </motion.tr>
                         );
@@ -250,7 +251,7 @@ export default function SkillsPage() {
 
           {/* Required Skills Breakdown */}
           <motion.div variants={itemVariants}>
-            <Card className="card-glow">
+            <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 font-display text-lg">
                   <BookOpen className="w-5 h-5" />

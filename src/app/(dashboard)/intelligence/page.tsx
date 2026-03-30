@@ -156,7 +156,7 @@ export default function IntelligencePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: 0.2 }}
       >
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -253,7 +253,7 @@ export default function IntelligencePage() {
       >
         {/* Salary Benchmark */}
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -308,7 +308,7 @@ export default function IntelligencePage() {
 
         {/* Visa Eligibility */}
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -383,7 +383,7 @@ export default function IntelligencePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: 0.3 }}
       >
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 font-display text-lg">
               <Wifi className="w-5 h-5 text-purple-600" />
@@ -436,7 +436,7 @@ export default function IntelligencePage() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -458,7 +458,7 @@ export default function IntelligencePage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
@@ -518,7 +518,7 @@ function IntelCard({
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring" as const, stiffness: 300, damping: 30 }}
     >
-      <Card className="card-glow">
+      <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="space-y-1">

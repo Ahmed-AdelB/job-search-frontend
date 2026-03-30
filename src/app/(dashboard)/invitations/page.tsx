@@ -169,7 +169,7 @@ function StatsCard({
   loading: boolean;
 }) {
   return (
-    <Card className="card-glow">
+    <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
       <CardContent className="p-4">
         <div className="flex items-center justify-between">
           <div>
@@ -204,7 +204,7 @@ function InvitationTable({
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-6">
           <div className="space-y-2">
             {Array.from({ length: 5 }).map((_, i) => (
@@ -218,7 +218,7 @@ function InvitationTable({
 
   if (invitations.length === 0) {
     return (
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="py-12">
           <div className="text-center text-muted-foreground">
             <MailOpen className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -230,7 +230,7 @@ function InvitationTable({
   }
 
   return (
-    <Card className="card-glow">
+    <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
       <CardContent className="p-0">
         <div className="rounded-md border-0">
           <Table>
@@ -251,6 +251,7 @@ function InvitationTable({
                 return (
                   <motion.tr
                     key={inv.id}
+                    className="hover:bg-white/5"
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ type: "spring" as const, stiffness: 100, damping: 15 }}

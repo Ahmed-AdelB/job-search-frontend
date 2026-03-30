@@ -122,14 +122,14 @@ export default function RecruitersPage() {
   return (
     <motion.div initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}} className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Recruiters</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Recruiters</h1>
         <p className="text-muted-foreground">
           Manage recruiter relationships and track interactions
         </p>
       </div>
 
       {/* Search */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-4">
           <div className="flex items-center gap-2">
             <Search className="w-4 h-4 text-muted-foreground shrink-0" />
@@ -144,7 +144,7 @@ export default function RecruitersPage() {
       </Card>
 
       {/* Recruiters Table */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Users className="w-5 h-5" />
@@ -169,7 +169,7 @@ export default function RecruitersPage() {
               <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-white/5">
                       <TableHead>Name</TableHead>
                       <TableHead>Company</TableHead>
                       <TableHead>Specialization</TableHead>
@@ -184,6 +184,7 @@ export default function RecruitersPage() {
                     {recruiters.map((recruiter, index) => (
                       <motion.tr
                         key={recruiter.contact_id}
+                        className="hover:bg-white/5 transition-colors"
                         initial={{opacity:0,x:-10}}
                         animate={{opacity:1,x:0}}
                         transition={{
@@ -193,7 +194,6 @@ export default function RecruitersPage() {
                           delay: index * 0.03,
                         }}
                         whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
-                        className="hover:bg-muted/50 transition-colors"
                       >
                         <TableCell>
                           <div>

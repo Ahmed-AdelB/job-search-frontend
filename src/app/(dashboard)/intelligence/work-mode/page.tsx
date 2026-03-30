@@ -88,7 +88,7 @@ export default function WorkModePage() {
       </div>
 
       {/* Detection Tool */}
-      <Card className="card-glow">
+      <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Search className="w-5 h-5" />
@@ -164,7 +164,7 @@ export default function WorkModePage() {
             const pct = total > 0 ? Math.round((count / total) * 100) : 0;
             return (
               <motion.div key={mode} variants={itemVariants}>
-                <Card className="card-glow">
+                <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
                   <CardContent className="pt-6 space-y-3">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
@@ -184,7 +184,7 @@ export default function WorkModePage() {
           })}
         </motion.div>
       ) : (
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardContent className="py-12 text-center text-muted-foreground">
             <Wifi className="w-12 h-12 mx-auto mb-4 opacity-50" />
             <p>No work mode data available yet</p>

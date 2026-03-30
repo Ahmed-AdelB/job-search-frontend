@@ -126,7 +126,7 @@ function TenantsTab() {
   const tenants = data?.tenants ?? [];
 
   return (
-    <Card className="card-glow">
+    <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
       <CardHeader>
         <CardTitle className="font-display text-lg">Tenant Management</CardTitle>
         <CardDescription>View and manage system tenants</CardDescription>
@@ -147,7 +147,7 @@ function TenantsTab() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow className="table-row-hover">
+                <TableRow className="hover:bg-white/5">
                   <TableHead>Name</TableHead>
                   <TableHead>Plan</TableHead>
                   <TableHead>Status</TableHead>
@@ -158,7 +158,7 @@ function TenantsTab() {
                 {tenants.map((tenant, index) => (
                   <motion.tr
                     key={tenant.id}
-                    className="table-row-hover"
+                    className="hover:bg-white/5"
                     initial={{opacity:0,x:-10}}
                     animate={{opacity:1,x:0}}
                     transition={{
@@ -210,7 +210,7 @@ function MaintenanceTab() {
 
   return (
     <div className="space-y-4">
-      <Card className="card-glow">
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
         <CardHeader>
           <CardTitle className="font-display text-lg">Maintenance Tasks</CardTitle>
           <CardDescription>System maintenance and optimization tools</CardDescription>
@@ -307,7 +307,7 @@ function MaintenanceTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.4 }}
             >
-              <Card className="card-glow border-green-200 dark:border-green-800">
+              <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow border-green-200 dark:border-green-800">
                 <CardContent className="p-4 space-y-2">
                   <div className="flex items-center gap-2 text-green-600 font-medium">
                     <CheckCircle2 className="w-5 h-5" />
@@ -378,7 +378,7 @@ function TrashTab() {
   const items = data?.items ?? [];
 
   return (
-    <Card className="card-glow">
+    <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
       <CardHeader>
         <CardTitle className="font-display text-lg">Trash / Soft-Deleted Items</CardTitle>
         <CardDescription>Restore or permanently delete soft-deleted items</CardDescription>
@@ -399,7 +399,7 @@ function TrashTab() {
           <div className="rounded-md border">
             <Table>
               <TableHeader>
-                <TableRow className="table-row-hover">
+                <TableRow className="hover:bg-white/5">
                   <TableHead>Name</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Deleted</TableHead>
@@ -410,7 +410,7 @@ function TrashTab() {
                 {items.map((item, index) => (
                   <motion.tr
                     key={item.id}
-                    className="table-row-hover"
+                    className="hover:bg-white/5"
                     initial={{opacity:0,x:-10}}
                     animate={{opacity:1,x:0}}
                     transition={{

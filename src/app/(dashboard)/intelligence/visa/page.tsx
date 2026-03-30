@@ -100,7 +100,7 @@ export default function VisaPage() {
         animate="visible"
       >
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -113,7 +113,7 @@ export default function VisaPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -126,7 +126,7 @@ export default function VisaPage() {
           </Card>
         </motion.div>
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -141,7 +141,7 @@ export default function VisaPage() {
       </motion.div>
 
       {/* Visa Scores Table */}
-      <Card className="card-glow">
+      <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2 font-display text-lg">
             <Globe className="w-5 h-5" />
@@ -165,7 +165,7 @@ export default function VisaPage() {
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="table-row-hover">
+                  <TableRow>
                     <TableHead>Occupation</TableHead>
                     <TableHead>Eligibility Score</TableHead>
                     <TableHead>Sponsorship Likelihood</TableHead>
@@ -180,7 +180,7 @@ export default function VisaPage() {
                     return (
                       <motion.tr
                         key={idx}
-                        className="table-row-hover"
+                        className="hover:bg-white/5"
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: "spring" as const, stiffness: 100, damping: 15, delay: idx * 0.05 }}

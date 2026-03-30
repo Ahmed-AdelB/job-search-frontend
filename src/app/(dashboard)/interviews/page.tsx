@@ -293,7 +293,7 @@ export default function InterviewsPage() {
         animate="visible"
       >
         <motion.div variants={cardVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -314,7 +314,7 @@ export default function InterviewsPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -335,7 +335,7 @@ export default function InterviewsPage() {
           </Card>
         </motion.div>
         <motion.div variants={cardVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
@@ -363,11 +363,11 @@ export default function InterviewsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.3 }}
       >
-        <Card className="card-glow">
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="flex items-center gap-2 font-display text-lg">
+                <CardTitle className="font-display flex items-center gap-2 text-lg">
                   <Calendar className="w-5 h-5" />
                   Interview Schedule
                 </CardTitle>
@@ -403,7 +403,7 @@ export default function InterviewsPage() {
                 <div className="rounded-md border overflow-x-auto">
                   <Table>
                     <TableHeader>
-                      <TableRow className="table-row-hover">
+                      <TableRow className="hover:bg-white/5">
                         <TableHead>Type</TableHead>
                         <TableHead>Date & Time</TableHead>
                         <TableHead>Duration</TableHead>
@@ -420,7 +420,7 @@ export default function InterviewsPage() {
                         return (
                           <motion.tr
                             key={interview.interview_id}
-                            className="table-row-hover border-b transition-colors data-[state=selected]:bg-muted"
+                            className="hover:bg-white/5 border-b transition-colors data-[state=selected]:bg-muted"
                             variants={tableRowVariants}
                             initial="hidden"
                             animate="visible"

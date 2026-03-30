@@ -172,7 +172,7 @@ export default function TargetListPage() {
     <motion.div className="space-y-6" initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Target List</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Target List</h1>
           <p className="text-muted-foreground">
             Manage your priority companies ({total} targets)
           </p>
@@ -210,14 +210,14 @@ export default function TargetListPage() {
         {(["A", "B", "C"] as const).map((tier) => (
           <motion.div key={tier} variants={itemVariants}>
             <Card
-              className="cursor-pointer hover:border-primary/50 transition-colors"
+              className="bg-white/5 backdrop-blur-xl border-white/10 cursor-pointer hover:border-primary/50 transition-colors"
               onClick={() => setTierFilter(tierFilter === tier ? "all" : tier)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-muted-foreground">Tier {tier}</p>
-                    <p className="text-2xl font-bold">{tierCounts[tier] ?? 0}</p>
+                    <p className="text-2xl font-display font-bold">{tierCounts[tier] ?? 0}</p>
                   </div>
                   <Badge className={TIER_COLOR[tier]}>{tier}</Badge>
                 </div>
@@ -228,7 +228,7 @@ export default function TargetListPage() {
       </motion.div>
 
       {/* Search + Filter */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-4">
           <div className="flex flex-col sm:flex-row gap-3">
             <div className="flex items-center gap-2 flex-1">
@@ -256,7 +256,7 @@ export default function TargetListPage() {
       </Card>
 
       {/* Companies Table */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Target className="w-5 h-5" />
@@ -280,7 +280,7 @@ export default function TargetListPage() {
             <div className="rounded-md border overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow>
+                  <TableRow className="hover:bg-white/5">
                     <TableHead>Company</TableHead>
                     <TableHead>Tier</TableHead>
                     <TableHead>Industry</TableHead>
@@ -295,6 +295,7 @@ export default function TargetListPage() {
                   {companies.map((company, index) => (
                     <motion.tr
                       key={company.id}
+                      className="hover:bg-white/5"
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{

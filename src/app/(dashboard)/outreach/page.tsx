@@ -113,7 +113,7 @@ export default function OutreachPage() {
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Outreach</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Outreach</h1>
           <p className="text-muted-foreground">
             Manage email campaigns and outreach messages
           </p>
@@ -184,7 +184,7 @@ export default function OutreachPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.2 }}
         >
-          <Card>
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <CardTitle>Active Campaigns</CardTitle>
               <CardDescription>{campaigns.length} campaigns</CardDescription>
@@ -222,7 +222,7 @@ export default function OutreachPage() {
       )}
 
       {/* Messages Table */}
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Mail className="w-5 h-5" />
@@ -247,7 +247,7 @@ export default function OutreachPage() {
               <div className="rounded-md border overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow>
+                    <TableRow className="hover:bg-white/5">
                       <TableHead>Subject</TableHead>
                       <TableHead>Type</TableHead>
                       <TableHead>Status</TableHead>
@@ -269,6 +269,7 @@ export default function OutreachPage() {
                           delay: index * 0.03,
                         }}
                         whileHover={{ backgroundColor: "rgba(0,0,0,0.05)" }}
+                        className="hover:bg-white/5"
                       >
                         <TableCell className="font-medium max-w-[250px] truncate">
                           {msg.subject}
@@ -351,7 +352,7 @@ function StatsCard({
 }) {
   return (
     <motion.div whileHover={{ scale: 1.02 }} transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}>
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-4">
           <div className="flex items-center justify-between">
             <div>
@@ -359,7 +360,7 @@ function StatsCard({
               {loading ? (
                 <Skeleton className="h-8 w-12 mt-1" />
               ) : (
-                <p className="text-2xl font-bold">{value}</p>
+                <p className="text-2xl font-display font-bold">{value}</p>
               )}
             </div>
             <Icon className="w-8 h-8 text-muted-foreground opacity-50" />

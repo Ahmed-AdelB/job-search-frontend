@@ -119,7 +119,7 @@ export default function DeployPage() {
         variants={containerVariants as any}
       >
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -146,7 +146,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -164,7 +164,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -182,7 +182,7 @@ export default function DeployPage() {
         </motion.div>
 
         <motion.div variants={itemVariants}>
-          <Card className="card-glow">
+          <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
@@ -205,7 +205,7 @@ export default function DeployPage() {
       </motion.div>
 
       {/* Actions */}
-      <Card className="card-glow">
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10 card-glow">
         <CardHeader>
           <CardTitle className="font-display text-lg">Deployment Actions</CardTitle>
           <CardDescription>Manage deployment lifecycle</CardDescription>

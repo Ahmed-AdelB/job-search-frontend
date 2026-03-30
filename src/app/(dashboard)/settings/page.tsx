@@ -98,7 +98,7 @@ export default function SettingsPage() {
         transition={{ duration: 0.4 }}
       >
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+          <h1 className="text-2xl font-display font-bold tracking-tight">Settings</h1>
           <p className="text-muted-foreground">Configure your account and preferences</p>
         </div>
         <div className="space-y-4">
@@ -118,7 +118,7 @@ export default function SettingsPage() {
       transition={{ duration: 0.4 }}
     >
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Settings</h1>
         <p className="text-muted-foreground">
           Configure your account, pipeline, and preferences
         </p>
@@ -201,9 +201,9 @@ function PipelineTab({ initialSettings }: { initialSettings?: PipelineSettings }
       animate="visible"
     >
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle>Pipeline Settings</CardTitle>
+            <CardTitle className="font-display">Pipeline Settings</CardTitle>
             <CardDescription>Configure job application automation and preferences</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -226,7 +226,7 @@ function PipelineTab({ initialSettings }: { initialSettings?: PipelineSettings }
               <div className="flex items-center justify-between">
                 <p className="font-medium">Minimum Match Score</p>
                 <motion.span
-                  className="text-lg font-semibold text-primary"
+                  className="text-lg font-display font-semibold text-primary"
                   key={settings.min_match_score}
                   initial={{ scale: 1.2 }}
                   animate={{ scale: 1 }}
@@ -331,9 +331,9 @@ function AppearanceTab({
       animate="visible"
     >
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle>Appearance</CardTitle>
+            <CardTitle className="font-display">Appearance</CardTitle>
             <CardDescription>Customize how the application looks</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -415,9 +415,9 @@ function NotificationsTab({ initialSettings }: { initialSettings?: NotificationS
       animate="visible"
     >
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle>Notifications</CardTitle>
+            <CardTitle className="font-display">Notifications</CardTitle>
             <CardDescription>Manage how you receive notifications</CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
@@ -502,9 +502,9 @@ function PrivacyTab() {
     >
       {/* Data Export */}
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2">
+            <CardTitle className="font-display flex items-center gap-2">
               <Download className="w-5 h-5" />
               Export Your Data
             </CardTitle>
@@ -540,9 +540,9 @@ function PrivacyTab() {
 
       {/* Account Deletion */}
       <motion.div variants={itemVariants}>
-        <Card className="border-destructive/30">
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10 border-destructive/30">
           <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-destructive">
+            <CardTitle className="font-display flex items-center gap-2 text-destructive">
               <Trash2 className="w-5 h-5" />
               Delete Account & Data
             </CardTitle>
@@ -636,9 +636,9 @@ function AccountTab() {
     >
       {/* Change Password */}
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle>Change Password</CardTitle>
+            <CardTitle className="font-display">Change Password</CardTitle>
             <CardDescription>Update your account password</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -675,9 +675,9 @@ function AccountTab() {
 
       {/* Export Data */}
       <motion.div variants={itemVariants}>
-        <Card>
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
-            <CardTitle>Export Data</CardTitle>
+            <CardTitle className="font-display">Export Data</CardTitle>
             <CardDescription>Download all your data in JSON format</CardDescription>
           </CardHeader>
           <CardContent>
@@ -691,9 +691,9 @@ function AccountTab() {
 
       {/* Delete Account */}
       <motion.div variants={itemVariants}>
-        <Card className="border-destructive/30">
+        <Card className="bg-white/5 backdrop-blur-xl border-white/10 border-destructive/30">
           <CardHeader>
-            <CardTitle className="text-destructive">Delete Account</CardTitle>
+            <CardTitle className="font-display text-destructive">Delete Account</CardTitle>
             <CardDescription>
               Permanently delete your account and all associated data
             </CardDescription>

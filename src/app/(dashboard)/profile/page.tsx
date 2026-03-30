@@ -85,7 +85,7 @@ export default function ProfilePage() {
   return (
     <motion.div className="space-y-6" initial={{opacity:0,y:20}} animate={{opacity:1,y:0}} transition={{duration:0.4}}>
       <div>
-        <h1 className="text-2xl font-bold tracking-tight">Profile</h1>
+        <h1 className="text-2xl font-display font-bold tracking-tight">Profile</h1>
         <p className="text-muted-foreground">
           Manage your personal information and resumes
         </p>
@@ -98,7 +98,7 @@ export default function ProfilePage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4, delay: 0.1 }}
         >
-          <Card className="border-blue-200 dark:border-blue-800">
+          <Card className="border-blue-200 dark:border-blue-800 bg-white/5 backdrop-blur-xl">
             <CardContent className="p-4">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm font-medium">Profile Setup Progress</p>
@@ -237,9 +237,9 @@ function ProfileForm({ profile }: { profile: Profile }) {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardHeader>
-          <CardTitle>Personal Information</CardTitle>
+          <CardTitle className="font-display">Personal Information</CardTitle>
           <CardDescription>Update your profile details</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -366,7 +366,7 @@ function ResumeUpload() {
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
     >
-      <Card>
+      <Card className="bg-white/5 backdrop-blur-xl border-white/10">
         <CardContent className="p-4">
           <motion.div
             className={`border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-colors ${
@@ -422,7 +422,7 @@ function ResumeCard({ resume }: { resume: Resume }) {
       whileHover={{ scale: 1.01 }}
       transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
     >
-      <Card className={resume.is_primary ? "border-primary" : ""}>
+      <Card className={`bg-white/5 backdrop-blur-xl border-white/10 ${resume.is_primary ? "border-primary" : ""}`}>
         <CardContent className="p-4">
           <div className="flex items-start justify-between">
             <div className="flex items-center gap-3">

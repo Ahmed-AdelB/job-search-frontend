@@ -231,7 +231,7 @@ export default function AnalyticsPage() {
           transition={{ duration: 0.4, delay: 0.1 }}
           whileHover={{ scale: 1.01 }}
         >
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <CardTitle className="font-display text-lg">Pipeline Funnel</CardTitle>
               <CardDescription>
@@ -280,7 +280,7 @@ export default function AnalyticsPage() {
           transition={{ duration: 0.4, delay: 0.2 }}
           whileHover={{ scale: 1.01 }}
         >
-          <Card className="card-glow">
+          <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
             <CardHeader>
               <CardTitle className="font-display text-lg">Jobs by Source</CardTitle>
               <CardDescription>Where your job opportunities come from</CardDescription>
@@ -334,7 +334,7 @@ export default function AnalyticsPage() {
         transition={{ duration: 0.4, delay: 0.3 }}
         whileHover={{ scale: 1.01 }}
       >
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
             <CardTitle className="font-display text-lg">Activity Timeline</CardTitle>
             <CardDescription>
@@ -436,7 +436,7 @@ export default function AnalyticsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.4, delay: 0.4 }}
       >
-        <Card className="card-glow">
+        <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10">
           <CardHeader>
             <CardTitle className="font-display text-lg">Key Metrics Summary</CardTitle>
           </CardHeader>
@@ -529,7 +529,7 @@ function OverviewCard({
 }) {
   return (
     <motion.div whileHover="whileHover" initial="initial" variants={cardHoverVariants}>
-      <Card className="card-glow h-full">
+      <Card className="card-glow bg-white/5 backdrop-blur-xl border-white/10 h-full">
         <CardContent className="p-6">
           <div className="flex items-center justify-between">
             <div className="flex-1">
@@ -585,7 +585,7 @@ function MetricItem({
 }) {
   return (
     <motion.div
-      className="p-4 rounded-lg border border-border/50 hover:border-border transition-colors"
+      className="p-4 rounded-lg border border-border/50 hover:border-border transition-colors bg-white/5 backdrop-blur-xl"
       whileHover={{ scale: 1.02 }}
       transition={{ type: "spring" as const, stiffness: 120, damping: 12 }}
     >
