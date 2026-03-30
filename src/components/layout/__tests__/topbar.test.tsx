@@ -10,7 +10,7 @@ import { Topbar } from "../topbar";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard/jobs",
+  usePathname: () => "/jobs",
   useRouter: () => ({
     push: vi.fn(),
   }),
@@ -93,7 +93,7 @@ describe("Topbar Component", () => {
       renderWithProviders(<Topbar />);
 
       const links = screen.getAllByRole("link");
-      const dashboardLink = links.find((link) => link.getAttribute("href") === "/dashboard");
+      const dashboardLink = links.find((link) => link.getAttribute("href") === "/jobs");
       expect(dashboardLink).toBeInTheDocument();
     });
 

@@ -11,7 +11,7 @@ import { Sidebar } from "../sidebar";
 
 // Mock next/navigation
 vi.mock("next/navigation", () => ({
-  usePathname: () => "/dashboard/jobs",
+  usePathname: () => "/jobs",
   useRouter: () => ({
     push: vi.fn(),
     back: vi.fn(),
@@ -43,34 +43,34 @@ describe("Sidebar Component", () => {
       });
 
       // Overview section
-      expect(screen.getByRole("link", { name: /Dashboard/i })).toHaveAttribute("href", "/dashboard");
-      expect(screen.getByRole("link", { name: /Analytics/i })).toHaveAttribute("href", "/dashboard/analytics");
-      expect(screen.getByRole("link", { name: /Alerts/i })).toHaveAttribute("href", "/dashboard/notifications");
+      expect(screen.getByRole("link", { name: /Dashboard/i })).toHaveAttribute("href", "/jobs");
+      expect(screen.getByRole("link", { name: /Analytics/i })).toHaveAttribute("href", "/analytics");
+      expect(screen.getByRole("link", { name: /Alerts/i })).toHaveAttribute("href", "/notifications");
 
       // Pipeline section
-      expect(screen.getByRole("link", { name: /^Jobs$/i })).toHaveAttribute("href", "/dashboard/jobs");
-      expect(screen.getByRole("link", { name: /Applications/i })).toHaveAttribute("href", "/dashboard/applications");
-      expect(screen.getByRole("link", { name: /Triage/i })).toHaveAttribute("href", "/dashboard/triage");
-      expect(screen.getByRole("link", { name: /Targets/i })).toHaveAttribute("href", "/dashboard/target-list");
+      expect(screen.getByRole("link", { name: /^Jobs$/i })).toHaveAttribute("href", "/jobs");
+      expect(screen.getByRole("link", { name: /Applications/i })).toHaveAttribute("href", "/applications");
+      expect(screen.getByRole("link", { name: /Triage/i })).toHaveAttribute("href", "/triage");
+      expect(screen.getByRole("link", { name: /Targets/i })).toHaveAttribute("href", "/target-list");
 
       // Network section
-      expect(screen.getByRole("link", { name: /Contacts/i })).toHaveAttribute("href", "/dashboard/contacts");
-      expect(screen.getByRole("link", { name: /Recruiters/i })).toHaveAttribute("href", "/dashboard/recruiters");
-      expect(screen.getByRole("link", { name: /Outreach/i })).toHaveAttribute("href", "/dashboard/outreach");
-      expect(screen.getByRole("link", { name: /Invitations/i })).toHaveAttribute("href", "/dashboard/invitations");
-      expect(screen.getByRole("link", { name: /Interviews/i })).toHaveAttribute("href", "/dashboard/interviews");
+      expect(screen.getByRole("link", { name: /Contacts/i })).toHaveAttribute("href", "/contacts");
+      expect(screen.getByRole("link", { name: /Recruiters/i })).toHaveAttribute("href", "/recruiters");
+      expect(screen.getByRole("link", { name: /Outreach/i })).toHaveAttribute("href", "/outreach");
+      expect(screen.getByRole("link", { name: /Invitations/i })).toHaveAttribute("href", "/invitations");
+      expect(screen.getByRole("link", { name: /Interviews/i })).toHaveAttribute("href", "/interviews");
 
       // Intelligence section
-      expect(screen.getByRole("link", { name: /Agents/i })).toHaveAttribute("href", "/dashboard/agents");
-      expect(screen.getByRole("link", { name: /Intel Hub/i })).toHaveAttribute("href", "/dashboard/intelligence");
-      expect(screen.getByRole("link", { name: /Community/i })).toHaveAttribute("href", "/dashboard/community");
+      expect(screen.getByRole("link", { name: /Agents/i })).toHaveAttribute("href", "/agents");
+      expect(screen.getByRole("link", { name: /Intel Hub/i })).toHaveAttribute("href", "/intelligence");
+      expect(screen.getByRole("link", { name: /Community/i })).toHaveAttribute("href", "/community");
 
       // System section
-      expect(screen.getByRole("link", { name: /Deploy/i })).toHaveAttribute("href", "/dashboard/deploy");
-      expect(screen.getByRole("link", { name: /Logs/i })).toHaveAttribute("href", "/dashboard/logs");
-      expect(screen.getByRole("link", { name: /Admin/i })).toHaveAttribute("href", "/dashboard/admin");
-      expect(screen.getByRole("link", { name: /Settings/i })).toHaveAttribute("href", "/dashboard/settings");
-      expect(screen.getByRole("link", { name: /Billing/i })).toHaveAttribute("href", "/dashboard/billing");
+      expect(screen.getByRole("link", { name: /Deploy/i })).toHaveAttribute("href", "/deploy");
+      expect(screen.getByRole("link", { name: /Logs/i })).toHaveAttribute("href", "/logs");
+      expect(screen.getByRole("link", { name: /Admin/i })).toHaveAttribute("href", "/admin");
+      expect(screen.getByRole("link", { name: /Settings/i })).toHaveAttribute("href", "/settings");
+      expect(screen.getByRole("link", { name: /Billing/i })).toHaveAttribute("href", "/billing");
     });
 
     it("has Portals link (recently added)", async () => {
@@ -80,7 +80,7 @@ describe("Sidebar Component", () => {
 
       const portalsLink = screen.getByRole("link", { name: /Portals/i });
       expect(portalsLink).toBeInTheDocument();
-      expect(portalsLink).toHaveAttribute("href", "/dashboard/portals");
+      expect(portalsLink).toHaveAttribute("href", "/portals");
     });
 
     it("renders Portals link in Pipeline section", async () => {
@@ -105,7 +105,7 @@ describe("Sidebar Component", () => {
         container = result.container;
       });
 
-      // The Jobs link should be active because usePathname() returns "/dashboard/jobs"
+      // The Jobs link should be active because usePathname() returns "/jobs"
       const jobsLink = screen.getByRole("link", { name: /^Jobs$/i });
       const jobsLinkParent = jobsLink.closest("a")?.nextElementSibling || jobsLink.parentElement;
 
@@ -119,7 +119,7 @@ describe("Sidebar Component", () => {
         renderWithProviders(<Sidebar />);
       });
 
-      // Dashboard link should not be active (since we're on /dashboard/jobs)
+      // Dashboard link should not be active (since we're on /jobs)
       const dashboardLink = screen.getByRole("link", { name: /^Dashboard$/i });
       expect(dashboardLink).toBeInTheDocument();
     });
@@ -146,7 +146,7 @@ describe("Sidebar Component", () => {
 
       // Find the logo link by its text content "JobFlow"
       const logoLink = screen.getByRole("link", { name: /JobFlow/i });
-      expect(logoLink).toHaveAttribute("href", "/dashboard");
+      expect(logoLink).toHaveAttribute("href", "/jobs");
     });
 
     it("renders system status indicator", async () => {
@@ -280,40 +280,39 @@ describe("Sidebar Component", () => {
       links.forEach((link) => {
         const href = link.getAttribute("href");
         expect(href).toBeTruthy();
-        if (href !== "/dashboard" && !href?.includes("JobFlow")) {
-          expect(href).toMatch(/^\/dashboard/);
+        if (href !== "/jobs" && !href?.includes("JobFlow")) {
+          expect(href).toMatch(/^\//);
         }
       });
     });
 
-    it("href paths follow dashboard routing pattern", async () => {
+    it("href paths follow routing pattern", async () => {
       await act(async () => {
         renderWithProviders(<Sidebar />);
       });
 
       const links = screen.getAllByRole("link");
       const validPaths = [
-        "/dashboard",
-        "/dashboard/analytics",
-        "/dashboard/notifications",
-        "/dashboard/jobs",
-        "/dashboard/applications",
-        "/dashboard/triage",
-        "/dashboard/target-list",
-        "/dashboard/portals",
-        "/dashboard/contacts",
-        "/dashboard/recruiters",
-        "/dashboard/outreach",
-        "/dashboard/invitations",
-        "/dashboard/interviews",
-        "/dashboard/agents",
-        "/dashboard/intelligence",
-        "/dashboard/community",
-        "/dashboard/deploy",
-        "/dashboard/logs",
-        "/dashboard/admin",
-        "/dashboard/settings",
-        "/dashboard/billing",
+        "/jobs",
+        "/analytics",
+        "/notifications",
+        "/applications",
+        "/triage",
+        "/target-list",
+        "/portals",
+        "/contacts",
+        "/recruiters",
+        "/outreach",
+        "/invitations",
+        "/interviews",
+        "/agents",
+        "/intelligence",
+        "/community",
+        "/deploy",
+        "/logs",
+        "/admin",
+        "/settings",
+        "/billing",
       ];
 
       links.forEach((link) => {

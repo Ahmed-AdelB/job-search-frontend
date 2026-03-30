@@ -46,6 +46,14 @@ const config: Config = {
           "0%": { opacity: "0", transform: "translateY(4px)" },
           "100%": { opacity: "1", transform: "translateY(0)" },
         },
+        wobble: {
+          "0%, 100%": { transform: "translateX(0)" },
+          "15%": { transform: "translateX(-2px) rotate(-2deg)" },
+          "30%": { transform: "translateX(2px) rotate(2deg)" },
+          "45%": { transform: "translateX(-2px) rotate(-2deg)" },
+          "60%": { transform: "translateX(2px) rotate(2deg)" },
+          "75%": { transform: "translateX(-1px) rotate(-1deg)" },
+        },
       },
       animation: {
         "fade-up": "fade-up 0.5s ease-out",
@@ -56,6 +64,7 @@ const config: Config = {
         shimmer: "shimmer 2s infinite linear",
         pulse: "pulse 2s ease-in-out infinite",
         "count-up": "count-up 0.6s ease-out",
+        wobble: "wobble 2s ease-in-out infinite",
       },
       colors: {
         primary: "hsl(var(--primary) / <alpha-value>)",
