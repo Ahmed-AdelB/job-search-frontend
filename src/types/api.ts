@@ -65,6 +65,7 @@ export interface Job {
   description?: string;
   salary_min?: number;
   salary_max?: number;
+  salary_range?: string;
   currency?: string;
   job_type?: "full-time" | "part-time" | "contract" | "freelance" | "internship";
   remote_type?: "on-site" | "hybrid" | "remote";
