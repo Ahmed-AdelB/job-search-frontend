@@ -18,6 +18,9 @@ describe("API Client", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
+    // Mock window.location
+    delete (window as any).location;
+    window.location = { href: "" } as any;
   });
 
   afterEach(() => {
@@ -37,7 +40,7 @@ describe("API Client", () => {
       const result = await apiGet("/test");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/test",
+        "/test",
         expect.objectContaining({
           method: "GET",
         })
@@ -60,7 +63,7 @@ describe("API Client", () => {
       const result = await apiPost("/test", mockBody);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/test",
+        "/test",
         expect.objectContaining({
           method: "POST",
           body: JSON.stringify(mockBody),
@@ -84,7 +87,7 @@ describe("API Client", () => {
       const result = await apiPut("/test/1", mockBody);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/test/1",
+        "/test/1",
         expect.objectContaining({
           method: "PUT",
           body: JSON.stringify(mockBody),
@@ -108,7 +111,7 @@ describe("API Client", () => {
       const result = await apiPatch("/test/1", mockBody);
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/test/1",
+        "/test/1",
         expect.objectContaining({
           method: "PATCH",
           body: JSON.stringify(mockBody),
@@ -129,7 +132,7 @@ describe("API Client", () => {
       const result = await apiDelete("/test/1");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/test/1",
+        "/test/1",
         expect.objectContaining({
           method: "DELETE",
         })
@@ -180,13 +183,19 @@ describe("API Client", () => {
   });
 
   describe("Error Handling", () => {
-    it("on 401 clears localStorage and redirects", async () => {
+    it("on 401 clears localStorage and redirects to login with returnUrl for protected paths", async () => {
       localStorage.setItem("auth-token", "test-token");
       localStorage.setItem("auth-user", '{"user_id":"123"}');
 
-      const originalHref = window.location.href;
-      delete (window as any).location;
-      window.location = { href: originalHref } as any;
+      // Mock window location with pathname
+      Object.defineProperty(window, "location", {
+        value: {
+          href: "",
+          pathname: "/jobs",
+          origin: "http://localhost:3000",
+        },
+        writable: true,
+      });
 
       const mockFetch = vi.fn().mockResolvedValueOnce({
         status: 401,
@@ -203,6 +212,36 @@ describe("API Client", () => {
 
       expect(localStorage.getItem("auth-token")).toBeNull();
       expect(localStorage.getItem("auth-user")).toBeNull();
+      // Should redirect to /login with returnUrl parameter for protected paths
+      expect(window.location.href).toBe("/login?returnUrl=%2Fjobs");
+    });
+
+    it("on 401 from non-protected path redirects to /login without returnUrl", async () => {
+      localStorage.setItem("auth-token", "test-token");
+
+      // Mock window location with non-protected pathname (auth page)
+      Object.defineProperty(window, "location", {
+        value: {
+          href: "",
+          pathname: "/login",
+          origin: "http://localhost:3000",
+        },
+        writable: true,
+      });
+
+      const mockFetch = vi.fn().mockResolvedValueOnce({
+        status: 401,
+        ok: false,
+        statusText: "Unauthorized",
+      });
+      global.fetch = mockFetch;
+
+      try {
+        await apiGet("/protected");
+      } catch (error) {
+        // Expected
+      }
+
       expect(window.location.href).toBe("/login");
     });
 
@@ -322,7 +361,7 @@ describe("API Client", () => {
       await apiGet("/users");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/users",
+        "/users",
         expect.any(Object)
       );
     });
@@ -338,7 +377,7 @@ describe("API Client", () => {
       await apiGet("users");
 
       expect(mockFetch).toHaveBeenCalledWith(
-        "http://localhost:8082/users",
+        "/users",
         expect.any(Object)
       );
     });

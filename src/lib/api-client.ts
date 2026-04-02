@@ -5,7 +5,9 @@
 
 import { toast } from "sonner";
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082";
+const API_URL = typeof window === 'undefined'
+  ? (process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082")
+  : "";
 
 interface ApiOptions extends RequestInit {
   skipAuth?: boolean;
@@ -17,6 +19,34 @@ interface ApiError extends Error {
 }
 
 /**
+ * Build login URL with returnUrl parameter to preserve current page
+ */
+function getLoginUrlWithReturn(): string {
+  if (typeof window === "undefined") {
+    return "/login";
+  }
+
+  // Get current pathname as return destination
+  const currentPath = window.location.pathname;
+  const loginUrl = new URL("/login", window.location.origin);
+
+  // Only set returnUrl for protected paths (avoid redirect loops from auth pages)
+  const protectedPaths = [
+    "/jobs", "/contacts", "/applications", "/agents", "/analytics",
+    "/outreach", "/profile", "/settings", "/billing", "/notifications",
+    "/intelligence", "/interviews", "/invitations", "/logs", "/portals",
+    "/recruiters", "/target-list", "/triage", "/deploy", "/admin", "/community",
+  ];
+
+  const shouldRedirectBack = protectedPaths.some((prefix) => currentPath.startsWith(prefix));
+  if (shouldRedirectBack) {
+    loginUrl.searchParams.set("returnUrl", currentPath);
+  }
+
+  return loginUrl.pathname + loginUrl.search;
+}
+
+/**
  * Core fetch wrapper with authentication and error handling
  */
 export async function apiFetch<T>(
@@ -24,7 +54,7 @@ export async function apiFetch<T>(
   options: ApiOptions = {}
 ): Promise<T> {
   const url = `${API_URL}${endpoint.startsWith("/") ? endpoint : `/${endpoint}`}`;
-  
+
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     ...((options.headers as Record<string, string>) || {}),
@@ -48,12 +78,13 @@ export async function apiFetch<T>(
 
     // Handle specific status codes
     if (response.status === 401) {
-      // Clear auth from localStorage and cookie, then redirect
+      // Clear auth from localStorage and cookie, then redirect with returnUrl
       if (typeof window !== "undefined") {
         localStorage.removeItem("auth-token");
         localStorage.removeItem("auth-user");
         document.cookie = "auth-token=; path=/; max-age=0; SameSite=Lax";
-        window.location.href = "/login";
+        const loginUrl = getLoginUrlWithReturn();
+        window.location.href = loginUrl;
       }
       throw new Error("Unauthorized - Please log in again");
     }
@@ -73,7 +104,7 @@ export async function apiFetch<T>(
       } catch {
         errorData = await response.text();
       }
-      
+
       const error: ApiError = new Error(
         (errorData as { detail?: string })?.detail || `HTTP ${response.status}: ${response.statusText}`
       );
