@@ -18,6 +18,7 @@ const nextConfig: NextConfig = {
 
   /* Rewrite /dashboard/* to /* since (dashboard) route group doesn't create URL segments */
   async rewrites() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"
     return [
       {
         source: "/dashboard",
@@ -26,6 +27,11 @@ const nextConfig: NextConfig = {
       {
         source: "/dashboard/:path*",
         destination: "/:path*",
+      },
+      /* Proxy /api/* to backend — browser sends relative URLs */
+      {
+        source: "/api/:path*",
+        destination: `${apiUrl}/api/:path*`,
       },
     ]
   },
