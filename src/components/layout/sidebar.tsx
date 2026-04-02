@@ -60,6 +60,7 @@ const navSections = [
       { href: "/jobs", icon: Briefcase, label: "Jobs" },
       { href: "/applications", icon: FileText, label: "Applications" },
       { href: "/triage", icon: ListFilter, label: "Triage" },
+      { href: "/automation", icon: Zap, label: "Automation" },
       { href: "/target-list", icon: Target, label: "Targets" },
       { href: "/portals", icon: Globe, label: "Portals" },
     ],

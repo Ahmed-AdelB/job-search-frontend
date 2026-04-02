@@ -856,3 +856,97 @@ export interface EmploymentTypeStats {
   total_analyzed: number;
   breakdown: Record<string, number>;
 }
+
+// ============================================================================
+// Automation (Browser-Based ATS Batch Apply)
+// ============================================================================
+
+export type AutomationPlatform = "greenhouse" | "workday" | "ashby" | "all";
+export type BatchRunStatus = "running" | "completed" | "cancelled" | "failed";
+
+export interface AutomationHealth {
+  imap: {
+    configured: boolean;
+    connected: boolean;
+    unread_gh_emails?: number;
+  };
+  capsolver: {
+    configured: boolean;
+    balance?: number | null;
+  };
+  browser: {
+    playwright_installed: boolean;
+  };
+  active_batches: number;
+  db_stats: {
+    total: number;
+    new: number;
+    submitted: number;
+    expired: number;
+  };
+}
+
+export interface BatchRun {
+  run_id: string;
+  platform: AutomationPlatform;
+  status: BatchRunStatus;
+  submitted: number;
+  failed: number;
+  pending: number;
+  total: number;
+  started_at: string;
+  completed_at?: string;
+  elapsed_seconds: number;
+  dry_run: boolean;
+  pid?: number;
+}
+
+export interface BatchApplyAutomationRequest {
+  platform: AutomationPlatform;
+  job_ids?: number[];
+  count?: number;
+  min_score?: number;
+  real: boolean;
+  concurrent?: number;
+}
+
+export interface BatchApplyAutomationResponse {
+  run_id: string;
+  status: string;
+  total_jobs: number;
+}
+
+export interface AutomationRunsResponse {
+  runs: BatchRun[];
+  total: number;
+}
+
+export interface DiscoverRequest {
+  keywords?: string[];
+  locations?: string[];
+  max_results?: number;
+}
+
+export interface DiscoverResponse {
+  run_id: string;
+  status: string;
+  total_discovered?: number;
+}
+
+export interface CleanupResponse {
+  checked: number;
+  alive: number;
+  dead: number;
+  archived: number;
+}
+
+export interface BatchProgressEvent {
+  phase: "started" | "progress" | "complete" | "error";
+  run_id: string;
+  submitted?: number;
+  failed?: number;
+  total?: number;
+  message?: string;
+  error?: string;
+  timestamp?: string;
+}
