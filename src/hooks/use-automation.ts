@@ -137,12 +137,15 @@ export function useLaunchDiscovery() {
  * Cleanup expired jobs via URL pre-filtering
  */
 export function useLaunchCleanup() {
+  const queryClient = useQueryClient()
+
   return useMutation({
-    mutationFn: () =>
-      apiPost<CleanupResponse>("/api/automation/cleanup", {}),
+    mutationFn: (data?: Record<string, unknown>) =>
+      apiPost<CleanupResponse>("/api/automation/cleanup", data ?? {}),
     onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["automation", "runs"] })
       toast.success(
-        `Cleanup: ${result.alive} alive, ${result.dead} dead, ${result.archived} archived`
+        `Cleanup started: ${result.total_jobs} jobs to check`
       )
     },
     onError: (error: Error) => {

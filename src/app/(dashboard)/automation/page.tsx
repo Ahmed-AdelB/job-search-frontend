@@ -382,7 +382,7 @@ function LaunchControls() {
           </Label>
           <Slider
             value={[minScore]}
-            onValueChange={(v) => setMinScore(v[0])}
+            onValueChange={(v) => setMinScore(Array.isArray(v) ? v[0] : v)}
             min={0}
             max={100}
             step={5}
@@ -426,7 +426,7 @@ function LaunchControls() {
 
           <Button
             variant="outline"
-            onClick={() => discoveryMutation.mutate()}
+            onClick={() => discoveryMutation.mutate({})}
             disabled={discoveryMutation.isPending}
           >
             {discoveryMutation.isPending ? (
@@ -439,7 +439,7 @@ function LaunchControls() {
 
           <Button
             variant="outline"
-            onClick={() => cleanupMutation.mutate()}
+            onClick={() => cleanupMutation.mutate({})}
             disabled={cleanupMutation.isPending}
           >
             {cleanupMutation.isPending ? (

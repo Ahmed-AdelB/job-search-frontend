@@ -934,10 +934,13 @@ export interface DiscoverResponse {
 }
 
 export interface CleanupResponse {
-  checked: number;
-  alive: number;
-  dead: number;
-  archived: number;
+  run_id: string;
+  status: string;
+  total_jobs: number;
+  checked?: number;
+  alive?: number;
+  dead?: number;
+  archived?: number;
 }
 
 export interface BatchProgressEvent {
