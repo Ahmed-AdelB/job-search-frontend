@@ -38,6 +38,10 @@ const nextConfig: NextConfig = {
 
   /* Configure headers for security */
   async headers() {
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"
+    // Extract the origin from API URL for CSP
+    const apiOrigin = new URL(apiUrl).origin
+
     return [
       {
         source: "/:path*",
@@ -68,7 +72,7 @@ const nextConfig: NextConfig = {
           },
           {
             key: "Content-Security-Policy",
-            value: "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
+            value: `default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; font-src 'self' data:; connect-src 'self' ${apiOrigin} ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';`,
           },
         ],
       },
