@@ -51,7 +51,7 @@ export default function DashboardPage() {
   const { data: agentsData, isLoading: agentsLoading, error: agentsError, refetch: refetchAgents } = useAgents();
 
   // Transform funnel data to pipeline stages
-  const pipelineStages = funnelData?.stages?.map((stage) => {
+  const pipelineStages = funnelData?.map((stage) => {
     const colorMap: Record<string, { color: string; colorEnd: string }> = {
       "Applied": { color: "#6366f1", colorEnd: "#818cf8" },
       "Phone Screen": { color: "#7c3aed", colorEnd: "#a78bfa" },
