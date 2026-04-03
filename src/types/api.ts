@@ -953,3 +953,42 @@ export interface BatchProgressEvent {
   error?: string;
   timestamp?: string;
 }
+
+// Schedule Management
+export interface AutomationSchedule {
+  id: string;
+  name: string;
+  platform: AutomationPlatform;
+  count: number;
+  min_score: number;
+  real: boolean;
+  interval_hours: number;
+  enabled: boolean;
+  last_run_at: string | null;
+  run_count: number;
+  created_at: string;
+}
+
+export interface ScheduleRequest {
+  name: string;
+  platform: AutomationPlatform;
+  count: number;
+  min_score: number;
+  real: boolean;
+  interval_hours: number;
+}
+
+// Batch Screenshots & Logs
+export interface BatchScreenshot {
+  filename: string;
+  job_id: string | null;
+  url: string;
+  timestamp: string | null;
+  size_kb: number;
+}
+
+export interface BatchLog {
+  run_id: string;
+  log_lines: number;
+  log_text: string;
+}

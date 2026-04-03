@@ -6,7 +6,7 @@
  */
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
-import { apiGet, apiPost, apiDelete } from "@/lib/api-client"
+import { apiGet, apiPost, apiDelete, apiPatch } from "@/lib/api-client"
 import type {
   AutomationHealth,
   BatchApplyAutomationRequest,
@@ -17,6 +17,10 @@ import type {
   DiscoverResponse,
   CleanupResponse,
   BatchProgressEvent,
+  AutomationSchedule,
+  ScheduleRequest,
+  BatchScreenshot,
+  BatchLog,
 } from "@/types/api"
 import { toast } from "sonner"
 import { useSSE } from "@/hooks/use-sse"
@@ -60,6 +64,42 @@ export function useBatchStatus(runId: string | null) {
     enabled: !!runId,
     refetchInterval: 3000,
     staleTime: 2000,
+  })
+}
+
+/**
+ * List automation schedules
+ */
+export function useAutomationSchedules() {
+  return useQuery({
+    queryKey: ["automation", "schedules"],
+    queryFn: () => apiGet<{ schedules: AutomationSchedule[]; total: number }>("/api/automation/schedules"),
+    refetchInterval: 10000,
+    staleTime: 5000,
+  })
+}
+
+/**
+ * Get screenshots for a batch run
+ */
+export function useBatchScreenshots(runId: string | null) {
+  return useQuery({
+    queryKey: ["automation", "batch", runId, "screenshots"],
+    queryFn: () => apiGet<{ screenshots: BatchScreenshot[] }>(`/api/automation/batch-apply/${runId}/screenshots`),
+    enabled: !!runId,
+    staleTime: 30000,
+  })
+}
+
+/**
+ * Get logs for a batch run
+ */
+export function useBatchLogs(runId: string | null) {
+  return useQuery({
+    queryKey: ["automation", "batch", runId, "logs"],
+    queryFn: () => apiGet<BatchLog>(`/api/automation/batch-apply/${runId}/logs`),
+    enabled: !!runId,
+    staleTime: 30000,
   })
 }
 
@@ -150,6 +190,65 @@ export function useLaunchCleanup() {
     },
     onError: (error: Error) => {
       toast.error("Cleanup failed", { description: error.message })
+    },
+  })
+}
+
+/**
+ * Create a new automation schedule
+ */
+export function useCreateSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (data: ScheduleRequest) =>
+      apiPost<AutomationSchedule>("/api/automation/schedules", data),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["automation", "schedules"] })
+      toast.success(`Schedule "${result.name}" created`)
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to create schedule", { description: error.message })
+    },
+  })
+}
+
+/**
+ * Delete an automation schedule
+ */
+export function useDeleteSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (scheduleId: string) =>
+      apiDelete<{ id: string }>(`/api/automation/schedules/${scheduleId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["automation", "schedules"] })
+      toast.success("Schedule deleted")
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to delete schedule", { description: error.message })
+    },
+  })
+}
+
+/**
+ * Toggle schedule enabled/disabled status
+ */
+export function useToggleSchedule() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ scheduleId, enabled }: { scheduleId: string; enabled: boolean }) =>
+      apiPatch<AutomationSchedule>(`/api/automation/schedules/${scheduleId}`, { enabled }),
+    onSuccess: (result) => {
+      queryClient.invalidateQueries({ queryKey: ["automation", "schedules"] })
+      toast.success(
+        `Schedule "${result.name}" ${result.enabled ? "enabled" : "disabled"}`
+      )
+    },
+    onError: (error: Error) => {
+      toast.error("Failed to toggle schedule", { description: error.message })
     },
   })
 }
