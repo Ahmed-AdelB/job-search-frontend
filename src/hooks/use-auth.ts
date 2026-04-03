@@ -1,5 +1,20 @@
 "use client"
 
+/**
+ * Auth Hook - Authentication state management and redirect handling
+ *
+ * REDIRECT PARAMETER CONVENTION (Issue #408):
+ * This module standardizes on 'returnUrl' as the query parameter name
+ * for post-login redirects throughout the application.
+ *
+ * Usage examples:
+ * - Redirect to login with return URL: /login?returnUrl=/jobs/123
+ * - Login page reads returnUrl and redirects user after auth
+ * - Use isSafeRedirectUrl() to validate redirect paths
+ *
+ * Author: Ahmed Adel Bakr Alderai
+ */
+
 import { useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuthStore } from "@/stores/auth-store"
@@ -60,6 +75,7 @@ export function useAuth(requireAuth = false): UseAuthResult {
     // Redirect to login if auth is required but user is not authenticated
     if (requireAuth && !isAuth) {
       const returnUrl = typeof window !== "undefined" ? window.location.pathname : "/jobs"
+      // Issue #408: Use standardized 'returnUrl' parameter name
       const safeReturnUrl = isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs"
       router.push(`/login?returnUrl=${encodeURIComponent(safeReturnUrl)}`)
     }

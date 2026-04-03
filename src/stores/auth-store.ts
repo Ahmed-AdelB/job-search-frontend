@@ -78,12 +78,28 @@ export const useAuthStore = create<AuthState>()(
       signup: async (email: string, password: string): Promise<boolean> => {
         set({ isLoading: true, error: null });
         try {
-          await apiPost<AuthResponse>("/api/auth/register", {
+          const response = await apiPost<AuthResponse>("/api/auth/register", {
             email,
             password,
           } as RegisterRequest);
 
-          set({ isLoading: false });
+          // Auto-login after successful signup
+          const user: User = {
+            user_id: response.user_id,
+            email: response.email,
+            name: response.name,
+          };
+
+          setToken(response.token);
+          setUser(user);
+
+          set({
+            user,
+            token: response.token,
+            isAuthenticated: true,
+            isLoading: false,
+          });
+
           return true;
         } catch (error) {
           const message = error instanceof Error ? error.message : "Signup failed";
@@ -132,6 +148,20 @@ export const useAuthStore = create<AuthState>()(
         token: state.token,
         isAuthenticated: state.isAuthenticated,
       }),
+      onRehydrateStorage: () => (state) => {
+        // Validate token immediately on rehydration from localStorage
+        if (state?.token) {
+          if (isTokenExpired(state.token)) {
+            removeToken();
+            removeUser();
+            state.token = null;
+            state.user = null;
+            state.isAuthenticated = false;
+          }
+        } else {
+          state && (state.isAuthenticated = false);
+        }
+      },
     }
   )
 );

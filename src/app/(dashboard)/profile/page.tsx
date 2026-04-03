@@ -34,6 +34,7 @@ import {
   Phone,
 } from "lucide-react";
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/api-client";
+import { getToken } from "@/lib/auth";
 import type { Profile, UpdateProfileRequest, Resume, ResumesResponse, OnboardingStatus, ParsedProfileData } from "@/types/api";
 
 const containerVariants = {
@@ -337,10 +338,13 @@ function ResumeUpload() {
     mutationFn: async (file: File) => {
       const formData = new FormData();
       formData.append("file", file);
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "";
-      const res = await fetch(`${apiUrl}/api/profiles/resumes`, {
+      const token = getToken();
+      const res = await fetch(`/api/profiles/resumes`, {
         method: "POST",
         body: formData,
+        headers: {
+          Authorization: `Bearer ${token || ""}`,
+        },
       });
       if (!res.ok) throw new Error("Upload failed");
       return res.json();

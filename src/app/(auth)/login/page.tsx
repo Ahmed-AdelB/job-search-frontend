@@ -2,6 +2,16 @@
 
 /**
  * Login Page
+ *
+ * REDIRECT PARAMETER CONVENTION (Issue #408):
+ * Frontend uses 'returnUrl' query parameter to redirect users after login
+ * Example: /login?returnUrl=/jobs/123
+ *
+ * The page reads returnUrl from searchParams and:
+ * 1. Validates it's a safe path via isSafeRedirectUrl()
+ * 2. Redirects to returnUrl after successful login
+ * 3. Falls back to /jobs if returnUrl is missing or unsafe
+ *
  * Author: Ahmed Adel Bakr Alderai
  */
 
@@ -20,22 +30,26 @@ import { Loader2, Mail, Lock, Eye, EyeOff } from "lucide-react";
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { login, error, clearError, isAuthenticated } = useAuthStore();
+  const { login, error, clearError, isAuthenticated, checkAuth } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [hasMounted, setHasMounted] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  // Redirect if already authenticated (in useEffect to avoid render loop)
+  // Verify token is still valid on mount, then redirect if authenticated
   useEffect(() => {
-    if (isAuthenticated) {
+    const stillValid = checkAuth();
+    setHasMounted(true);
+    if (stillValid) {
+      // Issue #408: Read returnUrl query param for post-login redirect
       const returnUrl = searchParams.get("returnUrl");
       const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs";
       router.replace(redirectTo);
     }
-  }, [isAuthenticated, router, searchParams]);
+  }, [checkAuth, router, searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +59,7 @@ function LoginForm() {
     try {
       const success = await login(formData.email, formData.password);
       if (success) {
+        // Issue #408: Redirect to returnUrl parameter or /jobs if absent
         const returnUrl = searchParams.get("returnUrl");
         const redirectTo = returnUrl && isSafeRedirectUrl(returnUrl) ? returnUrl : "/jobs";
         router.replace(redirectTo);
@@ -53,6 +68,17 @@ function LoginForm() {
       setIsLoading(false);
     }
   };
+
+  // Show loading spinner until hydration + checkAuth completes
+  if (!hasMounted) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center">
+          <Loader2 className="h-6 w-6 animate-spin mx-auto" />
+        </CardContent>
+      </Card>
+    );
+  }
 
   // Don't render form if already authenticated (redirecting)
   if (isAuthenticated) {

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPut, apiPost, apiDelete } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type { Profile, UpdateProfileRequest, Resume, ResumesResponse } from "@/types/api"
 import { toast } from "sonner"
 
@@ -45,14 +46,15 @@ export function useUploadCV() {
     mutationFn: async (file: File) => {
       const formData = new FormData()
       formData.append("file", file)
+      const token = getToken()
 
       const response = await fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"}/api/onboarding/cv`,
+        `/api/onboarding/cv`,
         {
           method: "POST",
           body: formData,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+            Authorization: `Bearer ${token || ""}`,
           },
         }
       )

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPatch, apiPost } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type { Application, ApplicationsResponse } from "@/types/api"
 import { toast } from "sonner"
 
@@ -271,10 +272,11 @@ export function useExportApplications() {
         ? `/api/applications/export/csv?status=${status}`
         : "/api/applications/export/csv"
 
+      const token = getToken()
       const response = await fetch(url, {
         method: "GET",
         headers: {
-          "Content-Type": "text/csv",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
         },
       })
 

@@ -1,5 +1,11 @@
 /**
  * API Client - Typed fetch wrapper for JobFlow API
+ *
+ * REDIRECT PARAMETER CONVENTION (Issue #408):
+ * When 401 Unauthorized is returned, this client redirects to login with
+ * the 'returnUrl' query parameter set to preserve the current page.
+ * Example: User accessing /jobs/123 gets 401 → redirect to /login?returnUrl=/jobs/123
+ *
  * Author: Ahmed Adel Bakr Alderai
  */
 
@@ -20,6 +26,8 @@ interface ApiError extends Error {
 
 /**
  * Build login URL with returnUrl parameter to preserve current page
+ *
+ * Issue #408: Uses standardized 'returnUrl' parameter name (not 'from')
  */
 function getLoginUrlWithReturn(): string {
   if (typeof window === "undefined") {
@@ -40,6 +48,7 @@ function getLoginUrlWithReturn(): string {
 
   const shouldRedirectBack = protectedPaths.some((prefix) => currentPath.startsWith(prefix));
   if (shouldRedirectBack) {
+    // Issue #408: Use standardized 'returnUrl' parameter name
     loginUrl.searchParams.set("returnUrl", currentPath);
   }
 

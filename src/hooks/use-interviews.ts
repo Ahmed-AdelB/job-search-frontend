@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPatch, apiDelete } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type { Interview, ApiListResponse } from "@/types/api"
 import { toast } from "sonner"
 
@@ -161,11 +162,12 @@ export function useCalendarExport(interviewId: string) {
   return useQuery({
     queryKey: ["interviews", interviewId, "calendar"],
     queryFn: async () => {
+      const token = getToken()
       const response = await fetch(
         `/api/interviews/${interviewId}/calendar.ics`,
         {
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth-token")}`,
+            Authorization: `Bearer ${token || ""}`,
           },
         }
       )

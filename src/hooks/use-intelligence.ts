@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type {
   SkillGapAnalysis,
   VisaScore,
@@ -133,17 +134,15 @@ export function useRemoteScore(jobId?: number) {
  */
 export function useSalaryReportPDF() {
   return useMutation({
-    mutationFn: () =>
-      fetch("/api/salary/report/pdf", {
+    mutationFn: () => {
+      const token = getToken()
+      return fetch("/api/salary/report/pdf", {
         method: "GET",
         headers: {
-          Authorization: `Bearer ${
-            typeof window !== "undefined"
-              ? localStorage.getItem("auth-token") || ""
-              : ""
-          }`,
+          Authorization: `Bearer ${token || ""}`,
         },
-      }).then((res) => res.blob()),
+      }).then((res) => res.blob())
+    },
     onSuccess: (blob) => {
       const url = window.URL.createObjectURL(blob)
       const link = document.createElement("a")

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPut, apiDelete, apiPost } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type { LinkedInContact, ContactsResponse } from "@/types/api"
 import { toast } from "sonner"
 
@@ -103,12 +104,13 @@ export function useImportContacts() {
     mutationFn: (file: File) => {
       const formData = new FormData()
       formData.append("file", file)
+      const token = getToken()
 
-      return fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"}/api/contacts/import`, {
+      return fetch(`/api/contacts/import`, {
         method: "POST",
         body: formData,
         headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth-token") || ""}`,
+          Authorization: `Bearer ${token || ""}`,
         },
       }).then((res) => {
         if (!res.ok) {

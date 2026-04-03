@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { apiGet, apiPost, apiPut, apiDelete } from "@/lib/api-client"
+import { getToken } from "@/lib/auth"
 import type {
   TargetCompany,
   TargetListResponse,
@@ -141,14 +142,15 @@ export function useImportTargetCompanies() {
     mutationFn: (file: File) => {
       const formData = new FormData()
       formData.append("file", file)
+      const token = getToken()
 
       return fetch(
-        `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8082"}/api/target-list/import`,
+        `/api/target-list/import`,
         {
           method: "POST",
           body: formData,
           headers: {
-            Authorization: `Bearer ${localStorage.getItem("auth-token") || ""}`,
+            Authorization: `Bearer ${token || ""}`,
           },
         }
       ).then((res) => {
