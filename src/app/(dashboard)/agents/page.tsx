@@ -188,14 +188,32 @@ export default function AgentsPage() {
   // Fetch pipeline activity for evidence
   const { data: activity } = useQuery({
     queryKey: ["pipeline-activity"],
-    queryFn: () => apiGet<PipelineActivity>("/api/pipeline/activity"),
+    queryFn: async () => {
+      try {
+        return await apiGet<PipelineActivity>("/api/pipeline/activity");
+      } catch (error) {
+        // Gracefully handle missing endpoint (404) or other errors
+        // Return null to indicate no activity data available
+        console.debug("Pipeline activity endpoint not available:", error);
+        return null;
+      }
+    },
     refetchInterval: 10000,
   });
 
   // Fetch recent pipeline runs
   const { data: runs } = useQuery({
     queryKey: ["pipeline-runs"],
-    queryFn: () => apiGet<PipelineRun[]>("/api/pipeline/runs"),
+    queryFn: async () => {
+      try {
+        return await apiGet<PipelineRun[]>("/api/pipeline/runs");
+      } catch (error) {
+        // Gracefully handle missing endpoint (404) or other errors
+        // Return empty array to indicate no runs data available
+        console.debug("Pipeline runs endpoint not available:", error);
+        return [];
+      }
+    },
     refetchInterval: 10000,
   });
 
@@ -514,143 +532,145 @@ export default function AgentsPage() {
         </div>
       )}
 
-      {/* Pipeline Activity Evidence */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-      >
-        <h2 className="text-lg font-display font-semibold mb-4">Pipeline Activity</h2>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Discovery Evidence */}
-          <Card className="card-glow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4 text-blue-500" />
-                <CardTitle className="font-display text-sm">Discovery</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-display font-bold">{activity?.discovery?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground mb-3">pages scraped</p>
-              {activity?.discovery?.sources && Object.keys(activity.discovery.sources).length > 0 && (
+      {/* Pipeline Activity Evidence - Graceful fallback if endpoint unavailable */}
+      {activity && (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.4 }}
+        >
+          <h2 className="text-lg font-display font-semibold mb-4">Pipeline Activity</h2>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {/* Discovery Evidence */}
+            <Card className="card-glow">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Search className="w-4 h-4 text-blue-500" />
+                  <CardTitle className="font-display text-sm">Discovery</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-display font-bold">{activity.discovery?.total ?? 0}</p>
+                <p className="text-xs text-muted-foreground mb-3">pages scraped</p>
+                {activity.discovery?.sources && Object.keys(activity.discovery.sources).length > 0 && (
+                  <div className="space-y-1.5">
+                    {Object.entries(activity.discovery.sources).map(([source, count]) => {
+                      const info = SOURCE_LABELS[source] ?? { label: source, icon: Globe };
+                      const SourceIcon = info.icon;
+                      return (
+                        <div key={source} className="flex items-center justify-between text-xs">
+                          <span className="flex items-center gap-1.5 text-muted-foreground">
+                            <SourceIcon className="w-3 h-3" />
+                            {info.label}
+                          </span>
+                          <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-blue-500/20 to-blue-400/20 text-blue-400">
+                            {count as number}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+
+            {/* Scoring Evidence */}
+            <Card className="card-glow">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Star className="w-4 h-4 text-yellow-500" />
+                  <CardTitle className="font-display text-sm">Scoring</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-display font-bold">{activity.scoring?.total ?? 0}</p>
+                <p className="text-xs text-muted-foreground mb-3">total jobs</p>
                 <div className="space-y-1.5">
-                  {Object.entries(activity.discovery.sources).map(([source, count]) => {
-                    const info = SOURCE_LABELS[source] ?? { label: source, icon: Globe };
-                    const SourceIcon = info.icon;
-                    return (
-                      <div key={source} className="flex items-center justify-between text-xs">
-                        <span className="flex items-center gap-1.5 text-muted-foreground">
-                          <SourceIcon className="w-3 h-3" />
-                          {info.label}
-                        </span>
-                        <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-blue-500/20 to-blue-400/20 text-blue-400">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Scored</span>
+                    <span className="font-medium">{activity.scoring?.scored ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">Avg Score</span>
+                    <span className="font-medium">{activity.scoring?.avg_score ?? 0}</span>
+                  </div>
+                  {(activity.scoring?.total ?? 0) > 0 && (
+                    <Progress
+                      value={((activity.scoring?.scored ?? 0) / (activity.scoring?.total ?? 1)) * 100}
+                      className="h-1.5 mt-2"
+                    />
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Applications Evidence */}
+            <Card className="card-glow">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Send className="w-4 h-4 text-green-500" />
+                  <CardTitle className="font-display text-sm">Applications</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-display font-bold">{activity.applications?.total ?? 0}</p>
+                <p className="text-xs text-muted-foreground mb-3">submitted</p>
+                {activity.applications?.statuses && Object.keys(activity.applications.statuses).length > 0 && (
+                  <div className="space-y-1.5">
+                    {Object.entries(activity.applications.statuses).map(([status, count]) => (
+                      <div key={status} className="flex items-center justify-between text-xs">
+                        <span className="text-muted-foreground capitalize">{status}</span>
+                        <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400">
                           {count as number}
                         </Badge>
                       </div>
-                    );
-                  })}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Scoring Evidence */}
-          <Card className="card-glow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Star className="w-4 h-4 text-yellow-500" />
-                <CardTitle className="font-display text-sm">Scoring</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-display font-bold">{activity?.scoring?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground mb-3">total jobs</p>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Scored</span>
-                  <span className="font-medium">{activity?.scoring?.scored ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-muted-foreground">Avg Score</span>
-                  <span className="font-medium">{activity?.scoring?.avg_score ?? 0}</span>
-                </div>
-                {(activity?.scoring?.total ?? 0) > 0 && (
-                  <Progress
-                    value={((activity?.scoring?.scored ?? 0) / (activity?.scoring?.total ?? 1)) * 100}
-                    className="h-1.5 mt-2"
-                  />
+                    ))}
+                  </div>
                 )}
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
 
-          {/* Applications Evidence */}
-          <Card className="card-glow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Send className="w-4 h-4 text-green-500" />
-                <CardTitle className="font-display text-sm">Applications</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-display font-bold">{activity?.applications?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground mb-3">submitted</p>
-              {activity?.applications?.statuses && Object.keys(activity.applications.statuses).length > 0 && (
+            {/* Outreach & Contacts Evidence */}
+            <Card className="card-glow">
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <Users className="w-4 h-4 text-purple-500" />
+                  <CardTitle className="font-display text-sm">Contacts & Outreach</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-2xl font-display font-bold">{activity.contacts?.total ?? 0}</p>
+                <p className="text-xs text-muted-foreground mb-3">contacts</p>
                 <div className="space-y-1.5">
-                  {Object.entries(activity.applications.statuses).map(([status, count]) => (
-                    <div key={status} className="flex items-center justify-between text-xs">
-                      <span className="text-muted-foreground capitalize">{status}</span>
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0 bg-gradient-to-r from-emerald-500/20 to-emerald-400/20 text-emerald-400">
-                        {count as number}
-                      </Badge>
-                    </div>
-                  ))}
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Users className="w-3 h-3" />
+                      Recruiters
+                    </span>
+                    <span className="font-medium">{activity.contacts?.recruiters ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Mail className="w-3 h-3" />
+                      With Email
+                    </span>
+                    <span className="font-medium">{activity.contacts?.with_email ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="flex items-center gap-1.5 text-muted-foreground">
+                      <Send className="w-3 h-3" />
+                      Messages Sent
+                    </span>
+                    <span className="font-medium">{activity.outreach?.total ?? 0}</span>
+                  </div>
                 </div>
-              )}
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </div>
+        </motion.div>
+      )}
 
-          {/* Outreach & Contacts Evidence */}
-          <Card className="card-glow">
-            <CardHeader className="pb-2">
-              <div className="flex items-center gap-2">
-                <Users className="w-4 h-4 text-purple-500" />
-                <CardTitle className="font-display text-sm">Contacts & Outreach</CardTitle>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-2xl font-display font-bold">{activity?.contacts?.total ?? 0}</p>
-              <p className="text-xs text-muted-foreground mb-3">contacts</p>
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Users className="w-3 h-3" />
-                    Recruiters
-                  </span>
-                  <span className="font-medium">{activity?.contacts?.recruiters ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Mail className="w-3 h-3" />
-                    With Email
-                  </span>
-                  <span className="font-medium">{activity?.contacts?.with_email ?? 0}</span>
-                </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="flex items-center gap-1.5 text-muted-foreground">
-                    <Send className="w-3 h-3" />
-                    Messages Sent
-                  </span>
-                  <span className="font-medium">{activity?.outreach?.total ?? 0}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </motion.div>
-
-      {/* Recent Pipeline Runs */}
+      {/* Recent Pipeline Runs - Only show if data available */}
       {runs && runs.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -699,7 +719,7 @@ export default function AgentsPage() {
         </motion.div>
       )}
 
-      {/* Recent Discovery Activity */}
+      {/* Recent Discovery Activity - Only show if activity data available */}
       {activity?.discovery?.recent && activity.discovery.recent.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
