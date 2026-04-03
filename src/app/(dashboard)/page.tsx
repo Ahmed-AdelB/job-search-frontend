@@ -2,6 +2,7 @@
 
 /**
  * Dashboard Home - Command Center with Bento Grid
+ * Integrated with real API calls for live data
  * Author: Ahmed Adel Bakr Alderai
  */
 
@@ -27,12 +28,75 @@ import {
   BarChart3,
   Users,
   Flame,
+  AlertCircle,
+  RotateCw,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { motion, AnimatePresence, useMotionValue, useTransform, animate } from "motion/react";
+import { useAnalyticsOverview, useFunnel } from "@/hooks/use-analytics";
+import { useApplications } from "@/hooks/use-applications";
+import { useAgents } from "@/hooks/use-agents";
+import { Skeleton } from "@/components/ui/skeleton";
+import { toast } from "sonner";
 
 export default function DashboardPage() {
+  const { data: overview, isLoading: overviewLoading, error: overviewError, refetch: refetchOverview } = useAnalyticsOverview();
+  const { data: funnelData, isLoading: funnelLoading, error: funnelError, refetch: refetchFunnel } = useFunnel();
+  const { data: applicationsData, isLoading: appsLoading, error: appsError, refetch: refetchApps } = useApplications({
+    per_page: 5,
+    sort_by: "created_at",
+    sort_order: "desc",
+  });
+  const { data: agentsData, isLoading: agentsLoading, error: agentsError, refetch: refetchAgents } = useAgents();
+
+  // Transform funnel data to pipeline stages
+  const pipelineStages = funnelData?.stages?.map((stage) => {
+    const colorMap: Record<string, { color: string; colorEnd: string }> = {
+      "Applied": { color: "#6366f1", colorEnd: "#818cf8" },
+      "Phone Screen": { color: "#7c3aed", colorEnd: "#a78bfa" },
+      "Technical": { color: "#22d3ee", colorEnd: "#67e8f9" },
+      "Final Round": { color: "#22c55e", colorEnd: "#4ade80" },
+      "Offer": { color: "#f59e0b", colorEnd: "#fbbf24" },
+    };
+    const colors = colorMap[stage.stage] || { color: "#6366f1", colorEnd: "#818cf8" };
+    return {
+      name: stage.stage,
+      count: stage.count,
+      percentage: stage.percentage,
+      ...colors,
+    };
+  }) || [];
+
+  // Transform applications data to recent applications format
+  const recentApplications = applicationsData?.applications?.map((app) => {
+    const statusColorMap: Record<string, string> = {
+      "draft": "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+      "submitted": "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
+      "screening": "bg-violet-500/10 text-violet-700 dark:text-violet-400",
+      "interview": "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
+      "offer": "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
+      "hired": "bg-green-500/10 text-green-700 dark:text-green-400",
+      "rejected": "bg-red-500/10 text-red-700 dark:text-red-400",
+      "withdrawn": "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+    };
+    return {
+      id: app.application_id,
+      company: app.company || "Unknown Company",
+      role: app.job_title || "Unknown Role",
+      status: app.status.charAt(0).toUpperCase() + app.status.slice(1),
+      statusColor: statusColorMap[app.status] || "bg-gray-500/10 text-gray-700 dark:text-gray-400",
+    };
+  }) || [];
+
+  // Transform agents data to agent statuses format
+  const agentStatuses = agentsData?.map((agent) => ({
+    name: agent.display_name,
+    status: agent.status === "running" ? "Active" : agent.status.charAt(0).toUpperCase() + agent.status.slice(1),
+    active: agent.status === "running",
+    uptime: agent.last_run_at ? formatUptime(agent.last_run_at) : "Unknown",
+  })) || [];
+
   return (
     <div className="space-y-8">
       {/* Hero Section */}
@@ -72,7 +136,7 @@ export default function DashboardPage() {
 
       {/* Stats Grid - 2+1+1 Bento Layout */}
       <div className="grid gap-4 grid-cols-1 md:grid-cols-2 lg:grid-cols-4">
-        {/* Primary Stat - Emphasized */}
+        {/* Primary Stat - Active Applications */}
         <motion.div
           className="md:col-span-1 lg:col-span-2"
           initial={{ opacity: 0, y: 20 }}
@@ -87,7 +151,11 @@ export default function DashboardPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Active Applications
                   </p>
-                  <AnimatedNumber value={24} className="text-4xl font-display font-bold mt-2" />
+                  {overviewLoading ? (
+                    <Skeleton className="h-10 w-20 mt-2" />
+                  ) : (
+                    <AnimatedNumber value={overview?.active_applications || 0} className="text-4xl font-display font-bold mt-2" />
+                  )}
                 </div>
                 <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center ring-1 ring-indigo-500/20">
                   <FileText className="w-6 h-6 text-indigo-500" />
@@ -96,14 +164,14 @@ export default function DashboardPage() {
               <div className="flex items-center gap-2">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                  +3 this week
+                  {overview?.response_rate ? `${Math.round(overview.response_rate * 100)}%` : "0%"} response rate
                 </span>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Secondary Stat */}
+        {/* Secondary Stat - Total Jobs Discovered */}
         <motion.div
           className="lg:col-span-1"
           initial={{ opacity: 0, y: 20 }}
@@ -116,9 +184,13 @@ export default function DashboardPage() {
               <div className="flex items-start justify-between">
                 <div>
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
-                    Jobs Matched
+                    Jobs Discovered
                   </p>
-                  <AnimatedNumber value={156} className="text-3xl font-display font-bold mt-2" />
+                  {overviewLoading ? (
+                    <Skeleton className="h-8 w-16 mt-2" />
+                  ) : (
+                    <AnimatedNumber value={overview?.total_jobs_discovered || 0} className="text-3xl font-display font-bold mt-2" />
+                  )}
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center ring-1 ring-violet-500/20">
                   <Target className="w-5 h-5 text-violet-500" />
@@ -127,14 +199,14 @@ export default function DashboardPage() {
               <div className="flex items-center gap-1.5 mt-3">
                 <TrendingUp className="w-3.5 h-3.5 text-emerald-500" />
                 <span className="text-xs text-emerald-600 dark:text-emerald-400">
-                  +12 today
+                  {overview?.total_applications || 0} applied
                 </span>
               </div>
             </CardContent>
           </Card>
         </motion.div>
 
-        {/* Tertiary Stat */}
+        {/* Tertiary Stat - Interviews */}
         <motion.div
           className="lg:col-span-1"
           initial={{ opacity: 0, y: 20 }}
@@ -149,7 +221,11 @@ export default function DashboardPage() {
                   <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">
                     Interviews
                   </p>
-                  <AnimatedNumber value={3} className="text-3xl font-display font-bold mt-2" />
+                  {overviewLoading ? (
+                    <Skeleton className="h-8 w-8 mt-2" />
+                  ) : (
+                    <AnimatedNumber value={overview?.interview_count || 0} className="text-3xl font-display font-bold mt-2" />
+                  )}
                 </div>
                 <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center ring-1 ring-emerald-500/20">
                   <Calendar className="w-5 h-5 text-emerald-500" />
@@ -158,7 +234,7 @@ export default function DashboardPage() {
               <div className="flex items-center gap-1.5 mt-3">
                 <Flame className="w-3.5 h-3.5 text-orange-500" />
                 <span className="text-xs text-muted-foreground">
-                  Next: Tomorrow
+                  {overview?.offer_count || 0} offers
                 </span>
               </div>
             </CardContent>
@@ -179,45 +255,76 @@ export default function DashboardPage() {
             <CardHeader className="pb-3">
               <div className="flex items-center justify-between">
                 <CardTitle className="font-display text-lg">Pipeline Overview</CardTitle>
-                <Badge variant="outline" className="text-xs font-mono">
-                  <Activity className="w-3 h-3 me-1" />
-                  Live
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs font-mono">
+                    <Activity className="w-3 h-3 me-1" />
+                    {funnelLoading ? "Loading..." : "Live"}
+                  </Badge>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => refetchFunnel()}
+                    disabled={funnelLoading}
+                    className="h-8 w-8 p-0"
+                  >
+                    <RotateCw className={`w-4 h-4 ${funnelLoading ? "animate-spin" : ""}`} />
+                  </Button>
+                </div>
               </div>
               <CardDescription>Application funnel progression</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 flex-1">
-              {pipelineStages.map((stage, index) => (
-                <motion.div
-                  key={stage.name}
-                  className="space-y-2"
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.4, ease: "easeOut", delay: 0.4 + index * 0.05 }}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">{stage.name}</span>
-                    <span className="font-mono text-sm font-semibold text-muted-foreground">
-                      {stage.count}
-                    </span>
-                  </div>
-                  <div className="relative h-2.5 rounded-full bg-muted overflow-hidden">
-                    <motion.div
-                      className="absolute inset-y-0 start-0 rounded-full"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${stage.percentage}%` }}
-                      transition={{
-                        duration: 1,
-                        ease: "easeOut",
-                        delay: 0.6 + index * 0.1
-                      }}
-                      style={{
-                        background: `linear-gradient(90deg, ${stage.color}, ${stage.colorEnd})`,
-                      }}
-                    />
-                  </div>
-                </motion.div>
-              ))}
+              {funnelError ? (
+                <div className="text-sm text-red-500 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Failed to load pipeline data
+                </div>
+              ) : funnelLoading ? (
+                <div className="space-y-4">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="space-y-2">
+                      <Skeleton className="h-4 w-24" />
+                      <Skeleton className="h-2.5 w-full" />
+                    </div>
+                  ))}
+                </div>
+              ) : pipelineStages.length > 0 ? (
+                pipelineStages.map((stage, index) => (
+                  <motion.div
+                    key={stage.name}
+                    className="space-y-2"
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.4, ease: "easeOut", delay: 0.4 + index * 0.05 }}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm font-medium">{stage.name}</span>
+                      <span className="font-mono text-sm font-semibold text-muted-foreground">
+                        {stage.count}
+                      </span>
+                    </div>
+                    <div className="relative h-2.5 rounded-full bg-muted overflow-hidden">
+                      <motion.div
+                        className="absolute inset-y-0 start-0 rounded-full"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${stage.percentage}%` }}
+                        transition={{
+                          duration: 1,
+                          ease: "easeOut",
+                          delay: 0.6 + index * 0.1
+                        }}
+                        style={{
+                          background: `linear-gradient(90deg, ${stage.color}, ${stage.colorEnd})`,
+                        }}
+                      />
+                    </div>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  No pipeline data yet. Start applying to see progress.
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -268,33 +375,69 @@ export default function DashboardPage() {
         >
           <Card className="card-glow h-full flex flex-col">
             <CardHeader className="pb-3">
-              <CardTitle className="font-display text-lg">Recent Applications</CardTitle>
-              <CardDescription>Latest submissions</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-lg">Recent Applications</CardTitle>
+                  <CardDescription>Latest submissions</CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => refetchApps()}
+                  disabled={appsLoading}
+                  className="h-8 w-8 p-0"
+                >
+                  <RotateCw className={`w-4 h-4 ${appsLoading ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="flex-1">
-              <div className="divide-y divide-border">
-                {recentApplications.map((app, index) => (
-                  <motion.div
-                    key={app.id}
-                    className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
-                    initial={{ opacity: 0, x: -10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.3, ease: "easeOut", delay: 0.6 + index * 0.05 }}
-                    whileHover={{ x: 4 }}
-                  >
-                    <div className="min-w-0">
-                      <p className="font-medium text-sm truncate">{app.company}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5 truncate">{app.role}</p>
+              {appsError ? (
+                <div className="text-sm text-red-500 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Failed to load applications
+                </div>
+              ) : appsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map((i) => (
+                    <div key={i} className="flex items-center justify-between py-3">
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-24 mb-1" />
+                        <Skeleton className="h-3 w-32" />
+                      </div>
+                      <Skeleton className="h-6 w-16" />
                     </div>
-                    <Badge
-                      variant="secondary"
-                      className={`shrink-0 ms-2 font-mono text-xs ${app.statusColor}`}
+                  ))}
+                </div>
+              ) : recentApplications.length > 0 ? (
+                <div className="divide-y divide-border">
+                  {recentApplications.map((app, index) => (
+                    <motion.div
+                      key={app.id}
+                      className="flex items-center justify-between py-3 px-2 rounded-lg hover:bg-muted/40 transition-colors cursor-pointer"
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3, ease: "easeOut", delay: 0.6 + index * 0.05 }}
+                      whileHover={{ x: 4 }}
                     >
-                      {app.status}
-                    </Badge>
-                  </motion.div>
-                ))}
-              </div>
+                      <div className="min-w-0">
+                        <p className="font-medium text-sm truncate">{app.company}</p>
+                        <p className="text-xs text-muted-foreground mt-0.5 truncate">{app.role}</p>
+                      </div>
+                      <Badge
+                        variant="secondary"
+                        className={`shrink-0 ms-2 font-mono text-xs ${app.statusColor}`}
+                      >
+                        {app.status}
+                      </Badge>
+                    </motion.div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  No applications yet. Submit your first application to get started!
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -308,29 +451,66 @@ export default function DashboardPage() {
         >
           <Card className="card-glow h-full flex flex-col">
             <CardHeader className="pb-3">
-              <CardTitle className="font-display text-lg">Agent Status</CardTitle>
-              <CardDescription>System health</CardDescription>
+              <div className="flex items-center justify-between">
+                <div>
+                  <CardTitle className="font-display text-lg">Agent Status</CardTitle>
+                  <CardDescription>System health</CardDescription>
+                </div>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => refetchAgents()}
+                  disabled={agentsLoading}
+                  className="h-8 w-8 p-0"
+                >
+                  <RotateCw className={`w-4 h-4 ${agentsLoading ? "animate-spin" : ""}`} />
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="space-y-3">
-              {agentStatuses.map((agent, index) => (
-                <motion.div
-                  key={agent.name}
-                  className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.3, ease: "easeOut", delay: 0.7 + index * 0.05 }}
-                >
-                  <span className={cn(
-                    "h-2.5 w-2.5 rounded-full shrink-0",
-                    agent.active ? "bg-cyan-400 animate-pulse" : "bg-muted"
-                  )} />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium">{agent.name}</p>
-                    <p className="text-xs text-muted-foreground">{agent.status}</p>
-                  </div>
-                  <span className="text-xs text-muted-foreground shrink-0">{agent.uptime}</span>
-                </motion.div>
-              ))}
+              {agentsError ? (
+                <div className="text-sm text-red-500 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4" />
+                  Failed to load agent status
+                </div>
+              ) : agentsLoading ? (
+                <div className="space-y-3">
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex items-center gap-3 p-2">
+                      <Skeleton className="h-2.5 w-2.5 rounded-full" />
+                      <div className="flex-1">
+                        <Skeleton className="h-4 w-24 mb-1" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                      <Skeleton className="h-4 w-12" />
+                    </div>
+                  ))}
+                </div>
+              ) : agentStatuses.length > 0 ? (
+                agentStatuses.map((agent, index) => (
+                  <motion.div
+                    key={agent.name}
+                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-muted/40 transition-colors"
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ duration: 0.3, ease: "easeOut", delay: 0.7 + index * 0.05 }}
+                  >
+                    <span className={cn(
+                      "h-2.5 w-2.5 rounded-full shrink-0",
+                      agent.active ? "bg-cyan-400 animate-pulse" : "bg-muted"
+                    )} />
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium">{agent.name}</p>
+                      <p className="text-xs text-muted-foreground">{agent.status}</p>
+                    </div>
+                    <span className="text-xs text-muted-foreground shrink-0">{agent.uptime}</span>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="text-sm text-muted-foreground text-center py-4">
+                  No agents configured yet.
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -354,7 +534,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {aiInsights.map((insight, index) => (
+                {getAIInsights(overview).map((insight, index) => (
                   <motion.div
                     key={index}
                     className="p-4 rounded-lg bg-white/50 dark:bg-white/5 border border-primary/10 hover:border-primary/20 transition-colors"
@@ -379,6 +559,100 @@ export default function DashboardPage() {
       </div>
     </div>
   );
+}
+
+/* ─── Helper Functions ─── */
+
+/**
+ * Generate AI insights based on analytics data
+ */
+function getAIInsights(overview: any) {
+  if (!overview) {
+    return [
+      {
+        title: "Get Started",
+        description: "Start discovering and applying to jobs to see insights here.",
+      },
+      {
+        title: "Track Progress",
+        description: "Monitor your pipeline as applications move through stages.",
+      },
+      {
+        title: "Optimize Strategy",
+        description: "AI will suggest improvements as you gather more data.",
+      },
+    ];
+  }
+
+  const insights = [];
+
+  // Response rate insight
+  if (overview.response_rate < 0.2) {
+    insights.push({
+      title: "Improve Application Quality",
+      description: `Your response rate is ${Math.round(overview.response_rate * 100)}%. Consider tailoring your application materials more carefully.`,
+    });
+  } else if (overview.response_rate > 0.4) {
+    insights.push({
+      title: "Strong Application Quality",
+      description: `Your response rate is ${Math.round(overview.response_rate * 100)}%. Keep using your current strategy!`,
+    });
+  }
+
+  // Volume insight
+  if (overview.total_applications < 10) {
+    insights.push({
+      title: "Increase Application Volume",
+      description: `You've submitted ${overview.total_applications} applications. Submit more to increase chances of interviews.`,
+    });
+  } else {
+    insights.push({
+      title: "Healthy Application Pace",
+      description: `You've submitted ${overview.total_applications} applications with ${overview.interview_count} interview(s). Keep up the momentum!`,
+    });
+  }
+
+  // Offer insight
+  if (overview.offer_count === 0 && overview.total_applications > 20) {
+    insights.push({
+      title: "Advance More Candidates",
+      description: "You have several applications in progress. Focus on moving them forward through interview rounds.",
+    });
+  } else if (overview.offer_count > 0) {
+    insights.push({
+      title: "Congratulations!",
+      description: `You have ${overview.offer_count} offer(s)! Carefully evaluate your options.`,
+    });
+  } else {
+    insights.push({
+      title: "Build Your Pipeline",
+      description: "Each application is a chance. Keep applying and you'll start seeing interviews soon.",
+    });
+  }
+
+  return insights.slice(0, 3);
+}
+
+/**
+ * Format uptime or last run time
+ */
+function formatUptime(timestamp: string): string {
+  try {
+    const date = new Date(timestamp);
+    const now = new Date();
+    const hours = Math.floor((now.getTime() - date.getTime()) / (1000 * 60 * 60));
+
+    if (hours < 1) {
+      return "Just now";
+    } else if (hours < 24) {
+      return `${hours}h ago`;
+    } else {
+      const days = Math.floor(hours / 24);
+      return `${days}d ago`;
+    }
+  } catch {
+    return "Unknown";
+  }
 }
 
 /* ─── Animated Counter Component ─── */
@@ -442,66 +716,3 @@ function Plus(props: React.SVGProps<SVGSVGElement>) {
     </svg>
   );
 }
-
-/* ─── Data ─── */
-
-const pipelineStages = [
-  { name: "Applied", count: 24, percentage: 100, color: "#6366f1", colorEnd: "#818cf8" },
-  { name: "Phone Screen", count: 8, percentage: 33, color: "#7c3aed", colorEnd: "#a78bfa" },
-  { name: "Technical", count: 5, percentage: 21, color: "#22d3ee", colorEnd: "#67e8f9" },
-  { name: "Final Round", count: 2, percentage: 8, color: "#22c55e", colorEnd: "#4ade80" },
-  { name: "Offer", count: 1, percentage: 4, color: "#f59e0b", colorEnd: "#fbbf24" },
-];
-
-const recentApplications = [
-  {
-    id: 1,
-    company: "TechCorp",
-    role: "Senior Frontend Developer",
-    status: "Applied",
-    statusColor: "bg-indigo-500/10 text-indigo-700 dark:text-indigo-400",
-  },
-  {
-    id: 2,
-    company: "Google",
-    role: "Product Engineer",
-    status: "In Review",
-    statusColor: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
-  },
-  {
-    id: 3,
-    company: "Meta",
-    role: "Full Stack Engineer",
-    status: "Phone Screen",
-    statusColor: "bg-cyan-500/10 text-cyan-700 dark:text-cyan-400",
-  },
-  {
-    id: 4,
-    company: "Stripe",
-    role: "Engineering Manager",
-    status: "Interview",
-    statusColor: "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
-  },
-];
-
-const agentStatuses = [
-  { name: "Discovery Agent", status: "Scanning jobs", active: true, uptime: "24h" },
-  { name: "Apply Agent", status: "Idle", active: true, uptime: "24h" },
-  { name: "Outreach Agent", status: "Sending messages", active: true, uptime: "12h" },
-  { name: "Analytics Agent", status: "Offline", active: false, uptime: "2h" },
-];
-
-const aiInsights = [
-  {
-    title: "Optimize Application Rate",
-    description: "You have a 45% application rate. Increasing target-list size could improve conversion.",
-  },
-  {
-    title: "Follow Up with Recruiters",
-    description: "3 applications from last week have no response. Send friendly follow-ups today.",
-  },
-  {
-    title: "Enhance Your Profile",
-    description: "Adding 2-3 recent projects to your portfolio could boost response rate by 15%.",
-  },
-];
